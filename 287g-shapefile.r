@@ -21,15 +21,29 @@ pending_agencies <-
 load("35158-0001-Data.rda")
 LEAIC <- da35158.0001
 
+# homeland infrastructure foundation-level data
+hifld <- arrow::read_feather(
+  "data/ice-detention-facilities/data/hifld-local-law-enforcement-facilities.feather"
+)
+
+hifld_prisons <- arrow::read_feather(
+  "data/ice-detention-facilities/data/hifld-prisons.feather"
+)
+
+# jails and prisons data
+jails_prisons <- arrow::read_feather(
+  "data/ice-detention-facilities/data/jails_prisons.feather"
+)
+
 agencies_all <-
   bind_rows(participating_agencies, pending_agencies) |>
   mutate(
-    state  = str_to_title(str_trim(STATE)),
+    state = str_to_title(str_trim(STATE)),
     county = str_to_title(str_trim(COUNTY)),
-    type_clean  = str_to_lower(str_trim(TYPE)),
+    type_clean = str_to_lower(str_trim(TYPE)),
     support_clean = str_to_lower(str_trim(`SUPPORT TYPE`)),
     has_addendum = !(is.na(ADDENDUM) | ADDENDUM %in% c("", "NA")),
-    moa_pending  = str_detect(str_to_lower(str_trim(MOA)), "pending"),
+    moa_pending = str_detect(str_to_lower(str_trim(MOA)), "pending"),
 
     # facility detector for later point handling
     facility_detector = str_detect(
@@ -38,90 +52,347 @@ agencies_all <-
     )
   )
 
-# Fuzzy Matching Municipalities ------------------------------------------
+# Direct String Matching Municipalities ----------------------------------
+# helper functions
+norm_key <- function(x) {
+  x |>
+    str_to_lower() |>
+    str_replace_all("&", " and ") |>
+    str_replace_all("\\bst\\b", "saint") |>
+    str_replace_all("\\b(county|city|town|village|borough|township|municipality)\\b", " ") |>
+    str_replace_all("\\b(police|pd|dept|department|public|safety|office)\\b", " ") |>
+    str_replace_all("\\b(of|the|and|for)\\b", " ") |>
+    str_replace_all("[^a-z0-9]", "") |>
+    str_squish()
+}
+
+norm_state <- function(x) {
+  x |>
+    str_to_lower() |>
+    str_replace_all("[^a-z]", "") |>
+    str_squish()
+}
+
+norm_place <- function(x) {
+  x |>
+    str_to_lower() |>
+    str_replace_all("\\b(county|city|town|village|borough|township|municipality)\\b", " ") |>
+    str_replace_all("[^a-z0-9\\s]", " ") |>
+    str_squish() |>
+    str_replace_all("\\s+", " ")
+}
+
+extract_city_guess <- function(x) {
+  s <- str_squish(x)
+  s <- str_remove(s, regex("(?i)^\\s*city\\s+of\\s+"))
+  s <- str_remove(s, regex("(?i)\\b(police|pd|police dept\\.?|police department|department|dept|public safety|office)\\b.*$"))
+  s <- str_squish(s)
+  s <- na_if(s, "")
+  str_to_title(s)
+}
+
+match_exact <- function(x, y, by_cols, source_name, keep_cols = NULL) {
+  out <- x |>
+    inner_join(
+      y,
+      by = by_cols,
+      relationship = "many-to-many",
+      suffix = c("", "_src")
+    )
+
+  if (!is.null(keep_cols)) {
+    out <- out |> select(any_of(c(names(x), keep_cols)))
+  }
+
+  out |>
+    group_by(state, county, agency) |>
+    slice_head(n = 1) |>
+    ungroup() |>
+    mutate(
+      source = source_name,
+      match_type = "exact",
+      match_score = 1
+    )
+}
+
+match_fuzzy <- function(x, y, join_cols, source_name, threshold = 0.12, keep_cols = NULL) {
+  candidates <- x |>
+    inner_join(
+      y,
+      by = join_cols,
+      relationship = "many-to-many",
+      suffix = c("", "_src")
+    )
+
+  if (!is.null(keep_cols)) {
+    candidates <- candidates |> select(any_of(c(names(x), keep_cols)))
+  }
+
+  candidates |>
+    mutate(
+      dist = stringdist(agency_key, agency_key_src, method = "jw", p = 0.1)
+    ) |>
+    group_by(state, county, agency) |>
+    slice_min(dist, n = 1, with_ties = FALSE) |>
+    ungroup() |>
+    filter(dist <= threshold) |>
+    mutate(
+      source = source_name,
+      match_type = "fuzzy",
+      match_score = 1 - dist
+    )
+}
+
+# 287(g) municipalities
 muni_287g <- agencies_all |>
   filter(type_clean == "municipality") |>
   transmute(
-    state  = str_to_title(str_squish(STATE)),
+    state = str_to_title(str_squish(STATE)),
     county = str_to_title(str_squish(COUNTY)),
     agency = str_squish(`LAW ENFORCEMENT AGENCY`)
   ) |>
   mutate(
-    agency_clean = agency |>
-      str_to_lower() |>
-      str_replace_all("&", " and ") |>
-      str_replace_all("[^a-z0-9\\s]", " ") |>
-      str_squish(),
-    county_clean = county |>
-      str_to_lower() |>
-      str_replace_all("[^a-z0-9\\s]", " ") |>
-      str_squish() |>
-      str_remove("\\bcounty\\b$") |>
-      str_squish()
+    state_key  = norm_state(state),
+    county_key = norm_place(county),
+    agency_key = norm_key(agency),
+    city_guess = extract_city_guess(agency),
+    city_key   = norm_place(city_guess)
   )
 
-leaic_keys <- LEAIC |>
+# source tables
+leaic_tbl <- LEAIC |>
   transmute(
-    leaic_state  = str_to_title(str_squish(STATENAME)),
+    leaic_state = str_to_title(str_squish(STATENAME)),
     leaic_county = str_to_title(str_squish(COUNTYNAME)),
-    leaic_name   = str_squish(NAME),
-    # keep IDs for later joins to TIGER
-    FSTATE, FCOUNTY, FPLACE, ORI9
+    leaic_name = str_squish(NAME),
+    FSTATE, FCOUNTY, FPLACE, ORI9, AGCYTYPE, SUBTYPE1, SUBTYPE2, COMMENT
   ) |>
   mutate(
-    leaic_name_clean = leaic_name |>
-      str_to_lower() |>
-      str_replace_all("&", " and ") |>
-      str_replace_all("[^a-z0-9\\s]", " ") |>
-      str_squish(),
-    leaic_county_clean = leaic_county |>
-      str_to_lower() |>
-      str_replace_all("[^a-z0-9\\s]", " ") |>
-      str_squish() |>
-      str_remove("\\bcounty\\b$") |>
-      str_squish()
+    state_key = norm_state(leaic_state),
+    county_key = norm_place(leaic_county),
+    agency_key_src = norm_key(leaic_name)
   )
 
-candidates <- muni_287g |>
+hifld_tbl <- hifld |>
+  transmute(
+    src_id = as.character(hifld_id),
+    src_name = str_squish(name),
+    src_address = address,
+    src_city = str_squish(city),
+    src_state = str_squish(state),
+    src_zip = zip,
+    src_type = type,
+    src_status = status,
+    src_latitude = latitude,
+    src_longitude = longitude,
+    src_date = date
+  ) |>
+  mutate(
+    state_key = norm_state(src_state),
+    city_key = norm_place(src_city),
+    agency_key_src = norm_key(src_name)
+  )
+
+# combined prisons and jails
+facilities_tbl <- bind_rows(
+  hifld_prisons |>
+    transmute(
+      src_dataset = "hifld_prisons",
+      src_id = as.character(hifld_id),
+      src_name = str_squish(name),
+      src_address = address,
+      src_city = str_squish(city),
+      src_state = str_squish(state),
+      src_zip = zip,
+      src_type = type,
+      src_status = status,
+      src_latitude = latitude,
+      src_longitude = longitude,
+      src_date = date
+    ),
+  jails_prisons |>
+    transmute(
+      src_dataset = "jails_prisons",
+      src_id = as.character(bjs_facility_ID),
+      src_name = str_squish(name),
+      src_address = address,
+      src_city = str_squish(city),
+      src_state = str_squish(state),
+      src_zip = zip,
+      src_type = NA_character_,
+      src_status = NA_character_,
+      src_latitude = NA_real_,
+      src_longitude = NA_real_,
+      src_date = date
+    )
+) |>
+  mutate(
+    state_key = norm_state(src_state),
+    city_key = norm_place(src_city),
+    agency_key_src = norm_key(src_name)
+  )
+
+# layer 1: leaic
+leaic_keep <- c(
+  "leaic_state", "leaic_county", "leaic_name",
+  "FSTATE", "FCOUNTY", "FPLACE", "ORI9", "AGCYTYPE", "SUBTYPE1", "SUBTYPE2", "COMMENT",
+  "agency_key_src"
+)
+
+leaic_exact <- match_exact(
+  x = muni_287g,
+  y = leaic_tbl,
+  by_cols = c("state_key", "county_key", "agency_key" = "agency_key_src"),
+  source_name = "LEAIC",
+  keep_cols = leaic_keep
+)
+
+after_leaic_exact <- muni_287g |>
+  anti_join(leaic_exact, by = c("state", "county", "agency"))
+
+leaic_fuzzy <- match_fuzzy(
+  x = after_leaic_exact,
+  y = leaic_tbl,
+  join_cols = c("state_key", "county_key"),
+  source_name = "LEAIC",
+  threshold = 0.12,
+  keep_cols = leaic_keep
+)
+
+after_leaic <- after_leaic_exact |>
+  anti_join(leaic_fuzzy, by = c("state", "county", "agency"))
+
+# layer 2: hifld law enforcement
+hifld_keep <- c(
+  "src_id", "src_name", "src_address", "src_city", "src_state", "src_zip",
+  "src_type", "src_status", "src_latitude", "src_longitude", "src_date",
+  "agency_key_src"
+)
+
+hifld_exact <- match_exact(
+  x = after_leaic,
+  y = hifld_tbl,
+  by_cols = c("state_key", "city_key", "agency_key" = "agency_key_src"),
+  source_name = "HIFLD",
+  keep_cols = hifld_keep
+)
+
+after_hifld_exact <- after_leaic |>
+  anti_join(hifld_exact, by = c("state", "county", "agency"))
+
+hifld_candidates_base <- after_hifld_exact |>
   inner_join(
-    leaic_keys,
-    by = c("state" = "leaic_state", "county_clean" = "leaic_county_clean"),
-    relationship = "many-to-many"
-  )
-
-# fuzzy scoring on FULL NAMES (Jaro-Winkler)
-matches_all <- candidates |>
-  mutate(
-    jw_dist = stringdist(agency_clean, leaic_name_clean, method = "jw", p = 0.1),
-    jw_sim  = 1 - jw_dist
+    hifld_tbl,
+    by = c("state_key"),
+    relationship = "many-to-many",
+    suffix = c("", "_src")
   ) |>
-  filter(jw_dist <= 0.22) |>
-  arrange(state, county, agency, jw_dist)
+  filter(is.na(city_key) | city_key == "" | city_key == city_key_src)
 
-# best match per 287(g) agency (lowest distance)
-best_match <- matches_all |>
+hifld_fuzzy <- hifld_candidates_base |>
+  mutate(
+    dist = stringdist(agency_key, agency_key_src, method = "jw", p = 0.1)
+  ) |>
   group_by(state, county, agency) |>
-  slice_min(order_by = jw_dist, n = 1, with_ties = FALSE) |>
+  slice_min(dist, n = 1, with_ties = FALSE) |>
+  ungroup() |>
+  filter(dist <= 0.12) |>
+  mutate(
+    source = "HIFLD",
+    match_type = "fuzzy",
+    match_score = 1 - dist
+  ) |>
+  select(any_of(c(names(after_hifld_exact), hifld_keep, "source", "match_type", "match_score", "dist")))
+
+after_hifld <- after_hifld_exact |>
+  anti_join(hifld_fuzzy, by = c("state", "county", "agency"))
+
+# layer 3: jails and prisons
+fac_keep <- c(
+  "src_dataset", "src_id", "src_name", "src_address", "src_city", "src_state", "src_zip",
+  "src_type", "src_status", "src_latitude", "src_longitude", "src_date",
+  "agency_key_src"
+)
+
+fac_exact <- match_exact(
+  x = after_hifld,
+  y = facilities_tbl,
+  by_cols = c("state_key", "city_key", "agency_key" = "agency_key_src"),
+  source_name = "FACILITIES",
+  keep_cols = fac_keep
+) |>
+  mutate(source = src_dataset)
+
+after_fac_exact <- after_hifld |>
+  anti_join(fac_exact, by = c("state", "county", "agency"))
+
+fac_candidates_base <- after_fac_exact |>
+  inner_join(
+    facilities_tbl,
+    by = c("state_key"),
+    relationship = "many-to-many",
+    suffix = c("", "_src")
+  ) |>
+  filter(is.na(city_key) | city_key == "" | city_key == city_key_src)
+
+fac_fuzzy <- fac_candidates_base |>
+  mutate(
+    dist = stringdist(agency_key, agency_key_src, method = "jw", p = 0.1)
+  ) |>
+  group_by(state, county, agency) |>
+  slice_min(dist, n = 1, with_ties = FALSE) |>
+  ungroup() |>
+  filter(dist <= 0.12) |>
+  mutate(
+    source = src_dataset,
+    match_type = "fuzzy",
+    match_score = 1 - dist
+  ) |>
+  select(any_of(c(names(after_fac_exact), fac_keep, "source", "match_type", "match_score", "dist")))
+
+# combine and pick best match
+all_matches <- bind_rows(
+  leaic_exact,
+  leaic_fuzzy,
+  hifld_exact,
+  hifld_fuzzy,
+  fac_exact,
+  fac_fuzzy
+)
+
+final_match <- all_matches |>
+  mutate(
+    source_rank = case_when(
+      source == "LEAIC" ~ 1L,
+      source == "HIFLD" ~ 2L,
+      source %in% c("hifld_prisons", "jails_prisons") ~ 3L,
+      TRUE ~ 99L
+    )
+  ) |>
+  group_by(state, county, agency) |>
+  arrange(source_rank, desc(match_score)) |>
+  slice_head(n = 1) |>
   ungroup()
 
-# ambiguous matches: multiple close candidates
-ambiguous <- matches_all |>
-  group_by(state, county, agency) |>
-  summarise(
-    n_candidates = n(),
-    best_dist = min(jw_dist),
-    second_best_dist = sort(jw_dist)[pmin(2, n())],
-    .groups = "drop"
-  ) |>
-  filter(n_candidates > 1 & (second_best_dist - best_dist) < 0.02)
+unmatched_final <- muni_287g |>
+  anti_join(final_match, by = c("state", "county", "agency"))
 
-# unmatched municipalities after thresholding
-unmatched <- muni_287g |>
-  anti_join(best_match, by = c("state", "county", "agency"))
+# prepare for geometry assignment (for LEAIC matches only, pad FIPS for joins later)
+final_match <- final_match |>
+  mutate(
+    FSTATE_chr = if_else(!is.na(FSTATE), str_pad(as.character(FSTATE), 2, pad = "0"), NA_character_),
+    FCOUNTY_chr = if_else(!is.na(FCOUNTY), str_pad(as.character(FCOUNTY), 3, pad = "0"), NA_character_),
+    FPLACE_chr = if_else(!is.na(FPLACE), str_pad(as.character(FPLACE), 5, pad = "0"), NA_character_),
+    county_geoid = if_else(!is.na(FSTATE_chr) & !is.na(FCOUNTY_chr), paste0(FSTATE_chr, FCOUNTY_chr), NA_character_),
+    place_geoid = if_else(!is.na(FSTATE_chr) & !is.na(FPLACE_chr), paste0(FSTATE_chr, FPLACE_chr), NA_character_)
+  )
 
-# quick summaries
-best_match |> summarise(matched = n_distinct(paste(state, county, agency)))
-unmatched  |> summarise(unmatched = n())
+# diagnostics
+final_match |> count(source, match_type)
+
+unmatched_final |>
+  select(state, county, agency) |>
+  arrange(state, county, agency)
 
 # Assigning Geometry -----------------------------------------------------
 agencies_all <- agencies_all |>
