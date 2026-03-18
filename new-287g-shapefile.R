@@ -6,13 +6,14 @@ library(tigris)
 library(purrr)
 library(stringdist)
 library(arrow)
+library(tidylog)
 
 options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
 
 # data loading -----------------------------------------------------------
 participating_agencies <-
-  read_excel("participatingAgencies02132026am.xlsx") |>
+  read_excel("participatingAgencies03182026am.xlsx") |>
   mutate(status = "participating")
 
 pending_agencies <-
@@ -492,7 +493,7 @@ all_agreements_sf <- bind_rows(
   st_transform(4326)
 
 # unresolved geometry
-unmatched_geom <- agencies_all |>
+  unmatched_geom <- agencies_all |>
   filter(geom_class != "unknown") |>
   anti_join(
     st_drop_geometry(all_agreements_sf),
