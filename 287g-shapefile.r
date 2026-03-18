@@ -1,13 +1,42 @@
 library(readxl)
+library(jsonlite)
 library(dplyr)
 library(stringr)
 library(tidyr)
 library(stringdist)
 library(sf)
 library(tigris)
+library(purrr)
 
 options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
+
+# data loading -----------------------------------------------------------
+
+# api_key <- ""
+# states <- c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+#             "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+#             "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+#             "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+#             "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+#             "DC")
+
+# all_states <- list()
+
+# for (state in states) {
+#   response <- request(paste0("https://api.usa.gov/crime/fbi/cde/agency/byStateAbbr/", state)) |>
+#     req_url_query(API_KEY = api_key) |>
+#     req_perform()
+  
+#   raw <- resp_body_json(response, simplifyVector = TRUE)
+  
+#   all_states[[state]] <- bind_rows(raw, .id = "county")
+  
+#   Sys.sleep(0.5)
+# }
+
+# crime_data <- bind_rows(all_states, .id = "state")
+# write_feather(crime_data, "crime_data_all_states.feather")
 
 participating_agencies <-
   read_excel("participatingAgencies02132026am.xlsx") |>
@@ -49,6 +78,16 @@ agencies_all <-
     facility_detector = str_detect(
       str_to_lower(`LAW ENFORCEMENT AGENCY`),
       "(detention|detention center|correctional|corrections center|jail|workhouse|facility|processing center)"
+    )
+  )
+
+# fix error - Pittsburgh is in Pennsylvania, not New Hampshire
+agencies_all <- agencies_all |>
+  mutate(
+    state = if_else(
+      `LAW ENFORCEMENT AGENCY` == "Pittsburgh Police Department" & state == "New Hampshire",
+      "Pennsylvania",
+      state
     )
   )
 
@@ -158,6 +197,12 @@ muni_287g <- agencies_all |>
     city_guess = extract_city_guess(agency),
     city_key   = norm_place(city_guess)
   )
+
+# clean county column
+muni_287g <- muni_287g |>
+  mutate(county = na_if(str_to_lower(str_trim(county)), "na"),
+         county = na_if(county, "#na"),
+         county_key = norm_place(county))
 
 # source tables
 leaic_tbl <- LEAIC |>
@@ -395,37 +440,44 @@ unmatched_final |>
   arrange(state, county, agency)
 
 # Assigning Geometry -----------------------------------------------------
+# diagnostics
+agencies_all |>
+  count(support_clean, type_clean) |>
+  arrange(support_clean, type_clean)
+
 agencies_all <- agencies_all |>
   group_by(state, `LAW ENFORCEMENT AGENCY`) |>
   mutate(
     geom_class = case_when(
-      # state-level signers
-      type_clean %in% c("state agency", "state") ~ "state_polygon",
-      # county-level signers
-      type_clean %in% c("county") ~ "county_polygon",
-      # municipal-level signers
-      type_clean %in% c("municipality") ~ "municipal_polygon",
-      TRUE ~ "unknown"
+      # facility points — jurisdiction limited to a single facility
+      support_clean %in% c("jail enforcement model", "warrant service officer") ~ "facility_point",
+      # task force model and everything else - polygon based on agency type
+      type_clean %in% c("state agency", "state")  ~ "state_polygon",
+      type_clean == "county"                       ~ "county_polygon",
+      type_clean == "municipality"                 ~ "municipal_polygon",
+      TRUE                                         ~ "unknown"
     ),
-
-    # flag for manual review (criteria from memo)
+    # preserve agency-level type for facility points
+    agency_level = case_when(
+      type_clean %in% c("state agency", "state") ~ "state",
+      type_clean == "county"                     ~ "county",
+      type_clean == "municipality"               ~ "municipal",
+      TRUE                                       ~ "unknown"
+    )
     needs_review = case_when(
-      geom_class == "unknown" ~ TRUE,
-      has_addendum ~ TRUE,
-      moa_pending ~ TRUE,
-      # state agencies with “jail enforcement model”
-      geom_class == "state_polygon" & str_detect(support_clean, "jail enforcement") ~ TRUE,
-      # county agencies with “jail enforcement model”
-      geom_class == "county_polygon" & str_detect(support_clean, "jail enforcement") ~ TRUE,
-      # municipal agencies with “jail enforcement model”
-      geom_class == "municipal_polygon" & str_detect(support_clean, "jail enforcement") ~ TRUE,
-      # agencies that appear multiple times
-      n() > 1 ~ TRUE,
+      geom_class == "unknown"                                                         ~ TRUE,
+      has_addendum                                                                    ~ TRUE,
+      moa_pending                                                                     ~ TRUE,
+      # agency appears multiple times (may have overlapping agreements)
+      n() > 1                                                                         ~ TRUE,
       # signer ambiguity
-      type_clean == "county" &
-        str_detect(str_to_lower(`LAW ENFORCEMENT AGENCY`),
-          "(corrections|department of corrections|board of county commissioners)") ~ TRUE,
-      TRUE ~ FALSE
+      type_clean == "county" & str_detect(
+        str_to_lower(`LAW ENFORCEMENT AGENCY`),
+        "(corrections|department of corrections|board of county commissioners)"
+      )                                                                               ~ TRUE,
+      # multi-county facilities (county field contains a comma)
+      !is.na(county) & str_detect(county, ",")                                       ~ TRUE,
+      TRUE                                                                            ~ FALSE
     )
   ) |>
   ungroup()
@@ -453,6 +505,15 @@ places_sf <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
             placefp = PLACEFP,
             geometry)
 
+cousubs_sf <- map_dfr(unique(states_sf$statefp), function(fp) {
+  tigris::county_subdivisions(state = fp, cb = TRUE, year = YEAR, class = "sf")
+}) |>
+  transmute(state = str_to_title(STATE_NAME),
+            place_guess = str_to_title(NAME),
+            statefp = STATEFP,
+            placefp = COUSUBFP,
+            geometry)
+
 # join agencies to correct geometry
 # state polygons
 state_agreements_sf <- agencies_all |>
@@ -466,11 +527,70 @@ county_agreements_sf <- agencies_all |>
   left_join(counties_sf, by = c("state", "county")) |>
   st_as_sf()
 
-# municipal polygons
+# build a normalized places lookup from both places and county subdivisions
+places_lookup <- bind_rows(
+  places_sf |> mutate(src = "place"),
+  cousubs_sf |> mutate(src = "cousub")
+) |>
+  mutate(
+    state_key = norm_state(state),
+    place_key = norm_place(place_guess)
+  )
+
+# deduplicate before joining - prefer places over cousubs when conflict
+places_lookup_deduped <- places_lookup |>
+  mutate(src_rank = if_else(src == "place", 1L, 2L)) |>
+  group_by(state_key, place_key) |>
+  slice_min(src_rank, n = 1, with_ties = FALSE) |>
+  ungroup()
+
+# county centroid fallback
+county_centroids <- counties_sf |>
+  st_transform(5070) |>  # Albers Equal Area, good for CONUS
+  mutate(centroid = st_centroid(geometry)) |>
+  st_drop_geometry() |>
+  st_as_sf(sf_column_name = "centroid") |>
+  st_transform(4326) |>  # transform back to WGS84 to match everything else
+  mutate(
+    state_key  = norm_state(state),
+    county_key = norm_place(county)
+  ) |>
+  rename(geometry = centroid)
+
 municipal_agreements_sf <- agencies_all |>
   filter(geom_class == "municipal_polygon") |>
-  left_join(places_sf, by = c("state", "place_guess")) |>
+  mutate(
+    city_guess = extract_city_guess(`LAW ENFORCEMENT AGENCY`),
+    state_key  = norm_state(state),
+    place_key  = norm_place(city_guess),
+    county_key = norm_place(county)
+  ) |>
+  left_join(
+    places_lookup_deduped |> select(state_key, place_key, geometry, src),
+    by = c("state_key", "place_key")
+  ) |>
+  left_join(
+    county_centroids |> select(state_key, county_key, geometry) |> rename(county_geometry = geometry),
+    by = c("state_key", "county_key")
+  ) |>
+  mutate(
+    missing_place = is.na(src) | st_is_empty(geometry) | is.na(st_dimension(geometry)),
+    src = if_else(missing_place, "county_centroid_fallback", src)
+  ) |>
+  # use base R to swap in fallback geometry where needed
+  (\(df) {
+    df$geometry[df$missing_place] <- df$county_geometry[df$missing_place]
+    df
+  })() |>
+  select(-county_geometry, -missing_place) |>
   st_as_sf()
+
+# needs manual review
+municipal_agreements_sf |>
+  st_drop_geometry() |>
+  filter(needs_review) |>
+  select(state, county, `LAW ENFORCEMENT AGENCY`, city_guess, src) |>
+  arrange(state, county)
 
 # combine, verify, and write shapefile
 all_agreements_sf <- bind_rows(
