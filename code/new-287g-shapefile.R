@@ -390,7 +390,7 @@ fac_all_matches <- bind_rows(
   fac_leaic_exact,
   fac_leaic_fuzzy,
   fac_hifld_exact,
-  fac_hifld_fuzzy
+  fac_hifld_fuzzy  
 ) |>
   mutate(
     src_rank = case_when(
