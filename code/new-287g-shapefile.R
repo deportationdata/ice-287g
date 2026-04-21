@@ -26,11 +26,11 @@ sf_use_s2(FALSE)
 #   response <- request(paste0("https://api.usa.gov/crime/fbi/cde/agency/byStateAbbr/", state)) |>
 #     req_url_query(API_KEY = api_key) |>
 #     req_perform()
-  
+
 #   raw <- resp_body_json(response, simplifyVector = TRUE)
-  
+
 #   all_states[[state]] <- bind_rows(raw, .id = "county")
-  
+
 #   Sys.sleep(0.5)
 # }
 
@@ -69,8 +69,14 @@ norm_key <- function(x) {
     str_replace_all("&", " and ") |>
     str_replace_all("\\bst\\.?\\b", "saint") |>
     str_replace_all("\\bpd\\b", " ") |>
-    str_replace_all("\\b(county|city|town|village|borough|township|municipality)\\b", " ") |>
-    str_replace_all("\\b(police|dept|department|public|safety|office)\\b", " ") |>
+    str_replace_all(
+      "\\b(county|city|town|village|borough|township|municipality)\\b",
+      " "
+    ) |>
+    str_replace_all(
+      "\\b(police|dept|department|public|safety|office)\\b",
+      " "
+    ) |>
     str_replace_all("\\b(of|the|and|for)\\b", " ") |>
     str_replace_all("[^a-z0-9]", "") |>
     str_squish()
@@ -86,7 +92,10 @@ norm_state <- function(x) {
 norm_place <- function(x) {
   x |>
     str_to_lower() |>
-    str_replace_all("\\b(county|city|town|village|borough|township|municipality)\\b", " ") |>
+    str_replace_all(
+      "\\b(county|city|town|village|borough|township|municipality)\\b",
+      " "
+    ) |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
     str_squish() |>
     str_replace_all("\\s+", " ")
@@ -95,7 +104,12 @@ norm_place <- function(x) {
 extract_city_guess <- function(x) {
   s <- str_squish(x)
   s <- str_remove(s, regex("(?i)^\\s*city\\s+of\\s+"))
-  s <- str_remove(s, regex("(?i)\\b(police|pd|police dept\\.?|police department|department|dept|public safety|office)\\b.*$"))
+  s <- str_remove(
+    s,
+    regex(
+      "(?i)\\b(police|pd|police dept\\.?|police department|department|dept|public safety|office)\\b.*$"
+    )
+  )
   s <- str_squish(s)
   s <- na_if(s, "")
   str_to_title(s)
@@ -105,17 +119,18 @@ extract_city_guess <- function(x) {
 agencies_all <-
   bind_rows(participating_agencies, pending_agencies) |>
   mutate(
-    state         = str_to_title(str_trim(STATE)),
-    county        = str_to_title(str_trim(COUNTY)),
-    type_clean    = str_to_lower(str_trim(TYPE)),
+    state = str_to_title(str_trim(STATE)),
+    county = str_to_title(str_trim(COUNTY)),
+    type_clean = str_to_lower(str_trim(TYPE)),
     support_clean = str_to_lower(str_trim(`SUPPORT TYPE`)),
-    has_addendum  = !(is.na(ADDENDUM) | ADDENDUM %in% c("", "NA")),
-    moa_pending   = str_detect(str_to_lower(str_trim(MOA)), "pending")
+    has_addendum = !(is.na(ADDENDUM) | ADDENDUM %in% c("", "NA")),
+    moa_pending = str_detect(str_to_lower(str_trim(MOA)), "pending")
   ) |>
   # fix data error — Pittsburgh is in Pennsylvania, not New Hampshire
   mutate(
     state = if_else(
-      `LAW ENFORCEMENT AGENCY` == "Pittsburgh Police Department" & state == "New Hampshire",
+      `LAW ENFORCEMENT AGENCY` == "Pittsburgh Police Department" &
+        state == "New Hampshire",
       "Pennsylvania",
       state
     )
@@ -123,29 +138,34 @@ agencies_all <-
   group_by(state, `LAW ENFORCEMENT AGENCY`) |>
   mutate(
     geom_class = case_when(
-      support_clean %in% c("jail enforcement model", "warrant service officer") ~ "facility_point",
-      type_clean %in% c("state agency", "state")                                ~ "state_polygon",
-      type_clean == "county"                                                     ~ "county_polygon",
-      type_clean == "municipality"                                               ~ "municipal_polygon",
-      TRUE                                                                       ~ "unknown"
+      support_clean %in%
+        c(
+          "jail enforcement model",
+          "warrant service officer"
+        ) ~ "facility_point",
+      type_clean %in% c("state agency", "state") ~ "state_polygon",
+      type_clean == "county" ~ "county_polygon",
+      type_clean == "municipality" ~ "municipal_polygon",
+      TRUE ~ "unknown"
     ),
     agency_level = case_when(
       type_clean %in% c("state agency", "state") ~ "state",
-      type_clean == "county"                     ~ "county",
-      type_clean == "municipality"               ~ "municipal",
-      TRUE                                       ~ "unknown"
+      type_clean == "county" ~ "county",
+      type_clean == "municipality" ~ "municipal",
+      TRUE ~ "unknown"
     ),
     needs_review = case_when(
-      geom_class == "unknown"                                                    ~ TRUE,
-      has_addendum                                                               ~ TRUE,
-      moa_pending                                                                ~ TRUE,
-      n() > 1                                                                    ~ TRUE,
-      type_clean == "county" & str_detect(
-        str_to_lower(`LAW ENFORCEMENT AGENCY`),
-        "(corrections|department of corrections|board of county commissioners)"
-      )                                                                          ~ TRUE,
-      !is.na(county) & str_detect(county, ",")                                  ~ TRUE,
-      TRUE                                                                       ~ FALSE
+      geom_class == "unknown" ~ TRUE,
+      has_addendum ~ TRUE,
+      moa_pending ~ TRUE,
+      n() > 1 ~ TRUE,
+      type_clean == "county" &
+        str_detect(
+          str_to_lower(`LAW ENFORCEMENT AGENCY`),
+          "(corrections|department of corrections|board of county commissioners)"
+        ) ~ TRUE,
+      !is.na(county) & str_detect(county, ",") ~ TRUE,
+      TRUE ~ FALSE
     )
   ) |>
   ungroup()
@@ -153,14 +173,21 @@ agencies_all <-
 # source tables ----------------------------------------------------------
 leaic_tbl <- LEAIC |>
   transmute(
-    leaic_state  = str_to_title(str_squish(STATENAME)),
+    leaic_state = str_to_title(str_squish(STATENAME)),
     leaic_county = str_to_title(str_squish(COUNTYNAME)),
-    leaic_name   = str_squish(NAME),
-    FSTATE, FCOUNTY, FPLACE, ORI9, AGCYTYPE, SUBTYPE1, SUBTYPE2, COMMENT
+    leaic_name = str_squish(NAME),
+    FSTATE,
+    FCOUNTY,
+    FPLACE,
+    ORI9,
+    AGCYTYPE,
+    SUBTYPE1,
+    SUBTYPE2,
+    COMMENT
   ) |>
   mutate(
-    state_key      = norm_state(leaic_state),
-    county_key     = norm_place(leaic_county),
+    state_key = norm_state(leaic_state),
+    county_key = norm_place(leaic_county),
     agency_key_src = norm_key(leaic_name)
   )
 
@@ -174,73 +201,73 @@ state_xwalk <- tibble(
 hifld_tbl <- bind_rows(
   hifld |>
     transmute(
-      src_dataset    = "hifld",
-      src_id         = as.character(hifld_id),
-      src_name       = str_squish(name),
-      src_address    = address,
-      src_city       = str_squish(city),
-      src_state      = str_squish(state),
-      src_zip        = zip,
-      src_type       = type,
-      src_status     = status,
+      src_dataset = "hifld",
+      src_id = as.character(hifld_id),
+      src_name = str_squish(name),
+      src_address = address,
+      src_city = str_squish(city),
+      src_state = str_squish(state),
+      src_zip = zip,
+      src_type = type,
+      src_status = status,
       src_population = NA_real_,
-      src_hold_72    = NA,
-      src_latitude   = latitude,
-      src_longitude  = longitude,
-      src_date       = date
+      src_hold_72 = NA,
+      src_latitude = latitude,
+      src_longitude = longitude,
+      src_date = date
     ),
   hifld_prisons |>
     transmute(
-      src_dataset    = "hifld_prisons",
-      src_id         = as.character(hifld_id),
-      src_name       = str_squish(name),
-      src_address    = address,
-      src_city       = str_squish(city),
-      src_state      = str_squish(state),
-      src_zip        = zip,
-      src_type       = type,
-      src_status     = status,
+      src_dataset = "hifld_prisons",
+      src_id = as.character(hifld_id),
+      src_name = str_squish(name),
+      src_address = address,
+      src_city = str_squish(city),
+      src_state = str_squish(state),
+      src_zip = zip,
+      src_type = type,
+      src_status = status,
       src_population = population,
-      src_hold_72    = NA,
-      src_latitude   = latitude,
-      src_longitude  = longitude,
-      src_date       = date
+      src_hold_72 = NA,
+      src_latitude = latitude,
+      src_longitude = longitude,
+      src_date = date
     ),
   jails_prisons |>
     transmute(
-      src_dataset    = "jails_prisons",
-      src_id         = as.character(bjs_facility_ID),
-      src_name       = str_squish(name),
-      src_address    = address,
-      src_city       = str_squish(city),
-      src_state      = str_squish(state),
-      src_zip        = zip,
-      src_type       = NA_character_,
-      src_status     = NA_character_,
+      src_dataset = "jails_prisons",
+      src_id = as.character(bjs_facility_ID),
+      src_name = str_squish(name),
+      src_address = address,
+      src_city = str_squish(city),
+      src_state = str_squish(state),
+      src_zip = zip,
+      src_type = NA_character_,
+      src_status = NA_character_,
       src_population = NA_real_,
-      src_hold_72    = hold_72,
-      src_latitude   = NA_real_,
-      src_longitude  = NA_real_,
-      src_date       = date
+      src_hold_72 = hold_72,
+      src_latitude = NA_real_,
+      src_longitude = NA_real_,
+      src_date = date
     )
 ) |>
   left_join(state_xwalk, by = c("src_state" = "state_abbr")) |>
   mutate(
-    state_key      = norm_state(src_state),
-    county_key     = norm_place(src_city),
+    state_key = norm_state(src_state),
+    county_key = norm_place(src_city),
     agency_key_src = norm_key(src_name)
   ) |>
   select(-state_full)
 
 crime_lookup <- crime_data |>
   transmute(
-    ori          = str_squish(ori),
-    crime_lat    = latitude,
-    crime_lon    = longitude,
-    agency_name  = str_squish(agency_name),
-    agency_type  = agency_type_name,
-    nibrs_start  = nibrs_start_date,
-    state_abbr   = str_squish(state_abbr)
+    ori = str_squish(ori),
+    crime_lat = latitude,
+    crime_lon = longitude,
+    agency_name = str_squish(agency_name),
+    agency_type = agency_type_name,
+    nibrs_start = nibrs_start_date,
+    state_abbr = str_squish(state_abbr)
   ) |>
   distinct(ori, .keep_all = TRUE)
 
@@ -251,22 +278,37 @@ states_sf <- tigris::states(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(state = str_to_title(NAME), statefp = STATEFP, geometry)
 
 counties_sf <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
-  transmute(state = str_to_title(STATE_NAME), county = str_to_title(NAME),
-            statefp = STATEFP, countyfp = COUNTYFP, geometry)
+  transmute(
+    state = str_to_title(STATE_NAME),
+    county = str_to_title(NAME),
+    statefp = STATEFP,
+    countyfp = COUNTYFP,
+    geometry
+  )
 
 places_sf <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
-  transmute(state = str_to_title(STATE_NAME), place_guess = str_to_title(NAME),
-            statefp = STATEFP, placefp = PLACEFP, geometry)
+  transmute(
+    state = str_to_title(STATE_NAME),
+    place_guess = str_to_title(NAME),
+    statefp = STATEFP,
+    placefp = PLACEFP,
+    geometry
+  )
 
 cousubs_sf <- map_dfr(unique(states_sf$statefp), function(fp) {
   tigris::county_subdivisions(state = fp, cb = TRUE, year = YEAR, class = "sf")
 }) |>
-  transmute(state = str_to_title(STATE_NAME), place_guess = str_to_title(NAME),
-            statefp = STATEFP, placefp = COUSUBFP, geometry)
+  transmute(
+    state = str_to_title(STATE_NAME),
+    place_guess = str_to_title(NAME),
+    statefp = STATEFP,
+    placefp = COUSUBFP,
+    geometry
+  )
 
 # normalized places lookup (places preferred over cousubs) ---------------
 places_lookup <- bind_rows(
-  places_sf  |> mutate(src = "place"),
+  places_sf |> mutate(src = "place"),
   cousubs_sf |> mutate(src = "cousub")
 ) |>
   mutate(
@@ -286,7 +328,7 @@ county_centroids <- counties_sf |>
   st_as_sf(sf_column_name = "centroid") |>
   st_transform(4326) |>
   mutate(
-    state_key  = norm_state(state),
+    state_key = norm_state(state),
     county_key = norm_place(county)
   ) |>
   rename(geometry = centroid)
@@ -306,8 +348,8 @@ municipal_agreements_sf <- agencies_all |>
   filter(geom_class == "municipal_polygon") |>
   mutate(
     city_guess = extract_city_guess(`LAW ENFORCEMENT AGENCY`),
-    state_key  = norm_state(state),
-    place_key  = norm_place(city_guess),
+    state_key = norm_state(state),
+    place_key = norm_place(city_guess),
     county_key = norm_place(county)
   ) |>
   left_join(
@@ -315,12 +357,15 @@ municipal_agreements_sf <- agencies_all |>
     by = c("state_key", "place_key")
   ) |>
   left_join(
-    county_centroids |> select(state_key, county_key, geometry) |>
+    county_centroids |>
+      select(state_key, county_key, geometry) |>
       rename(county_geometry = geometry),
     by = c("state_key", "county_key")
   ) |>
   mutate(
-    missing_place = is.na(src) | st_is_empty(geometry) | is.na(st_dimension(geometry)),
+    missing_place = is.na(src) |
+      st_is_empty(geometry) |
+      is.na(st_dimension(geometry)),
     src = if_else(missing_place, "county_centroid_fallback", src)
   ) |>
   (\(df) {
@@ -328,23 +373,25 @@ municipal_agreements_sf <- agencies_all |>
     df
   })() |>
   select(-county_geometry, -missing_place) |>
-  mutate(needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)) |>
+  mutate(
+    needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
+  ) |>
   st_as_sf()
 
 # facility point matching ------------------------------------------------
 fac_287g <- agencies_all |>
   filter(geom_class == "facility_point") |>
   transmute(
-    state         = state,
-    county        = county,
-    agency        = `LAW ENFORCEMENT AGENCY`,
-    agency_level  = agency_level,
-    needs_review  = needs_review,
-    status        = status,
+    state = state,
+    county = county,
+    agency = `LAW ENFORCEMENT AGENCY`,
+    agency_level = agency_level,
+    needs_review = needs_review,
+    status = status,
     support_clean = support_clean
   ) |>
   mutate(
-    state_key  = norm_state(state),
+    state_key = norm_state(state),
     county_key = norm_place(county),
     agency_key = norm_key(agency)
   )
@@ -371,7 +418,9 @@ fac_leaic_fuzzy <- after_fac_leaic_exact |>
     by = c("state_key", "county_key"),
     relationship = "many-to-many"
   ) |>
-  mutate(dist = stringdist(agency_key, agency_key_src, method = "jw", p = 0.1)) |>
+  mutate(
+    dist = stringdist(agency_key, agency_key_src, method = "jw", p = 0.1)
+  ) |>
   group_by(state, county, agency) |>
   slice_min(dist, n = 1, with_ties = FALSE) |>
   ungroup() |>
@@ -403,7 +452,9 @@ fac_hifld_fuzzy <- after_fac_hifld_exact |>
     by = c("state_key"),
     relationship = "many-to-many"
   ) |>
-  mutate(dist = stringdist(agency_key, agency_key_src, method = "jw", p = 0.1)) |>
+  mutate(
+    dist = stringdist(agency_key, agency_key_src, method = "jw", p = 0.1)
+  ) |>
   group_by(state, county, agency) |>
   slice_min(dist, n = 1, with_ties = FALSE) |>
   ungroup() |>
@@ -415,15 +466,15 @@ fac_all_matches <- bind_rows(
   fac_leaic_exact,
   fac_leaic_fuzzy,
   fac_hifld_exact,
-  fac_hifld_fuzzy  
+  fac_hifld_fuzzy
 ) |>
   mutate(
     src_rank = case_when(
-      fac_source == "leaic"         ~ 1L,
-      fac_source == "hifld"         ~ 2L,
+      fac_source == "leaic" ~ 1L,
+      fac_source == "hifld" ~ 2L,
       fac_source == "hifld_prisons" ~ 3L,
       fac_source == "jails_prisons" ~ 4L,
-      TRUE                          ~ 99L
+      TRUE ~ 99L
     )
   ) |>
   group_by(state, county, agency) |>
@@ -437,7 +488,7 @@ fac_all_matches <- bind_rows(
   ) |>
   mutate(
     # prefer HIFLD/jails coords, fall back to crime data coords
-    src_latitude  = coalesce(src_latitude, crime_lat),
+    src_latitude = coalesce(src_latitude, crime_lat),
     src_longitude = coalesce(src_longitude, crime_lon)
   ) |>
   select(-crime_lat, -crime_lon)
@@ -456,7 +507,7 @@ fac_with_coords <- fac_all_matches |>
 fac_leaic_only <- fac_all_matches |>
   filter(is.na(src_latitude) | is.na(src_longitude)) |>
   mutate(
-    state_key  = norm_state(state),
+    state_key = norm_state(state),
     county_key = norm_place(county)
   ) |>
   left_join(
@@ -465,14 +516,14 @@ fac_leaic_only <- fac_all_matches |>
   ) |>
   mutate(
     needs_review = TRUE,
-    src          = "county_centroid_fallback"
+    src = "county_centroid_fallback"
   ) |>
   st_as_sf()
 
 # unmatched facilities — county centroid fallback, flagged for review
 fac_no_match_sf <- fac_unmatched |>
   mutate(
-    state_key  = norm_state(state),
+    state_key = norm_state(state),
     county_key = norm_place(county)
   ) |>
   left_join(
@@ -481,7 +532,7 @@ fac_no_match_sf <- fac_unmatched |>
   ) |>
   mutate(
     needs_review = TRUE,
-    src          = "county_centroid_fallback_unmatched"
+    src = "county_centroid_fallback_unmatched"
   ) |>
   st_as_sf()
 
@@ -504,10 +555,10 @@ municipal_agreements_sf |>
 
 # combine and write ------------------------------------------------------
 all_agreements_sf <- bind_rows(
-  state_agreements_sf    |> st_transform(4326),
-  county_agreements_sf   |> st_transform(4326),
+  state_agreements_sf |> st_transform(4326),
+  county_agreements_sf |> st_transform(4326),
   municipal_agreements_sf |> st_transform(4326),
-  facility_agreements_sf  |> st_transform(4326)
+  facility_agreements_sf |> st_transform(4326)
 ) |>
   left_join(
     crime_lookup,
@@ -518,11 +569,14 @@ all_agreements_sf <- bind_rows(
   st_transform(4326)
 
 # unresolved geometry
-  unmatched_geom <- agencies_all |>
+unmatched_geom <- agencies_all |>
   filter(geom_class != "unknown") |>
   anti_join(
     st_drop_geometry(all_agreements_sf),
-    by = intersect(names(agencies_all), names(st_drop_geometry(all_agreements_sf)))
+    by = intersect(
+      names(agencies_all),
+      names(st_drop_geometry(all_agreements_sf))
+    )
   )
 
 st_write(all_agreements_sf, "287g_agreements.shp", delete_dsn = TRUE)
