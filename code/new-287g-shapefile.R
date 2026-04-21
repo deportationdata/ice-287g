@@ -12,6 +12,31 @@ options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
 
 # data loading -----------------------------------------------------------
+# api_key <- ""
+# states <- c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+#             "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+#             "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+#             "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+#             "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+#             "DC")
+
+# all_states <- list()
+
+# for (state in states) {
+#   response <- request(paste0("https://api.usa.gov/crime/fbi/cde/agency/byStateAbbr/", state)) |>
+#     req_url_query(API_KEY = api_key) |>
+#     req_perform()
+  
+#   raw <- resp_body_json(response, simplifyVector = TRUE)
+  
+#   all_states[[state]] <- bind_rows(raw, .id = "county")
+  
+#   Sys.sleep(0.5)
+# }
+
+# crime_data <- bind_rows(all_states, .id = "state")
+# write_feather(crime_data, "crime_data_all_states.feather")
+
 participating_agencies <-
   read_excel("participatingAgencies03182026am.xlsx") |>
   mutate(status = "participating")
