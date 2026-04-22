@@ -119,29 +119,39 @@ resolve_to_excel_links <- function(candidate_links) {
   return(unique(resolved_links))
 }
 
-# find candidate participating and pending links
-participating_candidates <- find_candidate_links(
-  page,
-  c(
-    "view\\s*287\\(g\\)\\s*participating",
-    "287\\(g\\).*participating",
-    "participatingAgencies",
-    "participating.*xlsx"
-  )
+# --- find excel links directly from page ---
+
+excel_links <- page |>
+  html_elements("a[href]") |>
+  html_attr("href")
+
+excel_links <- excel_links[str_detect(
+  excel_links,
+  regex("\\.xlsx($|\\?)", ignore_case = TRUE)
+)]
+
+# make URLs absolute
+excel_links <- ifelse(
+  startsWith(excel_links, "/"),
+  paste0("https://www.ice.gov", excel_links),
+  excel_links
 )
 
-pending_candidates <- find_candidate_links(
-  page,
-  c(
-    "pending\\s*agencies",
-    "287\\(g\\).*pending",
-    "pendingAgencies",
-    "pending.*xlsx"
-  )
-)
+excel_links <- unique(excel_links)
 
-participating <- resolve_to_excel_links(participating_candidates)
-pending <- resolve_to_excel_links(pending_candidates)
+cat(sprintf(
+  "Found %d Excel link(s): %s\n",
+  length(excel_links),
+  paste(excel_links, collapse = ", ")
+))
+
+# assign outputs
+participating <- excel_links
+pending <- c() # no pending file currently on site
+
+if (length(pending) == 0) {
+  cat("No pending agencies file found - skipping.\n")
+}
 
 # log what was found
 cat(sprintf(
