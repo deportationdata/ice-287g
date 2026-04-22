@@ -1,7 +1,7 @@
 library(readxl)
 library(dplyr)
 library(stringr)
-# library(sf)
+library(sf)
 library(tigris)
 library(purrr)
 library(stringdist)
