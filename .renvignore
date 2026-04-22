@@ -1,4 +1,4 @@
-data/ice-detention-facilities/
+data/ice-detention-facilities
 code/287g-shapefile.R
 **/renv.lock
 **/renv/
