@@ -25,119 +25,20 @@ make_absolute_url <- function(href) {
   return(href)
 }
 
-# function to find candidate links by broad text / href patterns
-find_candidate_links <- function(page, patterns) {
-  all_links <- page |>
-    html_elements("a[href]")
-
-  results <- c()
-
-  for (link in all_links) {
-    text <- link |>
-      html_text(trim = TRUE)
-
-    href <- link |>
-      html_attr("href")
-
-    href <- make_absolute_url(href)
-    combined <- paste(text, href)
-
-    if (any(str_detect(combined, regex(patterns, ignore_case = TRUE)))) {
-      results <- c(results, href)
-    }
-  }
-
-  return(unique(results[!is.na(results)]))
-}
-
-# function to extract direct excel links from a page
-find_excel_links <- function(page) {
-  links <- page |>
-    html_elements("a[href]") |>
-    html_attr("href")
-
-  links <- vapply(links, make_absolute_url, character(1))
-  links <- links[str_detect(links, regex("\\.xlsx($|\\?)", ignore_case = TRUE))]
-
-  return(unique(links[!is.na(links)]))
-}
-
-# function to resolve candidate links to direct excel files
-resolve_to_excel_links <- function(candidate_links) {
-  resolved_links <- c()
-
-  for (candidate_url in candidate_links) {
-    if (
-      str_detect(candidate_url, regex("\\.xlsx($|\\?)", ignore_case = TRUE))
-    ) {
-      resolved_links <- c(resolved_links, candidate_url)
-      next
-    }
-
-    tryCatch(
-      {
-        Sys.sleep(1)
-        sub_results <- GET(candidate_url, user_agent("Mozilla/5.0"))
-        stop_for_status(sub_results)
-
-        content_type <- headers(sub_results)[["content-type"]]
-
-        # if the candidate itself is already an excel file
-        if (
-          !is.null(content_type) &&
-            str_detect(
-              content_type,
-              regex(
-                "spreadsheet|excel|application/vnd.openxmlformats-officedocument",
-                ignore_case = TRUE
-              )
-            )
-        ) {
-          resolved_links <- c(resolved_links, candidate_url)
-        } else {
-          sub_page <- read_html(
-            content(sub_results, as = "text", encoding = "UTF-8")
-          )
-
-          excel_links <- find_excel_links(sub_page)
-
-          if (length(excel_links) > 0) {
-            resolved_links <- c(resolved_links, excel_links)
-          }
-        }
-      },
-      error = function(e) {
-        cat(sprintf(
-          "Failed to resolve candidate link %s: %s\n",
-          candidate_url,
-          conditionMessage(e)
-        ))
-      }
-    )
-  }
-
-  return(unique(resolved_links))
-}
-
-# --- find excel links directly from page ---
+# --- find Excel links directly from page ---
 
 excel_links <- page |>
   html_elements("a[href]") |>
   html_attr("href")
+
+excel_links <- vapply(excel_links, make_absolute_url, character(1))
 
 excel_links <- excel_links[str_detect(
   excel_links,
   regex("\\.xlsx($|\\?)", ignore_case = TRUE)
 )]
 
-# make URLs absolute
-excel_links <- ifelse(
-  startsWith(excel_links, "/"),
-  paste0("https://www.ice.gov", excel_links),
-  excel_links
-)
-
-excel_links <- unique(excel_links)
+excel_links <- unique(excel_links[!is.na(excel_links)])
 
 cat(sprintf(
   "Found %d Excel link(s): %s\n",
@@ -147,33 +48,11 @@ cat(sprintf(
 
 # assign outputs
 participating <- excel_links
-pending <- c() # no pending file currently on site
+pending <- c()
 
 if (length(pending) == 0) {
   cat("No pending agencies file found - skipping.\n")
 }
-
-# log what was found
-cat(sprintf(
-  "Found %d participating candidate link(s): %s\n",
-  length(participating_candidates),
-  paste(participating_candidates, collapse = ", ")
-))
-cat(sprintf(
-  "Resolved %d participating Excel link(s): %s\n",
-  length(participating),
-  paste(participating, collapse = ", ")
-))
-cat(sprintf(
-  "Found %d pending candidate link(s): %s\n",
-  length(pending_candidates),
-  paste(pending_candidates, collapse = ", ")
-))
-cat(sprintf(
-  "Resolved %d pending Excel link(s): %s\n",
-  length(pending),
-  paste(pending, collapse = ", ")
-))
 
 # abort early with a clear message if nothing found
 if (length(participating) == 0) {
