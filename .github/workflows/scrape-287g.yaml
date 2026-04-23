@@ -14,36 +14,37 @@ jobs:
   scrape:
     runs-on: [self-hosted]
 
+    env:
+      RENV_PATHS_CACHE: ~/renv-cache
+      RENV_CONFIG_PPM_ENABLED: FALSE
+      RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/manylinux_2_28/latest
+
     steps:
       - uses: actions/checkout@v4
         with:
           clean: true
+          lfs: true
           fetch-depth: 0
 
       - name: Ensure clean working tree and save current snapshot
         run: |
+          git lfs pull
           git checkout -- .
           mkdir -p /tmp/old-287g
           cp -r agreements /tmp/old-287g/agreements 2>/dev/null || true
           cp -r sheets /tmp/old-287g/sheets 2>/dev/null || true
-
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: "4.5.0"
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
-      - name: Install renv
-        run: |
-          Rscript -e "install.packages('renv', repos = 'https://cran.rstudio.com')"
-
       - name: Restore renv library
         run: |
-          Rscript -e "renv::restore(prompt = FALSE)"
+          Rscript -e "
+            renv::hydrate(sources = '~/R/aarch64-unknown-linux-gnu-library/4.5')
+            renv::restore()
+          "
 
       - name: Run scraper
         run: Rscript code/287g-scraper.R
