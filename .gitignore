@@ -49,7 +49,5 @@ po/*~
 rsconnect/
 
 # Ignore locally-generated scrape outputs
-agreements/
-sheets/
 .vscode/
 .vscode/
