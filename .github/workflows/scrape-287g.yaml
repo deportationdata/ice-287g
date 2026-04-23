@@ -34,11 +34,6 @@ jobs:
           cp -r agreements /tmp/old-287g/agreements 2>/dev/null || true
           cp -r sheets /tmp/old-287g/sheets 2>/dev/null || true
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
-
       - name: Restore renv library
         run: |
           Rscript -e "
