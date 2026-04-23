@@ -50,4 +50,3 @@ rsconnect/
 
 # Ignore locally-generated scrape outputs
 .vscode/
-.vscode/
