@@ -63,6 +63,9 @@ facilities <- arrow::read_parquet(
   "data/ice-detention-facilities/data/facilities-latest-sf.parquet"
 )
 
+university_boundaries <- st_read(
+  "data/colleges-and-universities-campuses/CollegeUniversityCampuses.shp"
+)
 
 # helper functions -------------------------------------------------------
 norm_key <- function(x) {
@@ -117,6 +120,72 @@ extract_city_guess <- function(x) {
   str_to_title(s)
 }
 
+extract_facility_guess <- function(x) {
+  s <- str_squish(x)
+
+  s <- str_replace(
+    s,
+    regex("(?i)^(.+?)\\s+Sheriff'?s\\s+Office$"),
+    "\\1 Jail"
+  )
+
+  s <- str_replace(
+    s,
+    regex("(?i)^(.+?)\\s+Police\\s+Department$"),
+    "\\1 City Jail"
+  )
+
+  s <- str_replace(
+    s,
+    regex(
+      "(?i)^(.+?)\\s+Board\\s+of\\s+County\\s+Commissioners\\s*/?\\s*(Department\\s+of\\s+Corrections|Detention\\s+Facility|Corrections)?$"
+    ),
+    "\\1 Jail"
+  )
+
+  s <- str_replace(
+    s,
+    regex("(?i)^(.+?)\\s+Department\\s+of\\s+Corrections$"),
+    "\\1 Department of Corrections"
+  )
+
+  s <- str_replace_all(
+    s,
+    regex("(?i)corrections department"),
+    "Department of Corrections"
+  )
+
+  s |>
+    str_squish() |>
+    str_to_title()
+}
+
+extract_university_guess <- function(x) {
+  s <- str_squish(x)
+
+  s <- str_remove(
+    s,
+    regex("(?i)^\\s*(district\\s+)?board\\s+of\\s+trustees\\s+of\\s+")
+  )
+
+  s <- str_remove(
+    s,
+    regex("(?i)\\s+board\\s+of\\s+trustees\\s*$")
+  )
+
+  s <- str_remove(
+    s,
+    regex(
+      "(?i)\\s+((campus\\s+)?police(\\s+department)?|pd|department\\s+of\\s+public\\s+safety|public\\s+safety|security)\\s*$"
+    )
+  )
+
+  s |>
+    str_remove(regex("(?i)^\\s*the\\s+")) |>
+    str_squish() |>
+    str_to_title()
+}
+
 # prepare agencies -------------------------------------------------------
 agencies_all <-
   # bind_rows(participating_agencies, pending_agencies) |>
@@ -147,11 +216,21 @@ agencies_all <-
       TRUE ~ "unknown"
     ),
 
+    is_university_agency = str_detect(
+      str_to_lower(`LAW ENFORCEMENT AGENCY`),
+      "university|college|campus|board of trustees"
+    ),
+
     geom_class = case_when(
       support_clean == "task force model" &
+        is_university_agency ~ "university_polygon",
+
+      support_clean == "task force model" &
         agency_level == "state" ~ "state_polygon",
+
       support_clean == "task force model" &
         agency_level == "county" ~ "county_polygon",
+
       support_clean == "task force model" &
         agency_level == "municipal" ~ "municipal_polygon",
 
@@ -324,6 +403,27 @@ places_lookup <- bind_rows(
   slice_min(src_rank, n = 1, with_ties = FALSE) |>
   ungroup()
 
+university_lookup <- university_boundaries |>
+  st_transform(4326) |>
+  mutate(
+    university_name = str_squish(NAME),
+    state_abbr = str_to_upper(str_squish(STATE))
+  ) |>
+  left_join(
+    state_xwalk,
+    by = c("state_abbr" = "state_abbr")
+  ) |>
+  mutate(
+    university_key = norm_key(university_name),
+    state_key = norm_state(state_full)
+  ) |>
+  select(
+    university_name,
+    university_key,
+    state_key,
+    geometry
+  )
+
 # county centroids (fallback for unmatched municipalities) ---------------
 county_centroids <- counties_sf |>
   st_transform(5070) |>
@@ -398,7 +498,9 @@ fac_287g <- agencies_all |>
   mutate(
     state_key = norm_state(state),
     county_key = norm_place(county),
-    agency_key = norm_key(agency)
+    agency_key = norm_key(agency),
+    facility_guess = extract_facility_guess(agency),
+    facility_guess_key = norm_key(facility_guess)
   )
 
 facilities_tbl <- facilities |>
@@ -498,6 +600,7 @@ facility_sources_exact <- bind_rows(
   leaic_facility_tbl
 )
 
+# exact match on original agency name
 facility_exact_matches <- fac_287g |>
   inner_join(
     facility_sources_exact,
@@ -509,7 +612,7 @@ facility_exact_matches <- fac_287g |>
     relationship = "many-to-many"
   ) |>
   mutate(
-    match_type = "exact_state_county_name",
+    match_type = "exact_state_county_agency_name",
     match_score = 1
   ) |>
   group_by(state, county, agency) |>
@@ -517,9 +620,88 @@ facility_exact_matches <- fac_287g |>
   slice_head(n = 1) |>
   ungroup()
 
-facility_unmatched <- fac_287g |>
+# unmatched after agency-name exact match
+facility_unmatched_after_exact <- fac_287g |>
   anti_join(
     facility_exact_matches,
+    by = c("state", "county", "agency")
+  )
+
+# fuzzy match within state + county using both agency name and facility guess
+facility_fuzzy_county <- facility_unmatched_after_exact |>
+  inner_join(
+    facility_sources_exact,
+    by = c("state_key", "county_key"),
+    relationship = "many-to-many"
+  ) |>
+  mutate(
+    dist_agency = stringdist(agency_key, facility_key, method = "jw", p = 0.1),
+    dist_guess = stringdist(
+      facility_guess_key,
+      facility_key,
+      method = "jw",
+      p = 0.1
+    ),
+    match_dist = pmin(dist_agency, dist_guess, na.rm = TRUE)
+  ) |>
+  filter(match_dist <= 0.22) |>
+  group_by(state, county, agency) |>
+  arrange(match_dist, source_rank) |>
+  slice_head(n = 1) |>
+  ungroup() |>
+  mutate(
+    match_type = "fuzzy_state_county",
+    match_score = 1 - match_dist,
+    needs_review = TRUE
+  )
+
+facility_unmatched_after_fuzzy_county <- facility_unmatched_after_exact |>
+  anti_join(
+    facility_fuzzy_county,
+    by = c("state", "county", "agency")
+  )
+
+# looser fallback: fuzzy within state only
+facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
+  inner_join(
+    facility_sources_exact,
+    by = "state_key",
+    relationship = "many-to-many"
+  ) |>
+  mutate(
+    dist_agency = stringdist(agency_key, facility_key, method = "jw", p = 0.1),
+    dist_guess = stringdist(
+      facility_guess_key,
+      facility_key,
+      method = "jw",
+      p = 0.1
+    ),
+    match_dist = pmin(dist_agency, dist_guess, na.rm = TRUE)
+  ) |>
+  filter(match_dist <= 0.12) |>
+  group_by(state, county, agency) |>
+  arrange(match_dist, source_rank) |>
+  slice_head(n = 1) |>
+  ungroup() |>
+  mutate(
+    match_type = "fuzzy_state",
+    match_score = 1 - match_dist,
+    needs_review = TRUE
+  )
+
+facility_all_matches <- bind_rows(
+  facility_exact_matches,
+  facility_fuzzy_county,
+  facility_fuzzy_state
+) |>
+  group_by(state, county, agency) |>
+  arrange(source_rank, desc(match_score)) |>
+  slice_head(n = 1) |>
+  ungroup()
+
+facility_unmatched_final <- fac_287g |>
+  anti_join(
+    facility_all_matches,
     by = c("state", "county", "agency")
   ) |>
   mutate(
@@ -529,7 +711,8 @@ facility_unmatched <- fac_287g |>
     needs_review = TRUE
   )
 
-facility_agreements_sf <- facility_exact_matches |>
+# build facility point layer from all matched facility records
+facility_agreements_sf <- facility_all_matches |>
   filter(!is.na(facility_latitude), !is.na(facility_longitude)) |>
   st_as_sf(
     coords = c("facility_longitude", "facility_latitude"),
@@ -540,27 +723,88 @@ facility_agreements_sf <- facility_exact_matches |>
     src = source,
     needs_review = needs_review |
       source != "facilities" |
+      match_type != "exact_state_county_agency_name" |
       has_addendum |
       moa_pending
   )
 
+# diagnostics ------------------------------------------------------------
 agencies_all |> count(geom_class)
 
-facility_exact_matches |>
-  count(source, match_type, sort = TRUE)
+facility_all_matches |>
+  count(match_type, source, sort = TRUE)
 
-facility_unmatched |>
-  select(state, county, agency, support_clean) |>
+facility_all_matches |>
+  filter(str_detect(match_type, "fuzzy")) |>
+  select(
+    state,
+    county,
+    agency,
+    facility_guess,
+    facility_name,
+    source,
+    match_type,
+    match_score
+  ) |>
+  arrange(match_score)
+
+facility_unmatched_final |>
+  select(state, county, agency, facility_guess, support_clean) |>
   arrange(state, county, agency)
 
-facility_exact_matches |>
-  filter(is.na(facility_latitude) | is.na(facility_longitude)) |>
-  select(state, county, agency, source, facility_name)
+# manual review ----------------------------------------------------------
+manual_facility_review <- facility_unmatched_final |>
+  mutate(
+    review_reason = case_when(
+      str_detect(
+        str_to_lower(agency),
+        "department of corrections|correctional services|public safety & corrections|division of corrections"
+      ) ~
+        "state corrections agreement; likely multi-facility or MOA review needed",
+      str_detect(str_to_lower(agency), "regional jail|jail authority") ~
+        "Regional jail authority; verify exact facility name/boundary/point",
+      TRUE ~ "no reliable facility match after exact and fuzzy matching"
+    )
+  ) |>
+  select(state, county, agency, support_clean, facility_guess, review_reason)
 
 # combine and write ------------------------------------------------------
+# manually fix florida a&m
+university_name_overrides <- tribble(
+  ~university_guess        , ~university_guess_fixed                          ,
+  "Florida A&M University" , "Florida Agricultural And Mechanical University"
+)
+
+university_agreements_sf <- agencies_all |>
+  filter(geom_class == "university_polygon") |>
+  mutate(
+    university_guess = extract_university_guess(`LAW ENFORCEMENT AGENCY`)
+  ) |>
+  left_join(university_name_overrides, by = "university_guess") |>
+  mutate(
+    university_guess_final = coalesce(university_guess_fixed, university_guess),
+    university_key = norm_key(university_guess_final),
+    state_key = norm_state(state)
+  ) |>
+  left_join(
+    university_lookup,
+    by = c("state_key", "university_key")
+  ) |>
+  st_as_sf() |>
+  mutate(
+    src = if_else(
+      is.na(university_name),
+      "unmatched_university_boundary",
+      "university_boundary"
+    ),
+    needs_geometry_review = is.na(university_name) | st_is_empty(geometry),
+    needs_review = needs_review | needs_geometry_review
+  )
+
 all_agreements_sf <- bind_rows(
   state_agreements_sf |> st_transform(4326),
   county_agreements_sf |> st_transform(4326),
+  university_agreements_sf |> st_transform(4326),
   municipal_agreements_sf |> st_transform(4326),
   facility_agreements_sf |> st_transform(4326)
 ) |>
