@@ -191,11 +191,11 @@ agencies_all <-
   # bind_rows(participating_agencies, pending_agencies) |>
   participating_agencies |>
   mutate(
-    state = str_to_title(str_trim(STATE)),
+    state = str_to_title(str_trim(STATE)), # TODO: I would not do string operations until the very end for display to avoid duplication
     county = str_to_title(str_trim(COUNTY)),
     type_clean = str_to_lower(str_trim(TYPE)),
     support_clean = str_to_lower(str_trim(`SUPPORT TYPE`)),
-    has_addendum = !(is.na(ADDENDUM) | ADDENDUM %in% c("", "NA")),
+    has_addendum = !(is.na(ADDENDUM) | ADDENDUM %in% c("", "NA")), # I don't see any values of "NA" as character, I'd make sure to remove those if they exist via na_if() when loading the data, then you can just check for is.na() here
     moa_pending = str_detect(str_to_lower(str_trim(MOA)), "pending")
   ) |>
   # fix data error — Pittsburgh is in Pennsylvania, not New Hampshire
@@ -207,12 +207,12 @@ agencies_all <-
       state
     )
   ) |>
-  group_by(state, `LAW ENFORCEMENT AGENCY`) |>
+  group_by(state, `LAW ENFORCEMENT AGENCY`) |> # TODO: for clarity of reading I'd split the mutate into two, one not grouped and then needs review grouped since that' s the only part that needs it
   mutate(
     agency_level = case_when(
       type_clean %in% c("state agency", "state") ~ "state",
       type_clean == "county" ~ "county",
-      type_clean == "municipality" ~ "municipal",
+      type_clean == "municipality" ~ "municipal", # TODO: keep as municipality for consistency in name with county and state?
       TRUE ~ "unknown"
     ),
 
@@ -369,6 +369,33 @@ counties_sf <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
     geometry
   )
 
+territories <- counties_sf |>
+  filter(statefp %in% c("60", "66", "69", "78")) |>
+  group_by(statefp) |>
+  summarise(geometry = st_union(geometry)) |>
+  left_join(
+    tibble(
+      statefp = c("60", "66", "69", "78"),
+      NAME = c(
+        "American Samoa",
+        "Guam",
+        "Commonwealth of the Northern Mariana Islands",
+        "United States Virgin Islands"
+      ),
+      STUSPS = c("AS", "GU", "MP", "VI")
+    ),
+    by = "statefp"
+  )
+
+all_states_and_territories <- bind_rows(
+  st |>
+    filter(as.integer(STATEFP) <= 56 | STATEFP == "72") |>
+    select(NAME, STATEFP, STUSPS, geometry),
+  territories |>
+    rename(STATEFP = statefp) |>
+    select(NAME, STATEFP, STUSPS, geometry)
+)
+
 places_sf <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(
     state = str_to_title(STATE_NAME),
@@ -440,7 +467,7 @@ county_centroids <- counties_sf |>
 # assign polygon geometries ----------------------------------------------
 state_agreements_sf <- agencies_all |>
   filter(geom_class == "state_polygon") |>
-  left_join(states_sf, by = "state") |>
+  anti_join(states_sf, by = "state") |>
   st_as_sf()
 
 county_agreements_sf <- agencies_all |>
@@ -476,6 +503,7 @@ municipal_agreements_sf <- agencies_all |>
     df$geometry[df$missing_place] <- df$county_geometry[df$missing_place]
     df
   })() |>
+  # mutate(geometry = if_else(missing_place, county_geometry, geometry)) |> # TODO: I think you can do this to simplify the above?
   select(-county_geometry, -missing_place) |>
   mutate(
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
