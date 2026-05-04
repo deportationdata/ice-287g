@@ -10,14 +10,8 @@ permissions:
   pull-requests: write
 
 jobs:
-
   scrape:
     runs-on: [self-hosted]
-
-    env:
-      RENV_PATHS_CACHE: ~/renv-cache
-      RENV_CONFIG_PPM_ENABLED: FALSE
-      RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/manylinux_2_28/latest
 
     steps:
       - uses: actions/checkout@v4
@@ -34,18 +28,20 @@ jobs:
           cp -r agreements /tmp/old-287g/agreements 2>/dev/null || true
           cp -r sheets /tmp/old-287g/sheets 2>/dev/null || true
 
-      - name: Restore renv library
+      - name: Install scraper packages only
         run: |
-          Rscript -e "
-            renv::hydrate(sources = '~/R/aarch64-unknown-linux-gnu-library/4.5')
-            renv::restore()
-          "
+          Rscript --vanilla -e '
+            install.packages(
+              c("httr", "rvest", "openxlsx", "stringr", "dplyr"),
+              repos = "https://cloud.r-project.org"
+            )
+          '
 
       - name: Run scraper
-        run: Rscript code/287g-scraper.R
+        run: Rscript --vanilla code/287g-scraper.R
 
       - name: Run deduplicator
-        run: Rscript code/287g-deduplicate.R
+        run: Rscript --vanilla code/287g-deduplicate.R
 
       - name: Check for changes
         id: check_changes
@@ -75,7 +71,7 @@ jobs:
           done
 
           # Generate change summary comparing old vs new files
-          Rscript code/287g-diff.R
+          Rscript --vanilla code/287g-diff.R
 
           # If files changed but contents are identical after deduplication, skip
           if grep -qF 'NO_REAL_CHANGES' /tmp/287g-changes.txt; then
