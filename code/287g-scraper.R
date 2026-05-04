@@ -25,29 +25,80 @@ make_absolute_url <- function(href) {
   return(href)
 }
 
-# --- find Excel links directly from page ---
+# --- Find participating agencies spreadsheet robustly ---
+all_links <- page |>
+  html_elements("a[href]")
 
-excel_links <- page |>
-  html_elements("a[href]") |>
-  html_attr("href")
+links_df <- data.frame(
+  text = all_links |> html_text(trim = TRUE),
+  href = all_links |> html_attr("href"),
+  stringsAsFactors = FALSE
+)
 
-excel_links <- vapply(excel_links, make_absolute_url, character(1))
+links_df$href <- vapply(links_df$href, make_absolute_url, character(1))
 
-excel_links <- excel_links[str_detect(
-  excel_links,
-  regex("\\.xlsx($|\\?)", ignore_case = TRUE)
-)]
-
-excel_links <- unique(excel_links[!is.na(excel_links)])
+candidate_links <- links_df |>
+  dplyr::filter(
+    str_detect(
+      text,
+      regex("participating agencies|view 287\\(g\\)", ignore_case = TRUE)
+    ) |
+      str_detect(
+        href,
+        regex(
+          "\\.xlsx($|\\?)|file-download/download/public",
+          ignore_case = TRUE
+        )
+      )
+  ) |>
+  dplyr::pull(href) |>
+  unique()
 
 cat(sprintf(
-  "Found %d Excel link(s): %s\n",
-  length(excel_links),
-  paste(excel_links, collapse = ", ")
+  "Found %d candidate participating agencies link(s): %s\n",
+  length(candidate_links),
+  paste(candidate_links, collapse = ", ")
 ))
 
-# assign outputs
-participating <- excel_links
+verified_links <- c()
+
+for (candidate in candidate_links) {
+  test <- tryCatch(
+    {
+      response <- GET(candidate, user_agent("Mozilla/5.0"))
+      status <- status_code(response)
+      ct <- headers(response)[["content-type"]]
+      cd <- headers(response)[["content-disposition"]]
+
+      looks_like_excel <-
+        status == 200 &&
+        (str_detect(candidate, regex("\\.xlsx($|\\?)", ignore_case = TRUE)) ||
+          str_detect(
+            candidate,
+            regex("file-download/download/public", ignore_case = TRUE)
+          ) ||
+          (!is.null(ct) &&
+            str_detect(
+              ct,
+              regex("spreadsheet|excel|octet-stream", ignore_case = TRUE)
+            )) ||
+          (!is.null(cd) &&
+            str_detect(
+              cd,
+              regex("\\.xlsx|excel|participating", ignore_case = TRUE)
+            )))
+
+      if (looks_like_excel) candidate else NA_character_
+    },
+    error = function(e) NA_character_
+  )
+
+  if (!is.na(test)) {
+    verified_links <- c(verified_links, test)
+  }
+}
+
+participating <- unique(verified_links)
 pending <- c()
 
 if (length(pending) == 0) {

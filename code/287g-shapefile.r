@@ -643,7 +643,7 @@ facility_exact_matches <- fac_287g |>
     match_type = "exact_state_county_agency_name",
     match_score = 1
   ) |>
-  group_by(state, county, agency) |>
+  group_by(state, county, agency, support_clean) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup()
