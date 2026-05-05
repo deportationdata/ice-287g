@@ -364,6 +364,4 @@ unmatched_geom <- agencies_all |>
     )
   )
 
-message(glue::glue("{nrow(unmatched_geom)} agencies with unresolved geometry"))
-
 st_write(all_agreements_sf, "287g_agreements.shp", delete_dsn = TRUE)
