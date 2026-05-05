@@ -33,7 +33,10 @@ hifld_prisons <- arrow::read_parquet(
 jails_prisons <- arrow::read_parquet(
   "data/ice-detention-facilities/data/jails_prisons.parquet"
 )
-crime_data <- arrow::read_parquet("data/crime-data-all-states.parquet")
+crime_data <- arrow::read_parquet(
+  "data/crime-data-all-states.parquet"
+)
+
 facilities <- arrow::read_parquet(
   "data/ice-detention-facilities/data/facilities-latest-sf.parquet"
 )
