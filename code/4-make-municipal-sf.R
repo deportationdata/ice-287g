@@ -52,13 +52,15 @@ municipal_agreements_sf <- agencies_all |>
     county_key = norm_place(county)
   ) |>
   left_join(
-    places_lookup |> select(state_key, place_key, geometry, src),
+    places_lookup |> select(state_key, place_key, geometry, src) |> st_transform(4326), # note added st_transform to fix below merging problem
     by = c("state_key", "place_key")
   ) |>
+  # TODO: why do we need centroids?
   left_join(
     county_centroids |>
       select(state_key, county_key, geometry) |>
-      rename(county_geometry = geometry),
+      rename(county_geometry = geometry) |> 
+      st_transform(4326), # this fixes the issue below 
     by = c("state_key", "county_key")
   ) |>
   mutate(
@@ -67,12 +69,15 @@ municipal_agreements_sf <- agencies_all |>
       is.na(st_dimension(geometry)),
     src = if_else(missing_place, "county_centroid_fallback", src)
   ) |>
-  (\(df) {
-    df$geometry[df$missing_place] <- df$county_geometry[df$missing_place]
-    df
-  })() |>
+  # TODO: the below we should be able to avoid using if_else but need coord system to align (see above)
+  mutate(geometry = if_else(missing_place, county_geometry, geometry)) |> 
+  # (\(df) {
+  #  df$geometry[df$missing_place] <- df$county_geometry[df$missing_place]
+  #  df
+  # })() |>
   select(-county_geometry, -missing_place) |>
   mutate(
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
   st_as_sf()
+# TODO: 301 need review -- what's next?

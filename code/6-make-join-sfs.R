@@ -125,7 +125,7 @@ fac_287g <- agencies_all |>
 
 doc_pattern <- "department of corrections|correctional services|public safety & corrections|division of corrections|department of public safety"
 
-is_doc_agency <- function(x) str_detect(str_to_lower(x), doc_pattern)
+is_doc_agency <- function(x) str_detect(str_to_lower(x), doc_pattern) # TODO: I would just move this into the pipelines, not enough uses to jsutify a function
 
 fac_287g_doc <- fac_287g |>
   filter(is_doc_agency(agency) & agency_level == "state")
@@ -319,7 +319,7 @@ facility_agreements_sf <- facility_all_matches |>
 
 agencies_all |> count(geom_class)
 
-facility_all_matches |> count(match_type, source, sort = TRUE)
+facility_all_matches |> count(match_type, source, sort = TRUE) # TODO: source is wrong here -- what happened? it says leaic for all
 
 facility_all_matches |>
   filter(str_detect(match_type, "fuzzy")) |>
@@ -364,4 +364,5 @@ unmatched_geom <- agencies_all |>
     )
   )
 
+# TODO: save as geoparquet instead
 st_write(all_agreements_sf, "287g_agreements.shp", delete_dsn = TRUE)
