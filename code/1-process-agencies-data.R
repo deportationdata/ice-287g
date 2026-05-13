@@ -16,29 +16,54 @@ sf_use_s2(FALSE)
 
 # data loading -----------------------------------------------------------
 
-participating_agencies <-
-  read_excel(
-    "sheets/sheets_20260421_173735/participatingAgencies04212026am 12.15.07 AM.xlsx"
-  )
+agency_files <- list.files(
+  "sheets",
+  pattern = "^participatingAgencies.*\\.xlsx$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+
+if (length(agency_files) == 0) {
+  stop("No participating agencies file found.")
+}
+
+folder_stamp <- sub(
+  ".*sheets_(\\d{8}_\\d{6}).*",
+  "\\1",
+  agency_files
+)
+
+folder_time <- as.POSIXct(
+  folder_stamp,
+  format = "%Y%m%d_%H%M%S",
+  tz = "UTC"
+)
+
+latest_agency_file <- agency_files[which.max(folder_time)]
+
+participating_agencies <- read_excel(latest_agency_file)
 
 load("data/35158-0001-Data.rda")
 LEAIC <- da35158.0001
 
 hifld <- arrow::read_parquet(
-  "data/ice-detention-facilities/data/hifld-local-law-enforcement-facilities.parquet"
+  "https://github.com/deportationdata/ice-detention-facilities/raw/main/data/hifld-local-law-enforcement-facilities.parquet"
 )
+
 hifld_prisons <- arrow::read_parquet(
-  "data/ice-detention-facilities/data/hifld-prisons.parquet"
+  "https://github.com/deportationdata/ice-detention-facilities/raw/main/data/hifld-prisons.parquet"
 )
+
 jails_prisons <- arrow::read_parquet(
-  "data/ice-detention-facilities/data/jails_prisons.parquet"
+  "https://github.com/deportationdata/ice-detention-facilities/raw/main/data/jails_prisons.parquet"
 )
+
 crime_data <- arrow::read_parquet(
   "data/crime-data-all-states.parquet"
 )
 
 facilities <- arrow::read_parquet(
-  "data/ice-detention-facilities/data/facilities-latest-sf.parquet"
+  "https://github.com/deportationdata/ice-detention-facilities/raw/main/data/facilities-latest-sf.parquet"
 )
 
 university_boundaries <- st_read(
