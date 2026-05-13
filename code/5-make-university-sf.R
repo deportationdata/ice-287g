@@ -24,6 +24,8 @@ university_name_overrides <- tribble(
 
 # university agreements --------------------------------------------------
 
+# TODO: noting Tallahassee State College Police Department didn't match
+
 university_agreements_sf <- agencies_all |>
   filter(geom_class == "university_polygon") |>
   mutate(

@@ -44,18 +44,18 @@ latest_agency_file <- agency_files[which.max(folder_time)]
 participating_agencies <- read_excel(latest_agency_file)
 
 load("data/35158-0001-Data.rda")
-LEAIC <- da35158.0001
+LEAIC <- da35158.0001 |> as_tibble()
 
 hifld <- arrow::read_parquet(
-  "https://github.com/deportationdata/ice-detention-facilities/raw/main/data/hifld-local-law-enforcement-facilities.parquet"
+  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-local-law-enforcement-facilities.parquet"
 )
 
 hifld_prisons <- arrow::read_parquet(
-  "https://github.com/deportationdata/ice-detention-facilities/raw/main/data/hifld-prisons.parquet"
+  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-prisons.parquet"
 )
 
 jails_prisons <- arrow::read_parquet(
-  "https://github.com/deportationdata/ice-detention-facilities/raw/main/data/jails_prisons.parquet"
+  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/jails_prisons.parquet"
 )
 
 crime_data <- arrow::read_parquet(
@@ -63,7 +63,7 @@ crime_data <- arrow::read_parquet(
 )
 
 facilities <- arrow::read_parquet(
-  "https://github.com/deportationdata/ice-detention-facilities/raw/main/data/facilities-latest-sf.parquet"
+  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/facilities-latest-sf.parquet"
 )
 
 university_boundaries <- st_read(
@@ -100,7 +100,7 @@ agencies_all <- participating_agencies |>
       state
     )
   ) |>
-  group_by(state, `LAW ENFORCEMENT AGENCY`) |>
+  group_by(state, `LAW ENFORCEMENT AGENCY`) |> # TODO: I don't think group_by is doing anythign here - there are no aggregation functions in the mutate - remove if so?
   mutate(
     agency_level = case_when(
       type_clean %in% c("state agency", "state") ~ "state",
