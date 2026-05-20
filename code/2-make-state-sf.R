@@ -10,6 +10,9 @@ sf_use_s2(FALSE)
 source("code/functions.R")
 
 agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
+manual_non_facility_polygons <- arrow::read_parquet(
+  "data/processed/manual_non_facility_polygons.parquet"
+)
 
 YEAR <- 2024
 
@@ -65,11 +68,37 @@ state_lookup <- all_states_and_territories |>
     geometry
   )
 
+# manual state overrides -------------------------------------------------
+
+state_overrides <- manual_non_facility_polygons |>
+  filter(manual_match_layer == "state") |>
+  select(
+    agency = agency,
+    state,
+    county,
+    manual_state_match = manual_match_name,
+    manual_reason,
+    manual_note
+  )
+
 # state agreements -------------------------------------------------------
 
 state_agreements_sf <- agencies_all |>
   filter(geom_class == "state_polygon") |>
-  left_join(state_lookup, by = "state") |>
+  left_join(
+    state_overrides,
+    by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
+  ) |>
+  mutate(state_match = coalesce(manual_state_match, state)) |>
+  left_join(state_lookup, by = c("state_match" = "state")) |>
+  mutate(
+    src = if_else(
+      is.na(manual_state_match),
+      "tigris_state",
+      "manual_state_override"
+    ),
+    needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
+  ) |>
   st_as_sf()
 
 # save state geometries --------------------------------------------------

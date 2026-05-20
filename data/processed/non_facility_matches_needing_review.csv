@@ -1,0 +1,72 @@
+match_layer,state,county,agency,geom_class,needs_review,state_match,county_match,city_guess,src,manual_reason,manual_note,university_name,university_guess,university_guess_final
+county,Missouri,Saint Francois County,Saint Francois County Sheriff's Office,county_polygon,TRUE,NA,Saint Francois County,NA,tigris_county,NA,NA,NA,NA,NA
+county,Oklahoma,Custer Countey,Custer County Sheriff's Office,county_polygon,TRUE,NA,Custer Countey,NA,tigris_county,NA,NA,NA,NA,NA
+county,Virginia,Hopewell County,Hopewell County Sheriff's Office,county_polygon,TRUE,NA,Hopewell County,NA,tigris_county,NA,NA,NA,NA,NA
+university,Florida,NA,Tallahassee State College Police Department,university_polygon,TRUE,NA,NA,NA,unmatched_university_boundary,NA,NA,NA,Tallahassee State College,Tallahassee State College
+municipal,Alabama,Tallapoosa County,Jackson's Gap Police Department,municipal_polygon,TRUE,NA,NA,Jackson's Gap,NA,NA,NA,NA,NA,NA
+municipal,Florida,Broward County,Florida Atlantic Police Department,municipal_polygon,TRUE,NA,NA,Florida Atlantic,NA,NA,NA,NA,NA,NA
+municipal,Florida,NA,Melbourne International Airport Police Department,municipal_polygon,TRUE,NA,NA,Melbourne International Airport,NA,NA,NA,NA,NA,NA
+municipal,Florida,St. Luice County,Port Saint Lucie Police Department,municipal_polygon,TRUE,NA,NA,Port Saint Lucie,NA,NA,NA,NA,NA,NA
+municipal,Florida,NA,Sanford Airport Police Department,municipal_polygon,TRUE,NA,NA,Sanford Airport,NA,NA,NA,NA,NA,NA
+municipal,Florida,NA,Sarasota Manatee Airport Authority Police Department,municipal_polygon,TRUE,NA,NA,Sarasota Manatee Airport Authority,NA,NA,NA,NA,NA,NA
+municipal,Florida,NA,Sunny Isles Police Department,municipal_polygon,TRUE,NA,NA,Sunny Isles,NA,NA,NA,NA,NA,NA
+municipal,Kentucky,Bell County,Middlesboro Police Department,municipal_polygon,TRUE,NA,NA,Middlesboro,NA,NA,NA,NA,NA,NA
+municipal,Louisiana,Allen Parish,Ward 5 Marshal's Office,municipal_polygon,TRUE,NA,NA,Ward 5 Marshal's,NA,NA,NA,NA,NA,NA
+municipal,Missouri,St. Louis County,Saint Ann Police Department,municipal_polygon,TRUE,NA,NA,Saint Ann,NA,NA,NA,NA,NA,NA
+municipal,Missouri,NA,Saint Mary Police Department,municipal_polygon,TRUE,NA,NA,Saint Mary,NA,NA,NA,NA,NA,NA
+municipal,Missouri,St. Charles County,Saint Charles County Police Department,municipal_polygon,TRUE,NA,NA,Saint Charles County,NA,NA,NA,NA,NA,NA
+municipal,Missouri,Washington County,Washington County Sheriff's Office,municipal_polygon,TRUE,NA,NA,Washington County Sheriff's,NA,NA,NA,NA,NA,NA
+municipal,Oklahoma,Haskell County,Haskell County Sheriff's Office,municipal_polygon,TRUE,NA,NA,Haskell County Sheriff's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Somerset County,Addison Borough Constable's Office,municipal_polygon,TRUE,NA,NA,Addison Borough Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Westmoreland County,Constable Unity Township,municipal_polygon,TRUE,NA,NA,Constable Unity Township,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Mercer County,Coolspring Township Constable's Office,municipal_polygon,TRUE,NA,NA,Coolspring Township Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,NA,Damascus Township Constable,municipal_polygon,TRUE,NA,NA,Damascus Township Constable,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,NA,East Donegal Township Constables Office,municipal_polygon,TRUE,NA,NA,East Donegal Township Constables,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Cumberland County,East Pennsylvania Township Constable Office,municipal_polygon,TRUE,NA,NA,East Pennsylvania Township Constable,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Franklin County,Fannett Township Constables Office,municipal_polygon,TRUE,NA,NA,Fannett Township Constables,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Tioga County,Gaines Township PA State Constable,municipal_polygon,TRUE,NA,NA,Gaines Township Pa State Constable,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Erie County,Greene Township Constable's Office,municipal_polygon,TRUE,NA,NA,Greene Township Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Greene County,Greene Washington Regional Police Department,municipal_polygon,TRUE,NA,NA,Greene Washington Regional,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Delaware County,Lansdowne Borough Constable's Office,municipal_polygon,TRUE,NA,NA,Lansdowne Borough Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Lebanon County,Lebanon County Regional Police Department,municipal_polygon,TRUE,NA,NA,Lebanon County Regional,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Miffin County,Lewistown Borough Constable's Office,municipal_polygon,TRUE,NA,NA,Lewistown Borough Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Westmoreland County,Lower Burrell Fourth Ward Constable,municipal_polygon,TRUE,NA,NA,Lower Burrell Fourth Ward Constable,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Montour County,Mahoning TWP Police Department - Montour,municipal_polygon,TRUE,NA,NA,Mahoning Twp,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,NA,Northwest Regional Police Department,municipal_polygon,TRUE,NA,NA,Northwest Regional,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Chester County,Pennsylvania State Constable Office Honey Brook Precinct 1,municipal_polygon,TRUE,NA,NA,Pennsylvania State Constable,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Cumberland County,Pennsylvania State Constable's Office So Middleton Twp,municipal_polygon,TRUE,NA,NA,Pennsylvania State Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Cumberland County,"Pennsylvania State Constable's Office, Cooke Township",municipal_polygon,TRUE,NA,NA,Pennsylvania State Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,NA,Preston Township Constable's Office,municipal_polygon,TRUE,NA,NA,Preston Township Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,NA,Sewickley Township Constable's Office,municipal_polygon,TRUE,NA,NA,Sewickley Township Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Pike County,Shohola Township Constable's Office,municipal_polygon,TRUE,NA,NA,Shohola Township Constable's,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Cumberland County,"Southampton Twp. Cumberland City, Constables Office",municipal_polygon,TRUE,NA,NA,"Southampton Twp. Cumberland City, Constables",NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Lancaster County,Susquehanna Regional Police Department,municipal_polygon,TRUE,NA,NA,Susquehanna Regional,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,Bradford County,Troy Township PA State Constable,municipal_polygon,TRUE,NA,NA,Troy Township Pa State Constable,NA,NA,NA,NA,NA,NA
+municipal,Pennsylvania,York County,York County Regional Police Department,municipal_polygon,TRUE,NA,NA,York County Regional,NA,NA,NA,NA,NA,NA
+municipal,Tennessee,Bradley County,Bradley County Constable District 1,municipal_polygon,TRUE,NA,NA,Bradley County Constable District 1,NA,NA,NA,NA,NA,NA
+municipal,Tennessee,Bradley County,Bradley County Constable District 6,municipal_polygon,TRUE,NA,NA,Bradley County Constable District 6,NA,NA,NA,NA,NA,NA
+municipal,Tennessee,Grundy County,Grundy County Constable District 3,municipal_polygon,TRUE,NA,NA,Grundy County Constable District 3,NA,NA,NA,NA,NA,NA
+municipal,Tennessee,Monroe County,Monroe County Constable District 2,municipal_polygon,TRUE,NA,NA,Monroe County Constable District 2,NA,NA,NA,NA,NA,NA
+municipal,Tennessee,Polk County,Polk County Constable District 2,municipal_polygon,TRUE,NA,NA,Polk County Constable District 2,NA,NA,NA,NA,NA,NA
+municipal,Tennessee,Polk County,Polk County Constable District 4,municipal_polygon,TRUE,NA,NA,Polk County Constable District 4,NA,NA,NA,NA,NA,NA
+municipal,Tennessee,Sevier County,Sevier County Constable District 5,municipal_polygon,TRUE,NA,NA,Sevier County Constable District 5,NA,NA,NA,NA,NA,NA
+municipal,Texas,Bexar County,Bexar County Constable Precinct 3,municipal_polygon,TRUE,NA,NA,Bexar County Constable Precinct 3,NA,NA,NA,NA,NA,NA
+municipal,Texas,Blanco County,Blanco County Constable Precinct 4,municipal_polygon,TRUE,NA,NA,Blanco County Constable Precinct 4,NA,NA,NA,NA,NA,NA
+municipal,Texas,Montgomery County,"Cut ""N"" Shoot Police Department",municipal_polygon,TRUE,NA,NA,"Cut ""N"" Shoot",NA,NA,NA,NA,NA,NA
+municipal,Texas,Delta County,Delta County Constable Precinct 5,municipal_polygon,TRUE,NA,NA,Delta County Constable Precinct 5,NA,NA,NA,NA,NA,NA
+municipal,Texas,Fannin County,Fannin County Constable Precinct 3,municipal_polygon,TRUE,NA,NA,Fannin County Constable Precinct 3,NA,NA,NA,NA,NA,NA
+municipal,Texas,Freestone County,Freestone County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Freestone County Constable Precinct 2,NA,NA,NA,NA,NA,NA
+municipal,Texas,Galveston County,Galveston County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Galveston County Constable Precinct 2,NA,NA,NA,NA,NA,NA
+municipal,Texas,Galveston County,Galveston County Constable's Office Pct.1,municipal_polygon,TRUE,NA,NA,Galveston County Constable's,NA,NA,NA,NA,NA,NA
+municipal,Texas,Galveston County,Galveston County Constable's Office Pct.4,municipal_polygon,TRUE,NA,NA,Galveston County Constable's,NA,NA,NA,NA,NA,NA
+municipal,Texas,Guadalupe County,Guadalupe County Constable Precinct 1,municipal_polygon,TRUE,NA,NA,Guadalupe County Constable Precinct 1,NA,NA,NA,NA,NA,NA
+municipal,Texas,Guadalupe County,Guadalupe County Constable Precinct 4,municipal_polygon,TRUE,NA,NA,Guadalupe County Constable Precinct 4,NA,NA,NA,NA,NA,NA
+municipal,Texas,Lavaca County,Lavaca County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Lavaca County Constable Precinct 2,NA,NA,NA,NA,NA,NA
+municipal,Texas,Liberty County,Liberty County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Liberty County Constable Precinct 2,NA,NA,NA,NA,NA,NA
+municipal,Texas,Liberty County,Liberty County Constable Precinct 6,municipal_polygon,TRUE,NA,NA,Liberty County Constable Precinct 6,NA,NA,NA,NA,NA,NA
+municipal,Texas,Guadalupe Conty,New Berlin Marshal's Office,municipal_polygon,TRUE,NA,NA,New Berlin Marshal's,NA,NA,NA,NA,NA,NA
+municipal,Texas,Bexar County,Saint Hedwig Marshal's Office,municipal_polygon,TRUE,NA,NA,Saint Hedwig Marshal's,NA,NA,NA,NA,NA,NA
+municipal,Texas,Gonzales County,Smiley City Marshal's Office,municipal_polygon,TRUE,NA,NA,Smiley City Marshal's,NA,NA,NA,NA,NA,NA
+municipal,Texas,Wilson County,Stockdale Marshal's Office,municipal_polygon,TRUE,NA,NA,Stockdale Marshal's,NA,NA,NA,NA,NA,NA
+municipal,Texas,Walker County,Walker County Constable Pct 3,municipal_polygon,TRUE,NA,NA,Walker County Constable Pct 3,NA,NA,NA,NA,NA,NA
+municipal,West Virginia,Ohio County,Village of Clearview Police Department,municipal_polygon,TRUE,NA,NA,Village Of Clearview,NA,NA,NA,NA,NA,NA

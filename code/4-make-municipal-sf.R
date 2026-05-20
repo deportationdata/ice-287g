@@ -10,6 +10,9 @@ sf_use_s2(FALSE)
 source("code/functions.R")
 
 agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
+manual_non_facility_polygons <- arrow::read_parquet(
+  "data/processed/manual_non_facility_polygons.parquet"
+)
 
 YEAR <- 2024
 
@@ -52,14 +55,32 @@ places_lookup <- bind_rows(
   slice_min(src_rank, n = 1, with_ties = FALSE) |>
   ungroup()
 
+# manual municipal overrides --------------------------------------------
+
+municipal_overrides <- manual_non_facility_polygons |>
+  filter(manual_match_layer == "municipal") |>
+  select(
+    agency = agency,
+    state,
+    county,
+    manual_city_match = manual_match_name,
+    manual_reason,
+    manual_note
+  )
+
 # municipal agreements ---------------------------------------------------
 
 municipal_agreements_sf <- agencies_all |>
   filter(geom_class == "municipal_polygon") |>
+  left_join(
+    municipal_overrides,
+    by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
+  ) |>
   mutate(
     city_guess = extract_city_guess(`LAW ENFORCEMENT AGENCY`),
+    city_match = coalesce(manual_city_match, city_guess),
     state_key = norm_state(state),
-    place_key = norm_place(city_guess)
+    place_key = norm_place(city_match)
   ) |>
   left_join(
     places_lookup |>
@@ -67,6 +88,11 @@ municipal_agreements_sf <- agencies_all |>
     by = c("state_key", "place_key")
   ) |>
   mutate(
+    src = if_else(
+      is.na(manual_city_match),
+      src,
+      paste("manual_municipal_override", src, sep = ":")
+    ),
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
   st_as_sf()

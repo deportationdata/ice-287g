@@ -474,10 +474,10 @@ facility_review <- facility_all_matches |>
     facility_longitude
   )
 
-# readr::write_csv(
-#   facility_review,
-#   "data/processed/facility_matches_needing_review.csv"
-# )
+readr::write_csv(
+  facility_review,
+  "data/processed/facility_matches_needing_review.csv"
+)
 
 # bind all layers --------------------------------------------------------
 
@@ -526,17 +526,23 @@ non_facility_unmatched <- non_facility_unmatched |>
     geom_class,
     needs_review,
     any_of(c(
+      "state_match",
+      "county_match",
       "city_guess",
+      "city_match",
       "src",
+      "manual_reason",
+      "manual_note",
+      "university_name",
       "university_guess",
       "university_guess_final"
     ))
   )
 
-# readr::write_csv(
-#   non_facility_unmatched,
-#   "data/processed/non_facility_matches_needing_review.csv"
-# )
+readr::write_csv(
+  non_facility_unmatched,
+  "data/processed/non_facility_matches_needing_review.csv"
+)
 
 all_agreements_sf <- bind_rows(
   non_facility_layers,

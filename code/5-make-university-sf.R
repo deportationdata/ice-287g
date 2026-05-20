@@ -6,6 +6,9 @@ library(sfarrow)
 source("code/functions.R")
 
 agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
+manual_non_facility_polygons <- arrow::read_parquet(
+  "data/processed/manual_non_facility_polygons.parquet"
+)
 state_xwalk <- readRDS("data/processed/state_xwalk.rds")
 university_boundaries <- sfarrow::st_read_parquet(
   "data/processed/university_boundaries.parquet"
@@ -33,18 +36,39 @@ university_name_overrides <- tribble(
   "Florida A&M University" , "Florida Agricultural And Mechanical University"
 )
 
+# manual university overrides -------------------------------------------
+
+university_overrides <- manual_non_facility_polygons |>
+  filter(manual_match_layer == "university") |>
+  select(
+    agency = agency,
+    state,
+    county,
+    manual_university_match = manual_match_name,
+    manual_reason,
+    manual_note
+  )
+
 # university agreements --------------------------------------------------
 
 # TODO: noting Tallahassee State College Police Department didn't match
 
 university_agreements_sf <- agencies_all |>
   filter(geom_class == "university_polygon") |>
+  left_join(
+    university_overrides,
+    by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
+  ) |>
   mutate(
     university_guess = extract_university_guess(`LAW ENFORCEMENT AGENCY`)
   ) |>
   left_join(university_name_overrides, by = "university_guess") |>
   mutate(
-    university_guess_final = coalesce(university_guess_fixed, university_guess),
+    university_guess_final = coalesce(
+      manual_university_match,
+      university_guess_fixed,
+      university_guess
+    ),
     university_key = norm_key(university_guess_final),
     state_key = norm_state(state)
   ) |>
@@ -54,7 +78,11 @@ university_agreements_sf <- agencies_all |>
     src = if_else(
       is.na(university_name),
       "unmatched_university_boundary",
-      "university_boundary"
+      if_else(
+        is.na(manual_university_match),
+        "university_boundary",
+        "manual_university_override"
+      )
     ),
     needs_geometry_review = is.na(university_name) | st_is_empty(geometry),
     needs_review = needs_review | needs_geometry_review

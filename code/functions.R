@@ -36,6 +36,14 @@ norm_place <- function(x) {
     str_replace_all("\\s+", " ")
 }
 
+norm_county <- function(x) {
+  x |>
+    str_to_lower() |>
+    str_replace_all("[^a-z0-9\\s]", " ") |>
+    str_squish() |>
+    str_replace_all("\\s+", " ")
+}
+
 extract_city_guess <- function(x) {
   s <- str_squish(x)
   s <- str_remove(s, regex("(?i)^\\s*city\\s+of\\s+"))
