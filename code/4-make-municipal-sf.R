@@ -1,4 +1,15 @@
-source("code/3-make-county-sf.R")
+library(tidyverse)
+library(sf)
+library(tigris)
+library(arrow)
+library(sfarrow)
+
+options(tigris_use_cache = TRUE)
+sf_use_s2(FALSE)
+
+source("code/functions.R")
+
+agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
 
 YEAR <- 2024
 
@@ -48,36 +59,27 @@ municipal_agreements_sf <- agencies_all |>
   mutate(
     city_guess = extract_city_guess(`LAW ENFORCEMENT AGENCY`),
     state_key = norm_state(state),
-    place_key = norm_place(city_guess),
-    county_key = norm_place(county)
+    place_key = norm_place(city_guess)
   ) |>
   left_join(
-    places_lookup |> select(state_key, place_key, geometry, src) |> st_transform(4326), # note added st_transform to fix below merging problem
+    places_lookup |>
+      select(state_key, place_key, geometry, src),
     by = c("state_key", "place_key")
   ) |>
-  # TODO: why do we need centroids?
-  left_join(
-    county_centroids |>
-      select(state_key, county_key, geometry) |>
-      rename(county_geometry = geometry) |> 
-      st_transform(4326), # this fixes the issue below 
-    by = c("state_key", "county_key")
-  ) |>
-  mutate(
-    missing_place = is.na(src) |
-      st_is_empty(geometry) |
-      is.na(st_dimension(geometry)),
-    src = if_else(missing_place, "county_centroid_fallback", src)
-  ) |>
-  # TODO: the below we should be able to avoid using if_else but need coord system to align (see above)
-  mutate(geometry = if_else(missing_place, county_geometry, geometry)) |> 
-  # (\(df) {
-  #  df$geometry[df$missing_place] <- df$county_geometry[df$missing_place]
-  #  df
-  # })() |>
-  select(-county_geometry, -missing_place) |>
   mutate(
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
   st_as_sf()
-# TODO: 301 need review -- what's next?
+
+
+# save municipal geometries ----------------------------------------------
+
+sfarrow::st_write_parquet(
+  municipal_agreements_sf,
+  "data/processed/municipal_agreements_sf.parquet"
+)
+
+sfarrow::st_write_parquet(
+  places_lookup,
+  "data/processed/places_lookup.parquet"
+)

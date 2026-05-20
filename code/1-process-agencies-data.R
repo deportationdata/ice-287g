@@ -1,18 +1,17 @@
 library(tidyverse)
 library(readxl)
-library(dplyr)
-library(stringr)
 library(sf)
 library(tigris)
-library(purrr)
-library(stringdist)
 library(arrow)
+library(sfarrow)
 library(tidylog)
-
-source("code/functions.R")
 
 options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
+
+source("code/functions.R")
+
+YEAR <- 2024
 
 # data loading -----------------------------------------------------------
 
@@ -62,7 +61,7 @@ crime_data <- arrow::read_parquet(
   "data/crime-data-all-states.parquet"
 )
 
-facilities <- arrow::read_parquet(
+facilities <- sfarrow::st_read_parquet(
   "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/facilities-latest-sf.parquet"
 )
 
@@ -75,6 +74,15 @@ state_xwalk <- tibble(
   state_full = state.name
 ) |>
   bind_rows(tibble(state_abbr = "DC", state_full = "District Of Columbia"))
+
+counties_lookup <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
+  st_transform(4326) |>
+  transmute(
+    src_county = str_to_title(NAME),
+    src_county_fips = paste0(STATEFP, COUNTYFP),
+    county_key_spatial = norm_place(NAME),
+    geometry
+  )
 
 agencies_all <- participating_agencies |>
   mutate(
@@ -100,7 +108,6 @@ agencies_all <- participating_agencies |>
       state
     )
   ) |>
-  group_by(state, `LAW ENFORCEMENT AGENCY`) |> # TODO: I don't think group_by is doing anythign here - there are no aggregation functions in the mutate - remove if so?
   mutate(
     agency_level = case_when(
       type_clean %in% c("state agency", "state") ~ "state",
@@ -129,17 +136,18 @@ agencies_all <- participating_agencies |>
           "warrant service officer"
         ) ~ "facility_point",
       TRUE ~ "unknown"
-    ),
-
+    )
+  ) |>
+  add_count(state, `LAW ENFORCEMENT AGENCY`, name = "agency_count") |>
+  mutate(
     needs_review = case_when(
       geom_class == "unknown" ~ TRUE,
       has_addendum ~ TRUE,
       moa_pending ~ TRUE,
-      n() > 1 ~ TRUE,
+      agency_count > 1 ~ TRUE,
       TRUE ~ FALSE
     )
-  ) |>
-  ungroup()
+  )
 
 # source lookup tables ---------------------------------------------------
 
@@ -163,7 +171,7 @@ leaic_tbl <- LEAIC |>
     agency_key_src = norm_key(leaic_name)
   )
 
-hifld_tbl <- bind_rows(
+hifld_raw <- bind_rows(
   hifld |>
     transmute(
       src_dataset = "hifld",
@@ -216,13 +224,41 @@ hifld_tbl <- bind_rows(
       src_date = date
     )
 ) |>
+  mutate(hifld_row_id = row_number()) |>
   left_join(state_xwalk, by = c("src_state" = "state_abbr")) |>
   mutate(
-    state_key = norm_state(src_state),
-    county_key = norm_place(src_city),
+    src_state_full = coalesce(state_full, src_state),
+    state_key = norm_state(src_state_full),
     agency_key_src = norm_key(src_name)
+  )
+
+hifld_counties_from_xy <- hifld_raw |>
+  filter(!is.na(src_latitude), !is.na(src_longitude)) |>
+  st_as_sf(
+    coords = c("src_longitude", "src_latitude"),
+    crs = 4326,
+    remove = FALSE
   ) |>
-  select(-state_full)
+  st_join(counties_lookup, join = st_within, left = TRUE) |>
+  st_drop_geometry() |>
+  distinct(hifld_row_id, .keep_all = TRUE) |>
+  select(
+    hifld_row_id,
+    src_county,
+    src_county_fips,
+    county_key_spatial
+  )
+
+hifld_tbl <- hifld_raw |>
+  left_join(hifld_counties_from_xy, by = "hifld_row_id") |>
+  mutate(
+    county_key = county_key_spatial
+  ) |>
+  select(
+    -hifld_row_id,
+    -state_full,
+    -county_key_spatial
+  )
 
 crime_lookup <- crime_data |>
   transmute(
@@ -237,3 +273,20 @@ crime_lookup <- crime_data |>
   distinct(ori, .keep_all = TRUE)
 
 manual_points <- read_csv("data/manual-facility-points.csv")
+
+# save processed data ----------------------------------------------------
+
+arrow::write_parquet(agencies_all, "data/processed/agencies_all.parquet")
+arrow::write_parquet(leaic_tbl, "data/processed/leaic_tbl.parquet")
+arrow::write_parquet(hifld_tbl, "data/processed/hifld_tbl.parquet")
+arrow::write_parquet(crime_lookup, "data/processed/crime_lookup.parquet")
+arrow::write_parquet(manual_points, "data/processed/manual_points.parquet")
+saveRDS(state_xwalk, "data/processed/state_xwalk.rds")
+sfarrow::st_write_parquet(
+  facilities,
+  "data/processed/facilities.parquet"
+)
+sfarrow::st_write_parquet(
+  university_boundaries,
+  "data/processed/university_boundaries.parquet"
+)

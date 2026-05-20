@@ -1,4 +1,15 @@
-source("code/1-process-agencies-data.R")
+library(tidyverse)
+library(sf)
+library(arrow)
+library(sfarrow)
+
+source("code/functions.R")
+
+agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
+state_xwalk <- readRDS("data/processed/state_xwalk.rds")
+university_boundaries <- sfarrow::st_read_parquet(
+  "data/processed/university_boundaries.parquet"
+)
 
 # university boundary lookup ---------------------------------------------
 
@@ -48,3 +59,14 @@ university_agreements_sf <- agencies_all |>
     needs_geometry_review = is.na(university_name) | st_is_empty(geometry),
     needs_review = needs_review | needs_geometry_review
   )
+
+# save university geometries ---------------------------------------------
+
+sfarrow::st_write_parquet(
+  university_agreements_sf,
+  "data/processed/university_agreements_sf.parquet"
+)
+sfarrow::st_write_parquet(
+  university_lookup,
+  "data/processed/university_lookup.parquet"
+)

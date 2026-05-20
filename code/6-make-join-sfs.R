@@ -1,7 +1,56 @@
-source("code/2-make-state-sf.R")
-source("code/3-make-county-sf.R")
-source("code/4-make-municipal-sf.R")
-source("code/5-make-university-sf.R")
+library(tidyverse)
+library(sf)
+library(stringdist)
+library(arrow)
+library(sfarrow)
+
+source("code/functions.R")
+
+restore_agency_name <- function(x) {
+  names(x)[names(x) == "LAW.ENFORCEMENT.AGENCY"] <- "LAW ENFORCEMENT AGENCY"
+  x
+}
+
+state_agreements_sf <- sfarrow::st_read_parquet(
+  "data/processed/state_agreements_sf.parquet"
+) |>
+  restore_agency_name()
+
+county_agreements_sf <- sfarrow::st_read_parquet(
+  "data/processed/county_agreements_sf.parquet"
+) |>
+  restore_agency_name()
+
+municipal_agreements_sf <- sfarrow::st_read_parquet(
+  "data/processed/municipal_agreements_sf.parquet"
+) |>
+  restore_agency_name()
+
+university_agreements_sf <- sfarrow::st_read_parquet(
+  "data/processed/university_agreements_sf.parquet"
+) |>
+  restore_agency_name()
+
+facilities <- sfarrow::st_read_parquet("data/processed/facilities.parquet")
+
+hifld_tbl <- arrow::read_parquet("data/processed/hifld_tbl.parquet")
+# leaic_tbl <- arrow::read_parquet("data/processed/leaic_tbl.parquet")
+# crime_lookup <- arrow::read_parquet("data/processed/crime_lookup.parquet")
+agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
+manual_points <- arrow::read_parquet("data/processed/manual_points.parquet") |>
+  mutate(
+    across(
+      c(
+        county,
+        manual_address,
+        manual_city,
+        manual_county,
+        manual_zip,
+        manual_note
+      ),
+      as.character
+    )
+  )
 
 # facility source tables -------------------------------------------------
 
@@ -60,42 +109,9 @@ hifld_facility_tbl <- hifld_tbl |>
     facility_key = agency_key_src
   )
 
-leaic_facility_tbl <- leaic_tbl |>
-  transmute(
-    source = "leaic",
-    source_rank = 5L,
-    detention_facility_code = ORI9,
-    facility_name = leaic_name,
-    facility_address = NA_character_,
-    facility_city = NA_character_,
-    facility_county = leaic_county,
-    facility_county_fips = as.character(FCOUNTY),
-    facility_state = leaic_state,
-    facility_state_fips = as.character(FSTATE),
-    facility_zip = NA_character_,
-    facility_address_full = NA_character_,
-    facility_latitude = NA_real_,
-    facility_longitude = NA_real_,
-    facility_field_office = NA_character_,
-    state_key,
-    county_key,
-    facility_key = agency_key_src,
-    ORI9
-  ) |>
-  left_join(
-    crime_lookup |> select(ori, crime_lat, crime_lon),
-    by = c("ORI9" = "ori")
-  ) |>
-  mutate(
-    facility_latitude = crime_lat,
-    facility_longitude = crime_lon
-  ) |>
-  select(-crime_lat, -crime_lon)
-
 facility_sources_exact <- bind_rows(
   facilities_tbl,
-  hifld_facility_tbl,
-  leaic_facility_tbl
+  hifld_facility_tbl
 )
 
 # 287(g) facility-model agencies -----------------------------------------
@@ -120,28 +136,32 @@ fac_287g <- agencies_all |>
     facility_guess_key = norm_key(facility_guess)
   )
 
-# split DOC agencies out before matching ---------------------------------
-# state DOC agencies need 1-to-many matching logic and are handled separately
+# state DOC agencies need 1-to-many matching logic -----------------------
 
 doc_pattern <- "department of corrections|correctional services|public safety & corrections|division of corrections|department of public safety"
 
-is_doc_agency <- function(x) str_detect(str_to_lower(x), doc_pattern) # TODO: I would just move this into the pipelines, not enough uses to jsutify a function
-
 fac_287g_doc <- fac_287g |>
-  filter(is_doc_agency(agency) & agency_level == "state")
+  filter(
+    str_detect(str_to_lower(agency), doc_pattern) & agency_level == "state"
+  )
 
 fac_287g_non_doc <- fac_287g |>
-  filter(!(is_doc_agency(agency) & agency_level == "state"))
+  filter(
+    !(str_detect(str_to_lower(agency), doc_pattern) & agency_level == "state")
+  )
 
-# exact matching (non-DOC only) ------------------------------------------
+# match detention facilities to facility datasets ------------------------
 
 facility_exact_matches <- fac_287g_non_doc |>
   inner_join(
     facility_sources_exact,
-    by = c("state_key", "county_key", "agency_key" = "facility_key"),
+    by = c("state_key", "county_key", "facility_guess_key" = "facility_key"),
     relationship = "many-to-many"
   ) |>
-  mutate(match_type = "exact_state_county_agency_name", match_score = 1) |>
+  mutate(
+    match_type = "exact_state_county_facility_name",
+    match_score = 1.0
+  ) |>
   group_by(state, county, agency, support_clean) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
@@ -150,7 +170,7 @@ facility_exact_matches <- fac_287g_non_doc |>
 facility_unmatched_after_exact <- fac_287g_non_doc |>
   anti_join(facility_exact_matches, by = c("state", "county", "agency"))
 
-# fuzzy match within state and county (non-DOC only) ---------------------
+# use fuzzy string matching on facility names within same county ---------
 
 facility_fuzzy_county <- facility_unmatched_after_exact |>
   inner_join(
@@ -159,14 +179,12 @@ facility_fuzzy_county <- facility_unmatched_after_exact |>
     relationship = "many-to-many"
   ) |>
   mutate(
-    dist_agency = stringdist(agency_key, facility_key, method = "jw", p = 0.1),
-    dist_guess = stringdist(
+    match_dist = stringdist(
       facility_guess_key,
       facility_key,
       method = "jw",
       p = 0.1
-    ),
-    match_dist = pmin(dist_agency, dist_guess, na.rm = TRUE)
+    )
   ) |>
   filter(match_dist <= 0.22) |>
   group_by(state, county, agency) |>
@@ -174,7 +192,7 @@ facility_fuzzy_county <- facility_unmatched_after_exact |>
   slice_head(n = 1) |>
   ungroup() |>
   mutate(
-    match_type = "fuzzy_state_county",
+    match_type = "fuzzy_county_facility",
     match_score = 1 - match_dist,
     needs_review = TRUE
   )
@@ -182,7 +200,7 @@ facility_fuzzy_county <- facility_unmatched_after_exact |>
 facility_unmatched_after_fuzzy_county <- facility_unmatched_after_exact |>
   anti_join(facility_fuzzy_county, by = c("state", "county", "agency"))
 
-# fuzzy match within state only (non-DOC only, looser fallback) ----------
+# broader state-level fuzzy matching for remaining unmatched facilities ----
 
 facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
   inner_join(
@@ -191,29 +209,25 @@ facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
     relationship = "many-to-many"
   ) |>
   mutate(
-    dist_agency = stringdist(agency_key, facility_key, method = "jw", p = 0.1),
-    dist_guess = stringdist(
+    match_dist = stringdist(
       facility_guess_key,
       facility_key,
       method = "jw",
       p = 0.1
-    ),
-    match_dist = pmin(dist_agency, dist_guess, na.rm = TRUE)
+    )
   ) |>
-  filter(match_dist <= 0.12) |>
+  filter(match_dist <= 0.15) |>
   group_by(state, county, agency) |>
   arrange(match_dist, source_rank) |>
   slice_head(n = 1) |>
   ungroup() |>
   mutate(
-    match_type = "fuzzy_state",
+    match_type = "fuzzy_state_facility",
     match_score = 1 - match_dist,
     needs_review = TRUE
   )
 
 # DOC: match to all facilities in state ----------------------------------
-
-doc_facility_pattern <- "correctional|prison|penitentiary|detention|work camp|correctional facility|correctional center"
 
 doc_matches <- fac_287g_doc |>
   inner_join(
@@ -221,8 +235,14 @@ doc_matches <- fac_287g_doc |>
     by = "state_key",
     relationship = "many-to-many"
   ) |>
-  filter(str_detect(str_to_lower(facility_name), doc_facility_pattern)) |>
+  filter(str_detect(
+    str_to_lower(facility_name),
+    "correctional|prison|penitentiary|detention|work camp|correctional facility|correctional center"
+  )) |>
   arrange(state, county, agency, source_rank) |>
+  group_by(state, county, agency, facility_key) |>
+  slice_head(n = 1) |>
+  ungroup() |>
   mutate(
     match_type = "state_doc_all_facilities",
     match_score = 1,
@@ -256,35 +276,103 @@ doc_fuzzy_matches <- doc_unmatched |>
     match_type = "state_doc_fuzzy",
     match_score = 1 - match_dist,
     needs_review = TRUE
-  )
+  ) |>
+  group_by(state, county, agency) |>
+  arrange(match_dist, source_rank) |>
+  slice_head(n = 1) |>
+  ungroup()
 
 # manual matches for regional jail authorities ---------------------------
 
-manual_matches <- fac_287g |>
-  inner_join(manual_points, by = c("agency", "state")) |>
-  mutate(
+manual_points_specific <- manual_points |>
+  filter(!is.na(county), county != "")
+
+manual_points_general <- manual_points |>
+  filter(is.na(county) | county == "")
+
+manual_matches_specific <- fac_287g |>
+  inner_join(
+    manual_points_specific,
+    by = c("agency", "state", "county")
+  )
+
+manual_matches_general <- fac_287g |>
+  inner_join(
+    manual_points_general |> select(-county),
+    by = c("agency", "state")
+  )
+
+manual_matches <- bind_rows(
+  manual_matches_specific,
+  manual_matches_general
+) |>
+  distinct(state, county, agency, .keep_all = TRUE) |>
+  transmute(
+    state,
+    county,
+    agency,
+    agency_level,
+    needs_review = TRUE,
+    support_clean,
+    has_addendum,
+    moa_pending,
+    state_key,
+    county_key,
+    agency_key,
+    facility_guess,
+    facility_guess_key,
+
+    source = "manual",
+    source_rank = 0L,
+    detention_facility_code = NA_character_,
+    facility_name = manual_facility_name,
+    facility_address = manual_address,
+    facility_city = manual_city,
+    facility_county = coalesce(manual_county, county),
+    facility_county_fips = NA_character_,
+    facility_state = coalesce(manual_state, state),
+    facility_state_fips = NA_character_,
+    facility_zip = manual_zip,
+    facility_address_full = str_squish(
+      paste(manual_address, manual_city, manual_state, manual_zip, sep = ", ")
+    ),
+    facility_latitude = latitude,
+    facility_longitude = longitude,
+    facility_field_office = NA_character_,
+    facility_key = norm_key(manual_facility_name),
+
     match_type = "manual",
     match_score = 1,
-    needs_review = TRUE,
-    facility_latitude = latitude,
-    facility_longitude = longitude
+    manual_reason,
+    manual_note
   )
 
 # combine all matches ----------------------------------------------------
 
-facility_all_matches <- bind_rows(
-  bind_rows(
-    facility_exact_matches,
-    facility_fuzzy_county,
-    facility_fuzzy_state
-  ) |>
-    group_by(state, county, agency) |>
-    arrange(source_rank, desc(match_score)) |>
-    slice_head(n = 1) |>
-    ungroup(),
+non_doc_auto_matches <- bind_rows(
+  facility_exact_matches,
+  facility_fuzzy_county,
+  facility_fuzzy_state
+) |>
+  group_by(state, county, agency) |>
+  arrange(source_rank, desc(match_score)) |>
+  slice_head(n = 1) |>
+  ungroup()
+
+doc_auto_matches <- bind_rows(
   doc_matches,
-  doc_fuzzy_matches,
-  manual_matches
+  doc_fuzzy_matches
+)
+
+auto_matches <- bind_rows(
+  non_doc_auto_matches,
+  doc_auto_matches
+)
+
+facility_all_matches <- bind_rows(
+  manual_matches,
+  auto_matches |>
+    anti_join(manual_matches, by = c("state", "county", "agency"))
 )
 
 # unmatched in fac_287g but not in any match table
@@ -310,19 +398,18 @@ facility_agreements_sf <- facility_all_matches |>
     src = source,
     needs_review = needs_review |
       source != "facilities" |
-      match_type != "exact_state_county_agency_name" |
+      match_type != "exact_state_county_facility_name" |
       has_addendum |
       moa_pending
   )
 
 # diagnostics ------------------------------------------------------------
 
-agencies_all |> count(geom_class)
-
-facility_all_matches |> count(match_type, source, sort = TRUE) # TODO: source is wrong here -- what happened? it says leaic for all
-
-facility_all_matches |>
+facility_fuzzy_matches <- facility_all_matches |>
+  as_tibble() |>
+  select(-any_of("geometry")) |>
   filter(str_detect(match_type, "fuzzy")) |>
+  filter(match_score < 0.85) |>
   select(
     state,
     county,
@@ -335,20 +422,126 @@ facility_all_matches |>
   ) |>
   arrange(match_score)
 
-facility_unmatched_final |>
-  select(state, county, agency, facility_guess, support_clean) |>
-  arrange(state, county, agency)
+facility_review <- facility_all_matches |>
+  as_tibble() |>
+  select(-any_of("geometry")) |>
+  mutate(
+    flag_missing_coordinates = is.na(facility_latitude) |
+      is.na(facility_longitude),
+
+    flag_state_level_fuzzy = match_type == "fuzzy_state_facility",
+
+    flag_low_confidence_fuzzy = str_detect(match_type, "fuzzy") &
+      match_score < 0.85,
+
+    flag_jails_prisons_source = source == "jails_prisons",
+
+    review_reasons = pmap_chr(
+      list(
+        flag_missing_coordinates,
+        flag_state_level_fuzzy,
+        flag_low_confidence_fuzzy,
+        flag_jails_prisons_source
+      ),
+      \(missing_coords, state_fuzzy, low_fuzzy, jails_source) {
+        reasons <- c(
+          if (missing_coords) "missing_coordinates",
+          if (state_fuzzy) "state_level_fuzzy",
+          if (low_fuzzy) "low_confidence_fuzzy",
+          if (jails_source) "jails_prisons_source"
+        )
+
+        paste(reasons, collapse = "; ")
+      }
+    )
+  ) |>
+  filter(review_reasons != "") |>
+  arrange(desc(flag_missing_coordinates), match_score) |>
+  select(
+    review_reasons,
+    state,
+    county,
+    agency,
+    facility_guess,
+    facility_name,
+    source,
+    match_type,
+    match_score,
+    facility_address,
+    facility_city,
+    facility_county,
+    facility_latitude,
+    facility_longitude
+  )
+
+# readr::write_csv(
+#   facility_review,
+#   "data/processed/facility_matches_needing_review.csv"
+# )
 
 # bind all layers --------------------------------------------------------
 
+non_facility_layers <- bind_rows(
+  state_agreements_sf |> st_transform(4326) |> mutate(match_layer = "state"),
+  county_agreements_sf |> st_transform(4326) |> mutate(match_layer = "county"),
+  university_agreements_sf |>
+    st_transform(4326) |>
+    mutate(match_layer = "university"),
+  municipal_agreements_sf |>
+    st_transform(4326) |>
+    mutate(match_layer = "municipal")
+) |>
+  st_as_sf()
+
+non_facility_unmatched <- non_facility_layers[
+  is.na(st_geometry(non_facility_layers)) |
+    st_is_empty(st_geometry(non_facility_layers)),
+] |>
+  st_drop_geometry()
+
+agency_name_cols <- intersect(
+  c("agency", "LAW ENFORCEMENT AGENCY"),
+  names(non_facility_unmatched)
+)
+
+if (length(agency_name_cols) > 0) {
+  if ("agency" %in% names(non_facility_unmatched)) {
+    non_facility_unmatched <- non_facility_unmatched |>
+      mutate(agency = coalesce(!!!syms(agency_name_cols)))
+  } else {
+    non_facility_unmatched <- non_facility_unmatched |>
+      rename(agency = all_of(agency_name_cols[[1]]))
+  }
+} else {
+  non_facility_unmatched <- non_facility_unmatched |>
+    mutate(agency = NA_character_)
+}
+
+non_facility_unmatched <- non_facility_unmatched |>
+  select(
+    match_layer,
+    state,
+    county,
+    agency,
+    geom_class,
+    needs_review,
+    any_of(c(
+      "city_guess",
+      "src",
+      "university_guess",
+      "university_guess_final"
+    ))
+  )
+
+# readr::write_csv(
+#   non_facility_unmatched,
+#   "data/processed/non_facility_matches_needing_review.csv"
+# )
+
 all_agreements_sf <- bind_rows(
-  state_agreements_sf |> st_transform(4326),
-  county_agreements_sf |> st_transform(4326),
-  university_agreements_sf |> st_transform(4326),
-  municipal_agreements_sf |> st_transform(4326),
+  non_facility_layers,
   facility_agreements_sf |> st_transform(4326)
 ) |>
-  left_join(crime_lookup, by = c("ORI9" = "ori")) |>
   filter(!is.na(geometry)) |>
   st_make_valid() |>
   st_transform(4326)
@@ -364,5 +557,13 @@ unmatched_geom <- agencies_all |>
     )
   )
 
-# TODO: save as geoparquet instead
-st_write(all_agreements_sf, "287g_agreements.shp", delete_dsn = TRUE)
+# save final outputs -----------------------------------------------------
+
+sfarrow::st_write_parquet(
+  all_agreements_sf,
+  "data/processed/all_agreements_sf.parquet"
+)
+sfarrow::st_write_parquet(
+  facility_agreements_sf,
+  "data/processed/facility_agreements_sf.parquet"
+)
