@@ -1,1 +1,4 @@
 agency,state,county,manual_match_layer,manual_match_name,manual_reason,manual_note
+Saint Francois County Sheriff's Office,Missouri,Saint Francois County,county,St. Francois County,county_name_fix,
+Custer County Sheriff's Office,Oklahoma,Custer Countey,county,Custer County,county_typo,
+Hopewell County Sheriff's Office,Virginia,Hopewell County,county,Hopewell City,independent_city_fix,

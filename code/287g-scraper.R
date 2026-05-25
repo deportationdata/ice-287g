@@ -143,12 +143,10 @@ download_excel_from_url <- function(url, folder, label = "file") {
       cd <- headers(results)[["content-disposition"]]
 
       if (!is.null(cd) && grepl("filename=", cd)) {
-        file_name_only <- str_trim(
-          str_remove(
-            str_split(cd, "filename=")[[1]][2],
-            '["\']'
-          )
-        )
+        file_name_only <- str_split(cd, "filename=", n = 2)[[1]][2]
+        file_name_only <- str_remove(file_name_only, ";.*$")
+        file_name_only <- str_trim(file_name_only)
+        file_name_only <- str_remove_all(file_name_only, "^[\"']|[\"']$")
       } else {
         # fall back to last segment of URL
         file_name_only <- basename(str_split(url, "\\?")[[1]][1])
@@ -219,15 +217,35 @@ ws <- wb$worksheets[[1]]
 # pull hyperlink targets from the sheet XML
 hyperlink_map <- ws$hyperlinks
 
+# build lookup: Excel cell ref -> URL target
+hyperlink_lookup <- list()
+
+if (!is.null(hyperlink_map) && length(hyperlink_map) > 0) {
+  for (h in hyperlink_map) {
+    cell_ref <- h$ref
+    target <- h$target
+
+    if (
+      !is.null(cell_ref) &&
+        !is.null(target) &&
+        !is.na(cell_ref) &&
+        !is.na(target) &&
+        target != ""
+    ) {
+      hyperlink_lookup[[cell_ref]] <- target
+    }
+  }
+}
+
 # helper function: row number -> hyperlink target
 get_hyperlink_for_row <- function(row_idx) {
   cell_ref <- paste0("G", row_idx)
 
-  if (!is.null(hyperlink_map) && cell_ref %in% names(hyperlink_map)) {
-    return(hyperlink_map[[cell_ref]]$ref)
-  } else {
-    return(NULL)
+  if (cell_ref %in% names(hyperlink_lookup)) {
+    return(hyperlink_lookup[[cell_ref]])
   }
+
+  return(NULL)
 }
 
 # collect hyperlink, state, and agency values
@@ -302,12 +320,10 @@ for (i in seq_along(hyperlinks_list)) {
         cd <- headers(results)[["content-disposition"]]
 
         if (!is.null(cd) && grepl("filename=", cd)) {
-          file_name_only <- str_trim(
-            str_remove(
-              str_split(cd, "filename=")[[1]][2],
-              '["\']'
-            )
-          )
+          file_name_only <- str_split(cd, "filename=", n = 2)[[1]][2]
+          file_name_only <- str_remove(file_name_only, ";.*$")
+          file_name_only <- str_trim(file_name_only)
+          file_name_only <- str_remove_all(file_name_only, "^[\"']|[\"']$")
         } else {
           file_name_only <- basename(str_split(hyperlink, "\\?")[[1]][1])
 

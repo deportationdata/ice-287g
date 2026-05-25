@@ -58,11 +58,11 @@ places_lookup <- bind_rows(
 # manual municipal overrides --------------------------------------------
 
 municipal_overrides <- manual_non_facility_polygons |>
-  filter(manual_match_layer == "municipal") |>
   select(
     agency = agency,
     state,
     county,
+    manual_match_layer,
     manual_city_match = manual_match_name,
     manual_reason,
     manual_note
@@ -71,12 +71,20 @@ municipal_overrides <- manual_non_facility_polygons |>
 # municipal agreements ---------------------------------------------------
 
 municipal_agreements_sf <- agencies_all |>
-  filter(geom_class == "municipal_polygon") |>
   left_join(
     municipal_overrides,
     by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
   ) |>
+  filter(
+    manual_match_layer == "municipal" |
+      (geom_class == "municipal_polygon" & is.na(manual_match_layer))
+  ) |>
   mutate(
+    manual_city_match = if_else(
+      manual_match_layer == "municipal",
+      manual_city_match,
+      NA_character_
+    ),
     city_guess = extract_city_guess(`LAW ENFORCEMENT AGENCY`),
     city_match = coalesce(manual_city_match, city_guess),
     state_key = norm_state(state),

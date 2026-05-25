@@ -229,16 +229,46 @@ facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
 
 # DOC: match to all facilities in state ----------------------------------
 
-doc_matches <- fac_287g_doc |>
+doc_facility_pattern <- paste(
+  "correctional",
+  "prison",
+  "penitentiary",
+  "detention",
+  "work camp",
+  "re-?entry",
+  "work release",
+  "work program",
+  "transition(al)? center",
+  "classification",
+  "diagnostic",
+  "treatment facility",
+  sep = "|"
+)
+
+doc_exclude_pattern <- paste(
+  "county jail",
+  "parish jail",
+  "city jail",
+  "municipal jail",
+  "sheriff",
+  "police",
+  "courthouse",
+  "regional lock-?up",
+  sep = "|"
+)
+
+doc_candidates <- fac_287g_doc |>
   inner_join(
     facility_sources_exact,
     by = "state_key",
     relationship = "many-to-many"
+  )
+
+doc_matches <- doc_candidates |>
+  filter(
+    str_detect(str_to_lower(facility_name), doc_facility_pattern),
+    !str_detect(str_to_lower(facility_name), doc_exclude_pattern)
   ) |>
-  filter(str_detect(
-    str_to_lower(facility_name),
-    "correctional|prison|penitentiary|detention|work camp|correctional facility|correctional center"
-  )) |>
   arrange(state, county, agency, source_rank) |>
   group_by(state, county, agency, facility_key) |>
   slice_head(n = 1) |>
@@ -249,40 +279,7 @@ doc_matches <- fac_287g_doc |>
     needs_review = TRUE
   )
 
-# DOC: fuzzy fallback for state DOC agencies with no exact facility match ----
-
-doc_unmatched <- fac_287g_doc |>
-  anti_join(doc_matches, by = c("state", "county", "agency"))
-
-doc_fuzzy_matches <- doc_unmatched |>
-  inner_join(
-    facility_sources_exact,
-    by = "state_key",
-    relationship = "many-to-many"
-  ) |>
-  mutate(
-    dist_agency = stringdist(agency_key, facility_key, method = "jw", p = 0.1),
-    dist_guess = stringdist(
-      facility_guess_key,
-      facility_key,
-      method = "jw",
-      p = 0.1
-    ),
-    match_dist = pmin(dist_agency, dist_guess, na.rm = TRUE)
-  ) |>
-  filter(match_dist <= 0.22) |>
-  arrange(state, county, agency, match_dist, source_rank) |>
-  mutate(
-    match_type = "state_doc_fuzzy",
-    match_score = 1 - match_dist,
-    needs_review = TRUE
-  ) |>
-  group_by(state, county, agency) |>
-  arrange(match_dist, source_rank) |>
-  slice_head(n = 1) |>
-  ungroup()
-
-# manual matches for regional jail authorities ---------------------------
+# manual matches ---------------------------------------------------------
 
 manual_points_specific <- manual_points |>
   filter(!is.na(county), county != "")
@@ -349,7 +346,7 @@ manual_matches <- bind_rows(
 
 # combine all matches ----------------------------------------------------
 
-non_doc_auto_matches <- bind_rows(
+non_doc_matches <- bind_rows(
   facility_exact_matches,
   facility_fuzzy_county,
   facility_fuzzy_state
@@ -359,14 +356,9 @@ non_doc_auto_matches <- bind_rows(
   slice_head(n = 1) |>
   ungroup()
 
-doc_auto_matches <- bind_rows(
-  doc_matches,
-  doc_fuzzy_matches
-)
-
 auto_matches <- bind_rows(
-  non_doc_auto_matches,
-  doc_auto_matches
+  non_doc_matches,
+  doc_matches
 )
 
 facility_all_matches <- bind_rows(
@@ -375,7 +367,6 @@ facility_all_matches <- bind_rows(
     anti_join(manual_matches, by = c("state", "county", "agency"))
 )
 
-# unmatched in fac_287g but not in any match table
 facility_unmatched_final <- fac_287g |>
   anti_join(facility_all_matches, by = c("state", "county", "agency")) |>
   mutate(
@@ -384,6 +375,12 @@ facility_unmatched_final <- fac_287g |>
     source_rank = NA_integer_,
     needs_review = TRUE
   )
+
+readr::write_csv(
+  facility_unmatched_final |>
+    select(state, county, agency, agency_level, support_clean, facility_guess),
+  "data/processed/facility_unmatched.csv"
+)
 
 # facility point sf layer ------------------------------------------------
 
@@ -479,8 +476,6 @@ readr::write_csv(
   "data/processed/facility_matches_needing_review.csv"
 )
 
-# bind all layers --------------------------------------------------------
-
 non_facility_layers <- bind_rows(
   state_agreements_sf |> st_transform(4326) |> mutate(match_layer = "state"),
   county_agreements_sf |> st_transform(4326) |> mutate(match_layer = "county"),
@@ -530,6 +525,7 @@ non_facility_unmatched <- non_facility_unmatched |>
       "county_match",
       "city_guess",
       "city_match",
+      "manual_match_layer",
       "src",
       "manual_reason",
       "manual_note",
@@ -543,6 +539,8 @@ readr::write_csv(
   non_facility_unmatched,
   "data/processed/non_facility_matches_needing_review.csv"
 )
+
+# bind all layers --------------------------------------------------------
 
 all_agreements_sf <- bind_rows(
   non_facility_layers,

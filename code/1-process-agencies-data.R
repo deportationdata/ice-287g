@@ -4,7 +4,6 @@ library(sf)
 library(tigris)
 library(arrow)
 library(sfarrow)
-library(tidylog)
 
 options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
@@ -274,16 +273,7 @@ crime_lookup <- crime_data |>
 
 manual_points <- read_csv("data/manual-facility-points.csv")
 manual_non_facility_polygons <- read_csv(
-  "data/manual-non-facility-polygons.csv",
-  col_types = cols(
-    agency = col_character(),
-    state = col_character(),
-    county = col_character(),
-    manual_match_layer = col_character(),
-    manual_match_name = col_character(),
-    manual_reason = col_character(),
-    manual_note = col_character()
-  )
+  "data/manual-non-facility-polygons.csv"
 )
 
 # save processed data ----------------------------------------------------

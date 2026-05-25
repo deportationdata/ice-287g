@@ -34,11 +34,11 @@ counties_sf <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
 # manual county overrides -----------------------------------------------
 
 county_overrides <- manual_non_facility_polygons |>
-  filter(manual_match_layer == "county") |>
   select(
     agency = agency,
     state,
     county,
+    manual_match_layer,
     manual_county_match = manual_match_name,
     manual_reason,
     manual_note
@@ -47,12 +47,20 @@ county_overrides <- manual_non_facility_polygons |>
 # county agreements ------------------------------------------------------
 
 county_agreements_sf <- agencies_all |>
-  filter(geom_class == "county_polygon") |>
   left_join(
     county_overrides,
     by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
   ) |>
+  filter(
+    manual_match_layer == "county" |
+      (geom_class == "county_polygon" & is.na(manual_match_layer))
+  ) |>
   mutate(
+    manual_county_match = if_else(
+      manual_match_layer == "county",
+      manual_county_match,
+      NA_character_
+    ),
     county_match = coalesce(manual_county_match, county),
     state_key = norm_state(state),
     county_key = norm_county(county_match)

@@ -71,11 +71,11 @@ state_lookup <- all_states_and_territories |>
 # manual state overrides -------------------------------------------------
 
 state_overrides <- manual_non_facility_polygons |>
-  filter(manual_match_layer == "state") |>
   select(
     agency = agency,
     state,
     county,
+    manual_match_layer,
     manual_state_match = manual_match_name,
     manual_reason,
     manual_note
@@ -84,12 +84,22 @@ state_overrides <- manual_non_facility_polygons |>
 # state agreements -------------------------------------------------------
 
 state_agreements_sf <- agencies_all |>
-  filter(geom_class == "state_polygon") |>
   left_join(
     state_overrides,
     by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
   ) |>
-  mutate(state_match = coalesce(manual_state_match, state)) |>
+  filter(
+    manual_match_layer == "state" |
+      (geom_class == "state_polygon" & is.na(manual_match_layer))
+  ) |>
+  mutate(
+    manual_state_match = if_else(
+      manual_match_layer == "state",
+      manual_state_match,
+      NA_character_
+    ),
+    state_match = coalesce(manual_state_match, state)
+  ) |>
   left_join(state_lookup, by = c("state_match" = "state")) |>
   mutate(
     src = if_else(

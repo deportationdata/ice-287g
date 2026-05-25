@@ -39,11 +39,11 @@ university_name_overrides <- tribble(
 # manual university overrides -------------------------------------------
 
 university_overrides <- manual_non_facility_polygons |>
-  filter(manual_match_layer == "university") |>
   select(
     agency = agency,
     state,
     county,
+    manual_match_layer,
     manual_university_match = manual_match_name,
     manual_reason,
     manual_note
@@ -51,15 +51,21 @@ university_overrides <- manual_non_facility_polygons |>
 
 # university agreements --------------------------------------------------
 
-# TODO: noting Tallahassee State College Police Department didn't match
-
 university_agreements_sf <- agencies_all |>
-  filter(geom_class == "university_polygon") |>
   left_join(
     university_overrides,
     by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
   ) |>
+  filter(
+    manual_match_layer == "university" |
+      (geom_class == "university_polygon" & is.na(manual_match_layer))
+  ) |>
   mutate(
+    manual_university_match = if_else(
+      manual_match_layer == "university",
+      manual_university_match,
+      NA_character_
+    ),
     university_guess = extract_university_guess(`LAW ENFORCEMENT AGENCY`)
   ) |>
   left_join(university_name_overrides, by = "university_guess") |>
