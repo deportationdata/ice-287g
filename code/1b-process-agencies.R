@@ -77,6 +77,11 @@ agencies_all <- participating_agencies |>
       support_clean %in% c("jail enforcement model", "warrant service officer") ~
         "facility_point",
       TRUE ~ "unknown"
+    ),
+    geom_class = if_else(
+      state == "Tennessee" & str_detect(str_to_lower(agency), "\\bconstables?\\b"),
+      "county_polygon",
+      geom_class
     )
   ) |>
   add_count(state, agency, name = "agency_count") |>
