@@ -2,14 +2,14 @@ library(tidyverse)
 library(sf)
 library(tigris)
 library(arrow)
-library(sfarrow)
 
 options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
+agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+  normalize_agencies_all()
 manual_non_facility_polygons <- arrow::read_parquet(
   "data/processed/manual_non_facility_polygons.parquet"
 )
@@ -52,7 +52,7 @@ county_agreements_sf <-
   agencies_all |>
   left_join(
     county_overrides,
-    by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
+    by = c("agency", "state", "county")
   ) |>
   filter(
     manual_match_layer == "county" |
@@ -81,11 +81,40 @@ county_agreements_sf <-
     ),
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
+  select(
+    state,
+    county,
+    agency,
+    support_type,
+    agency_level,
+    geom_class,
+    ORI9,
+    FSTATE,
+    FCOUNTY,
+    FPLACE,
+    leaic_name,
+    leaic_match_type,
+    crime_ori,
+    crime_agency_name,
+    crime_match_type,
+    ori_source,
+    needs_review,
+    has_addendum,
+    moa_pending,
+    county_match,
+    statefp,
+    countyfp,
+    src,
+    manual_match_layer,
+    manual_reason,
+    manual_note,
+    geometry
+  ) |>
   st_as_sf()
 
 # save county geometries -------------------------------------------------
 
-sfarrow::st_write_parquet(
+write_sf_parquet(
   county_agreements_sf,
   "data/processed/county_agreements_sf.parquet"
 )

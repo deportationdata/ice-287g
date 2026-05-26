@@ -1,17 +1,18 @@
 library(tidyverse)
 library(sf)
 library(arrow)
-library(sfarrow)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
+agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+  normalize_agencies_all()
 manual_non_facility_polygons <- arrow::read_parquet(
   "data/processed/manual_non_facility_polygons.parquet"
 )
-state_xwalk <- readRDS("data/processed/state_xwalk.rds") # TODO: switch to parquet; does this need to include territories?
-university_boundaries <- sfarrow::st_read_parquet(
-  "data/processed/university_boundaries.parquet"
+state_xwalk <- arrow::read_parquet("data/processed/state_xwalk.parquet")
+university_boundaries <- read_sf_parquet(
+  "data/processed/university_boundaries.parquet",
+  crs = 3857
 )
 
 # university boundary lookup ---------------------------------------------
@@ -34,8 +35,8 @@ university_lookup <-
 
 university_name_overrides <-
   tribble(
-    ~university_guess        , ~university_guess_fixed                          ,
-    "Florida A&M University" , "Florida Agricultural And Mechanical University"
+    ~university_guess, ~university_guess_fixed,
+    "Florida A&M University", "Florida Agricultural And Mechanical University"
   )
 
 # manual university overrides -------------------------------------------
@@ -57,7 +58,7 @@ university_overrides <-
 university_agreements_sf <- agencies_all |>
   left_join(
     university_overrides,
-    by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
+    by = c("agency", "state", "county")
   ) |>
   filter(
     manual_match_layer == "university" |
@@ -69,7 +70,7 @@ university_agreements_sf <- agencies_all |>
       manual_university_match,
       NA_character_
     ),
-    university_guess = extract_university_guess(`LAW ENFORCEMENT AGENCY`)
+    university_guess = extract_university_guess(agency)
   ) |>
   left_join(university_name_overrides, by = "university_guess") |>
   mutate(
@@ -95,15 +96,40 @@ university_agreements_sf <- agencies_all |>
     ),
     needs_geometry_review = is.na(university_name) | st_is_empty(geometry),
     needs_review = needs_review | needs_geometry_review
+  ) |>
+  select(
+    state,
+    county,
+    agency,
+    support_type,
+    agency_level,
+    geom_class,
+    ORI9,
+    FSTATE,
+    FCOUNTY,
+    FPLACE,
+    leaic_name,
+    leaic_match_type,
+    crime_ori,
+    crime_agency_name,
+    crime_match_type,
+    ori_source,
+    needs_review,
+    has_addendum,
+    moa_pending,
+    university_name,
+    university_guess,
+    university_guess_final,
+    src,
+    manual_match_layer,
+    manual_reason,
+    manual_note,
+    geometry
   )
 
 # save university geometries ---------------------------------------------
 
-sfarrow::st_write_parquet(
+write_sf_parquet(
   university_agreements_sf,
   "data/processed/university_agreements_sf.parquet"
-)
-sfarrow::st_write_parquet(
-  university_lookup,
-  "data/processed/university_lookup.parquet"
 )
