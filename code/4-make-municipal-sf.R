@@ -30,9 +30,16 @@ places_sf <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
 # pull all states for county subdivisions
 states_sf_raw <- tigris::states(cb = TRUE, year = YEAR, class = "sf")
 
-cousubs_sf <- map_dfr(unique(states_sf_raw$STATEFP), function(fp) {
-  tigris::county_subdivisions(state = fp, cb = TRUE, year = YEAR, class = "sf")
-}) |>
+cousubs_sf <-
+  unique(states_sf_raw$STATEFP) |>
+  map_dfr(function(fp) {
+    tigris::county_subdivisions(
+      state = fp,
+      cb = TRUE,
+      year = YEAR,
+      class = "sf"
+    )
+  }) |>
   transmute(
     state = str_to_title(STATE_NAME),
     place_guess = str_to_title(NAME),
@@ -42,10 +49,11 @@ cousubs_sf <- map_dfr(unique(states_sf_raw$STATEFP), function(fp) {
   )
 
 # normalized places lookup (places preferred over cousubs)
-places_lookup <- bind_rows(
-  places_sf |> mutate(src = "place"),
-  cousubs_sf |> mutate(src = "cousub")
-) |>
+places_lookup <-
+  bind_rows(
+    places_sf |> mutate(src = "place"),
+    cousubs_sf |> mutate(src = "cousub")
+  ) |>
   mutate(
     state_key = norm_state(state),
     place_key = norm_place(place_guess),
@@ -57,7 +65,8 @@ places_lookup <- bind_rows(
 
 # manual municipal overrides --------------------------------------------
 
-municipal_overrides <- manual_non_facility_polygons |>
+municipal_overrides <-
+  manual_non_facility_polygons |>
   select(
     agency = agency,
     state,

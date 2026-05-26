@@ -54,7 +54,9 @@ manual_points <- arrow::read_parquet("data/processed/manual_points.parquet") |>
 
 # facility source tables -------------------------------------------------
 
-facilities_tbl <- facilities |>
+# TODO: I would extract the code abou facilities into its own file - the parts in process agencies data R file and this one
+facilities_tbl <-
+  facilities |>
   st_drop_geometry() |>
   filter(!is.na(latitude), !is.na(longitude)) |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |>
@@ -82,7 +84,10 @@ facilities_tbl <- facilities |>
     facility_key = norm_key(facility_name)
   )
 
-hifld_facility_tbl <- hifld_tbl |>
+# TODO: I would extract the code abou hifld into its own file - the parts in process agencies data R file and this one
+
+hifld_facility_tbl <-
+  hifld_tbl |>
   transmute(
     source = src_dataset,
     source_rank = case_when(
@@ -116,7 +121,8 @@ facility_sources_exact <- bind_rows(
 
 # 287(g) facility-model agencies -----------------------------------------
 
-fac_287g <- agencies_all |>
+fac_287g <-
+  agencies_all |>
   filter(geom_class == "facility_point") |>
   transmute(
     state,
@@ -140,19 +146,22 @@ fac_287g <- agencies_all |>
 
 doc_pattern <- "department of corrections|correctional services|public safety & corrections|division of corrections|department of public safety"
 
-fac_287g_doc <- fac_287g |>
+fac_287g_doc <-
+  fac_287g |>
   filter(
     str_detect(str_to_lower(agency), doc_pattern) & agency_level == "state"
   )
 
-fac_287g_non_doc <- fac_287g |>
+fac_287g_non_doc <-
+  fac_287g |>
   filter(
     !(str_detect(str_to_lower(agency), doc_pattern) & agency_level == "state")
   )
 
 # match detention facilities to facility datasets ------------------------
 
-facility_exact_matches <- fac_287g_non_doc |>
+facility_exact_matches <-
+  fac_287g_non_doc |>
   inner_join(
     facility_sources_exact,
     by = c("state_key", "county_key", "facility_guess_key" = "facility_key"),
@@ -167,12 +176,14 @@ facility_exact_matches <- fac_287g_non_doc |>
   slice_head(n = 1) |>
   ungroup()
 
-facility_unmatched_after_exact <- fac_287g_non_doc |>
+facility_unmatched_after_exact <-
+  fac_287g_non_doc |>
   anti_join(facility_exact_matches, by = c("state", "county", "agency"))
 
 # use fuzzy string matching on facility names within same county ---------
 
-facility_fuzzy_county <- facility_unmatched_after_exact |>
+facility_fuzzy_county <-
+  facility_unmatched_after_exact |>
   inner_join(
     facility_sources_exact,
     by = c("state_key", "county_key"),
@@ -197,7 +208,8 @@ facility_fuzzy_county <- facility_unmatched_after_exact |>
     needs_review = TRUE
   )
 
-facility_unmatched_after_fuzzy_county <- facility_unmatched_after_exact |>
+facility_unmatched_after_fuzzy_county <-
+  facility_unmatched_after_exact |>
   anti_join(facility_fuzzy_county, by = c("state", "county", "agency"))
 
 # broader state-level fuzzy matching for remaining unmatched facilities ----
@@ -281,28 +293,33 @@ doc_matches <- doc_candidates |>
 
 # manual matches ---------------------------------------------------------
 
-manual_points_specific <- manual_points |>
+manual_points_specific <-
+  manual_points |>
   filter(!is.na(county), county != "")
 
-manual_points_general <- manual_points |>
+manual_points_general <-
+  manual_points |>
   filter(is.na(county) | county == "")
 
-manual_matches_specific <- fac_287g |>
+manual_matches_specific <-
+  fac_287g |>
   inner_join(
     manual_points_specific,
     by = c("agency", "state", "county")
   )
 
-manual_matches_general <- fac_287g |>
+manual_matches_general <-
+  fac_287g |>
   inner_join(
     manual_points_general |> select(-county),
     by = c("agency", "state")
   )
 
-manual_matches <- bind_rows(
-  manual_matches_specific,
-  manual_matches_general
-) |>
+manual_matches <-
+  bind_rows(
+    manual_matches_specific,
+    manual_matches_general
+  ) |>
   distinct(state, county, agency, .keep_all = TRUE) |>
   transmute(
     state,
@@ -346,26 +363,29 @@ manual_matches <- bind_rows(
 
 # combine all matches ----------------------------------------------------
 
-non_doc_matches <- bind_rows(
-  facility_exact_matches,
-  facility_fuzzy_county,
-  facility_fuzzy_state
-) |>
+non_doc_matches <-
+  bind_rows(
+    facility_exact_matches,
+    facility_fuzzy_county,
+    facility_fuzzy_state
+  ) |>
   group_by(state, county, agency) |>
   arrange(source_rank, desc(match_score)) |>
   slice_head(n = 1) |>
   ungroup()
 
-auto_matches <- bind_rows(
-  non_doc_matches,
-  doc_matches
-)
+auto_matches <-
+  bind_rows(
+    non_doc_matches,
+    doc_matches
+  )
 
-facility_all_matches <- bind_rows(
-  manual_matches,
-  auto_matches |>
-    anti_join(manual_matches, by = c("state", "county", "agency"))
-)
+facility_all_matches <-
+  bind_rows(
+    manual_matches,
+    auto_matches |>
+      anti_join(manual_matches, by = c("state", "county", "agency"))
+  )
 
 facility_unmatched_final <- fac_287g |>
   anti_join(facility_all_matches, by = c("state", "county", "agency")) |>
@@ -384,7 +404,8 @@ readr::write_csv(
 
 # facility point sf layer ------------------------------------------------
 
-facility_agreements_sf <- facility_all_matches |>
+facility_agreements_sf <-
+  facility_all_matches |>
   filter(!is.na(facility_latitude), !is.na(facility_longitude)) |>
   st_as_sf(
     coords = c("facility_longitude", "facility_latitude"),
@@ -402,7 +423,8 @@ facility_agreements_sf <- facility_all_matches |>
 
 # diagnostics ------------------------------------------------------------
 
-facility_fuzzy_matches <- facility_all_matches |>
+facility_fuzzy_matches <-
+  facility_all_matches |>
   as_tibble() |>
   select(-any_of("geometry")) |>
   filter(str_detect(match_type, "fuzzy")) |>
@@ -419,7 +441,8 @@ facility_fuzzy_matches <- facility_all_matches |>
   ) |>
   arrange(match_score)
 
-facility_review <- facility_all_matches |>
+facility_review <-
+  facility_all_matches |>
   as_tibble() |>
   select(-any_of("geometry")) |>
   mutate(
@@ -475,6 +498,8 @@ readr::write_csv(
   facility_review,
   "data/processed/facility_matches_needing_review.csv"
 )
+
+# TODO: I would split the rest of this inot a new file - this one would hten just be facility layers then there's a join one to pull it altogehter. I know this is kind of tedious, but it makes it easier to assess the logic for each piece and to re-run just that piece when making adjustments, without having to run the whole thing
 
 non_facility_layers <- bind_rows(
   state_agreements_sf |> st_transform(4326) |> mutate(match_layer = "state"),
@@ -542,16 +567,18 @@ readr::write_csv(
 
 # bind all layers --------------------------------------------------------
 
-all_agreements_sf <- bind_rows(
-  non_facility_layers,
-  facility_agreements_sf |> st_transform(4326)
-) |>
+all_agreements_sf <-
+  bind_rows(
+    non_facility_layers,
+    facility_agreements_sf |> st_transform(4326)
+  ) |>
   filter(!is.na(geometry)) |>
   st_make_valid() |>
   st_transform(4326)
 
 # unresolved geometry diagnostics
-unmatched_geom <- agencies_all |>
+unmatched_geom <-
+  agencies_all |>
   filter(geom_class != "unknown") |>
   anti_join(
     st_drop_geometry(all_agreements_sf),

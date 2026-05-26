@@ -18,7 +18,8 @@ YEAR <- 2024
 
 # county boundaries ------------------------------------------------------
 
-counties_sf <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
+counties_sf <-
+  tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(
     state = str_to_title(STATE_NAME),
     county = str_to_title(NAMELSAD),
@@ -33,7 +34,8 @@ counties_sf <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
 
 # manual county overrides -----------------------------------------------
 
-county_overrides <- manual_non_facility_polygons |>
+county_overrides <-
+  manual_non_facility_polygons |>
   select(
     agency = agency,
     state,
@@ -46,7 +48,8 @@ county_overrides <- manual_non_facility_polygons |>
 
 # county agreements ------------------------------------------------------
 
-county_agreements_sf <- agencies_all |>
+county_agreements_sf <-
+  agencies_all |>
   left_join(
     county_overrides,
     by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")

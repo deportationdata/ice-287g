@@ -9,14 +9,15 @@ agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet")
 manual_non_facility_polygons <- arrow::read_parquet(
   "data/processed/manual_non_facility_polygons.parquet"
 )
-state_xwalk <- readRDS("data/processed/state_xwalk.rds")
+state_xwalk <- readRDS("data/processed/state_xwalk.rds") # TODO: switch to parquet; does this need to include territories?
 university_boundaries <- sfarrow::st_read_parquet(
   "data/processed/university_boundaries.parquet"
 )
 
 # university boundary lookup ---------------------------------------------
 
-university_lookup <- university_boundaries |>
+university_lookup <-
+  university_boundaries |>
   st_transform(4326) |>
   mutate(
     university_name = str_squish(NAME),
@@ -31,14 +32,16 @@ university_lookup <- university_boundaries |>
 
 # manual name overrides --------------------------------------------------
 
-university_name_overrides <- tribble(
-  ~university_guess        , ~university_guess_fixed                          ,
-  "Florida A&M University" , "Florida Agricultural And Mechanical University"
-)
+university_name_overrides <-
+  tribble(
+    ~university_guess        , ~university_guess_fixed                          ,
+    "Florida A&M University" , "Florida Agricultural And Mechanical University"
+  )
 
 # manual university overrides -------------------------------------------
 
-university_overrides <- manual_non_facility_polygons |>
+university_overrides <-
+  manual_non_facility_polygons |>
   select(
     agency = agency,
     state,

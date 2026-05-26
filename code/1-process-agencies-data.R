@@ -1,3 +1,5 @@
+# TODO: let's switch this into several R files one for each dataset - one for agencies, one for hifld, etc.
+
 library(tidyverse)
 library(readxl)
 library(sf)

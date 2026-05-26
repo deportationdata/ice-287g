@@ -28,7 +28,8 @@ states_sf <- tigris::states(cb = TRUE, year = YEAR, class = "sf") |>
 # territories
 counties_sf_raw <- tigris::counties(cb = TRUE, year = YEAR, class = "sf")
 
-territories <- counties_sf_raw |>
+territories <-
+  counties_sf_raw |>
   filter(STATEFP %in% c("60", "66", "69", "78")) |>
   group_by(STATEFP) |>
   summarise(geometry = st_union(geometry)) |>
@@ -46,21 +47,23 @@ territories <- counties_sf_raw |>
     by = "STATEFP"
   )
 
-all_states_and_territories <- bind_rows(
-  states_sf |>
-    filter(as.integer(statefp) <= 56 | statefp == "72") |>
-    transmute(
-      NAME = state,
-      STATEFP = statefp,
-      STUSPS = NA_character_,
-      geometry
-    ),
-  territories |>
-    rename(STATEFP = STATEFP) |>
-    select(NAME, STATEFP, STUSPS, geometry)
-)
+all_states_and_territories <-
+  bind_rows(
+    states_sf |>
+      filter(as.integer(statefp) <= 56 | statefp == "72") |> # states plus PR
+      transmute(
+        NAME = state,
+        STATEFP = statefp,
+        STUSPS = NA_character_,
+        geometry
+      ),
+    territories |>
+      rename(STATEFP = STATEFP) |>
+      select(NAME, STATEFP, STUSPS, geometry)
+  )
 
-state_lookup <- all_states_and_territories |>
+state_lookup <-
+  all_states_and_territories |>
   transmute(
     state = NAME,
     statefp = STATEFP,
@@ -70,7 +73,8 @@ state_lookup <- all_states_and_territories |>
 
 # manual state overrides -------------------------------------------------
 
-state_overrides <- manual_non_facility_polygons |>
+state_overrides <-
+  manual_non_facility_polygons |>
   select(
     agency = agency,
     state,
@@ -83,7 +87,8 @@ state_overrides <- manual_non_facility_polygons |>
 
 # state agreements -------------------------------------------------------
 
-state_agreements_sf <- agencies_all |>
+state_agreements_sf <-
+  agencies_all |>
   left_join(
     state_overrides,
     by = c("LAW ENFORCEMENT AGENCY" = "agency", "state", "county")
@@ -110,6 +115,8 @@ state_agreements_sf <- agencies_all |>
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
   st_as_sf()
+
+# TODO: do we need to keep all the extra intermediate columns like type_clean? alterantively, do we need COUNTY still? I would only keep stuff that's required either for intermediate computations or the final dataset at this stage
 
 # save state geometries --------------------------------------------------
 
