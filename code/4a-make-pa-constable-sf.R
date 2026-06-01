@@ -6,30 +6,30 @@ sf_use_s2(FALSE)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
 
 # municipality boundaries from PA Spatial Data Access
 pasda_municipalities <- st_read(
-  "data/2026-pennsylvania-municipalities/PaMunicipalities2026_04.shp",
+  "inputs/2026-pennsylvania-municipalities/PaMunicipalities2026_04.shp",
   quiet = TRUE
 )
 
 # voting district boundaries from PA Legislative Reapportionment Commission (LRC)
 lrc_voting_districts <- st_read(
-  "data/2021-pennsylvania-lrc-voting-district-boundaries/WP_VotingDistricts.shp",
+  "inputs/2021-pennsylvania-lrc-voting-district-boundaries/WP_VotingDistricts.shp",
   quiet = TRUE
 )
 
 # ward boundaries from PA LRC
 lrc_wards <- st_read(
-  "data/2021-pennsylvania-lrc-voting-district-boundaries/WP_Wards.shp",
+  "inputs/2021-pennsylvania-lrc-voting-district-boundaries/WP_Wards.shp",
   quiet = TRUE
 )
 
 # county boundaries from PA LRC
 lrc_counties <- st_read(
-  "data/2021-pennsylvania-lrc-voting-district-boundaries/WP_Counties.shp",
+  "inputs/2021-pennsylvania-lrc-voting-district-boundaries/WP_Counties.shp",
   quiet = TRUE
 ) |>
   st_drop_geometry() |>
@@ -82,6 +82,11 @@ pasda_lookup <- pasda_municipalities |>
   mutate(
     lookup_id = row_number(),
     src = "pasda_municipalities_2026",
+    state_fips = str_pad(as.character(FIPS_STATE), 2, pad = "0"),
+    countyfp = str_pad(as.character(FIPS_COUNT), 3, pad = "0"),
+    county_fips = paste0(state_fips, countyfp),
+    place_fips = as.character(FIPS_MUN_C),
+    geoid = as.character(GEOID),
     resolved_county = str_to_title(COUNTY_NAM),
     municipality_match = str_to_title(MUNICIPAL1),
     municipality_type = muni_type_from_pasda(CLASS_OF_M),
@@ -91,6 +96,10 @@ pasda_lookup <- pasda_municipalities |>
   select(
     lookup_id,
     src,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     resolved_county,
     resolved_county_key,
     municipality_match,
@@ -104,6 +113,10 @@ vtd_lookup <- lrc_voting_districts |>
   mutate(
     lookup_id = row_number(),
     src = "lrc_voting_districts_2021",
+    state_fips = STATEFP20,
+    county_fips = paste0(STATEFP20, COUNTYFP20),
+    place_fips = VTDST20,
+    geoid = GEOID20,
     resolved_county = str_to_title(COUNTY_NME),
     municipality_match = str_to_title(MCD_NAME),
     municipality_type = muni_type_from_lrc(MCD_TYP_NM),
@@ -115,6 +128,10 @@ vtd_lookup <- lrc_voting_districts |>
   select(
     lookup_id,
     src,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     resolved_county,
     resolved_county_key,
     municipality_match,
@@ -144,6 +161,10 @@ ward_lookup <- lrc_wards |>
   mutate(
     lookup_id = row_number(),
     src = "lrc_wards_2021",
+    state_fips = "42",
+    county_fips = FIPS,
+    place_fips = as.character(FIPS_MCD),
+    geoid = as.character(cou_cbt_wa),
     municipality_match = str_to_title(MUNICIPALI),
     municipality_type = case_when(
       CBT == "2" ~ "city",
@@ -167,6 +188,10 @@ ward_lookup <- lrc_wards |>
   select(
     lookup_id,
     src,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     resolved_county,
     resolved_county_key,
     municipality_match,
@@ -278,6 +303,10 @@ pa_matches <- bind_rows(
     pa_constable_row_id,
     src,
     match_type,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     resolved_county,
     county_match_status,
     municipality_match,
@@ -299,6 +328,10 @@ unmatched <- pa_constables |>
   mutate(
     src = NA_character_,
     match_type = "unmatched_pa_constable_geometry",
+    state_fips = "42",
+    county_fips = NA_character_,
+    place_fips = NA_character_,
+    geoid = NA_character_,
     resolved_county = NA_character_,
     county_match_status = if_else(
       is.na(source_county_key),
@@ -317,6 +350,10 @@ unmatched <- pa_constables |>
     pa_constable_row_id,
     src,
     match_type,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     resolved_county,
     county_match_status,
     municipality_match,
@@ -409,6 +446,10 @@ pa_constable_agreements_sf <- st_sf(
     precinct_number,
     src,
     match_type,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     resolved_county,
     county_match_status,
     municipality_match,
@@ -445,10 +486,10 @@ review_reasons <- pa_constable_agreements_sf |>
 
 write_sf_parquet(
   pa_constable_agreements_sf,
-  "data/processed/pa_constable_agreements_sf.parquet"
+  "data/pa_constable_agreements_sf.parquet"
 )
 
 readr::write_csv(
   review_reasons,
-  "data/processed/pa_constable_matches_needing_review.csv"
+  "data/pa_constable_matches_needing_review.csv"
 )

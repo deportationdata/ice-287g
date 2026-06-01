@@ -3,10 +3,10 @@ library(arrow)
 
 source("code/functions.R")
 
-load("data/35158-0001-Data.rda")
+load("inputs/35158-0001-Data.rda")
 LEAIC <- da35158.0001 |> as_tibble()
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
 
 leaic_lookup <- LEAIC |>
@@ -80,4 +80,4 @@ agencies_all <- agencies_all |>
   ) |>
   select(-state_key, -county_key, -agency_key)
 
-arrow::write_parquet(agencies_all, "data/processed/agencies_all.parquet")
+arrow::write_parquet(agencies_all, "data/agencies_all.parquet")

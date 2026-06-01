@@ -10,7 +10,7 @@ source("code/functions.R")
 
 YEAR <- 2024
 
-state_xwalk <- arrow::read_parquet("data/processed/state_xwalk.parquet")
+state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 
 hifld <- arrow::read_parquet(
   "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-local-law-enforcement-facilities.parquet"
@@ -133,10 +133,10 @@ hifld_facility_tbl <- hifld_tbl |>
     facility_name = src_name,
     facility_address = src_address,
     facility_city = src_city,
-    facility_county = NA_character_,
-    facility_county_fips = NA_character_,
+    facility_county = src_county,
+    facility_county_fips = src_county_fips,
     facility_state = src_state,
-    facility_state_fips = NA_character_,
+    facility_state_fips = str_sub(src_county_fips, 1, 2),
     facility_zip = src_zip,
     facility_address_full = NA_character_,
     facility_latitude = src_latitude,
@@ -149,5 +149,5 @@ hifld_facility_tbl <- hifld_tbl |>
 
 arrow::write_parquet(
   hifld_facility_tbl,
-  "data/processed/hifld_facility_tbl.parquet"
+  "data/hifld_facility_tbl.parquet"
 )

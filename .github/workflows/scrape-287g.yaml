@@ -28,20 +28,36 @@ jobs:
           cp -r agreements /tmp/old-287g/agreements 2>/dev/null || true
           cp -r sheets /tmp/old-287g/sheets 2>/dev/null || true
 
-      - name: Install scraper packages only
+      - name: Install R packages
         run: |
           Rscript --vanilla -e '
             install.packages(
-              c("httr", "rvest", "openxlsx", "stringr", "dplyr"),
+              c(
+                "arrow",
+                "digest",
+                "dplyr",
+                "httr",
+                "openxlsx",
+                "readr",
+                "readxl",
+                "rvest",
+                "sf",
+                "sfarrow",
+                "stringdist",
+                "stringr",
+                "tigris",
+                "tidyr",
+                "tidyverse"
+              ),
               repos = "https://cloud.r-project.org"
             )
           '
 
       - name: Run scraper
-        run: Rscript --vanilla code/287g-scraper.R
+        run: Rscript --vanilla code/0-287g-scraper.R
 
       - name: Run deduplicator
-        run: Rscript --vanilla code/287g-deduplicate.R
+        run: Rscript --vanilla code/0-287g-deduplicate.R
 
       - name: Check for changes
         id: check_changes
@@ -71,7 +87,7 @@ jobs:
           done
 
           # Generate change summary comparing old vs new files
-          Rscript --vanilla code/287g-diff.R
+          Rscript --vanilla code/0-287g-diff.R
 
           # If files changed but contents are identical after deduplication, skip
           if grep -qF 'NO_REAL_CHANGES' /tmp/287g-changes.txt; then
@@ -83,6 +99,12 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Run CI-friendly data pipeline
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          bash code/run_ci.sh
+          git add data/
+
       - name: Commit and push
         if: steps.check_changes.outputs.changed == 'true'
         run: |
@@ -93,6 +115,7 @@ jobs:
 
       - name: Create pull request
         if: steps.check_changes.outputs.changed == 'true'
+        id: create_pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -102,7 +125,19 @@ jobs:
             cat /tmp/287g-changes.txt
           } > /tmp/pr-body.txt
 
-          gh pr create \
+          pr_url=$(gh pr create \
             --title "287(g) update $(date +%Y-%m-%d)" \
             --body-file /tmp/pr-body.txt \
-            --base main
+            --base main)
+          pr_num="${pr_url##*/}"
+          echo "pr_url=${pr_url}" >> "$GITHUB_OUTPUT"
+          echo "pr_number=${pr_num}" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger diff workflow
+        if: steps.create_pr.outputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/dispatches" \
+            -f event_type=diff-pr \
+            -F "client_payload[pr_number]=${{ steps.create_pr.outputs.pr_number }}"

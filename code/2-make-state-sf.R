@@ -8,10 +8,10 @@ sf_use_s2(FALSE)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
 manual_non_facility_polygons <- arrow::read_parquet(
-  "data/processed/manual_non_facility_polygons.parquet"
+  "data/manual_non_facility_polygons.parquet"
 )
 
 YEAR <- 2024
@@ -112,6 +112,10 @@ state_agreements_sf <-
       "tigris_state",
       "manual_state_override"
     ),
+    state_fips = statefp,
+    county_fips = NA_character_,
+    place_fips = NA_character_,
+    geoid = state_fips,
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
   select(
@@ -136,6 +140,10 @@ state_agreements_sf <-
     moa_pending,
     state_match,
     statefp,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     state_abbr,
     src,
     manual_match_layer,
@@ -149,5 +157,5 @@ state_agreements_sf <-
 
 write_sf_parquet(
   state_agreements_sf,
-  "data/processed/state_agreements_sf.parquet"
+  "data/state_agreements_sf.parquet"
 )

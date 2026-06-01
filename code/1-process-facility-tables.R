@@ -36,4 +36,4 @@ facilities_tbl <- facilities |>
     facility_key = norm_key(facility_name)
   )
 
-write_sf_parquet(facilities_tbl, "data/processed/facilities_tbl.parquet")
+write_sf_parquet(facilities_tbl, "data/facilities_tbl.parquet")

@@ -5,14 +5,14 @@ library(arrow)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
-facilities_tbl <- read_sf_parquet("data/processed/facilities_tbl.parquet") |>
+facilities_tbl <- read_sf_parquet("data/facilities_tbl.parquet") |>
   st_drop_geometry()
 hifld_facility_tbl <- arrow::read_parquet(
-  "data/processed/hifld_facility_tbl.parquet"
+  "data/hifld_facility_tbl.parquet"
 )
-manual_points <- arrow::read_parquet("data/processed/manual_points.parquet") |>
+manual_points <- arrow::read_parquet("data/manual_points.parquet") |>
   mutate(
     across(
       c(
@@ -328,7 +328,7 @@ facility_unmatched_final <- fac_287g |>
 readr::write_csv(
   facility_unmatched_final |>
     select(state, county, agency, agency_level, support_clean, facility_guess),
-  "data/processed/facility_unmatched.csv"
+  "data/facility_unmatched.csv"
 )
 
 # facility point sf layer ------------------------------------------------
@@ -344,6 +344,10 @@ facility_agreements_sf <-
   mutate(
     geom_class = "facility_point",
     src = source,
+    state_fips = facility_state_fips,
+    county_fips = facility_county_fips,
+    place_fips = NA_character_,
+    geoid = county_fips,
     needs_review = needs_review |
       source != "facilities" |
       match_type != "exact_state_county_facility_name" |
@@ -379,8 +383,14 @@ facility_agreements_sf <-
     facility_address,
     facility_city,
     facility_county,
+    facility_county_fips,
     facility_state,
+    facility_state_fips,
     facility_zip,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     facility_latitude,
     facility_longitude,
     geometry
@@ -439,10 +449,10 @@ facility_review <-
 
 readr::write_csv(
   facility_review,
-  "data/processed/facility_matches_needing_review.csv"
+  "data/facility_matches_needing_review.csv"
 )
 
 write_sf_parquet(
   facility_agreements_sf,
-  "data/processed/facility_agreements_sf.parquet"
+  "data/facility_agreements_sf.parquet"
 )

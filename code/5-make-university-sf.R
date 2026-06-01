@@ -4,14 +4,14 @@ library(arrow)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
 manual_non_facility_polygons <- arrow::read_parquet(
-  "data/processed/manual_non_facility_polygons.parquet"
+  "data/manual_non_facility_polygons.parquet"
 )
-state_xwalk <- arrow::read_parquet("data/processed/state_xwalk.parquet")
+state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 university_boundaries <- read_sf_parquet(
-  "data/processed/university_boundaries.parquet",
+  "data/university_boundaries.parquet",
   crs = 3857
 )
 
@@ -29,7 +29,7 @@ university_lookup <-
     university_key = norm_key(university_name),
     state_key = norm_state(state_full)
   ) |>
-  select(university_name, university_key, state_key, geometry)
+  select(university_name, university_key, state_key, state_fips, geometry)
 
 # manual name overrides --------------------------------------------------
 
@@ -94,6 +94,9 @@ university_agreements_sf <- agencies_all |>
         "manual_university_override"
       )
     ),
+    county_fips = NA_character_,
+    place_fips = NA_character_,
+    geoid = NA_character_,
     needs_geometry_review = is.na(university_name) | st_is_empty(geometry),
     needs_review = needs_review | needs_geometry_review
   ) |>
@@ -120,6 +123,10 @@ university_agreements_sf <- agencies_all |>
     university_name,
     university_guess,
     university_guess_final,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     src,
     manual_match_layer,
     manual_reason,
@@ -131,5 +138,5 @@ university_agreements_sf <- agencies_all |>
 
 write_sf_parquet(
   university_agreements_sf,
-  "data/processed/university_agreements_sf.parquet"
+  "data/university_agreements_sf.parquet"
 )

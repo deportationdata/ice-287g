@@ -5,11 +5,11 @@ library(arrow)
 source("code/functions.R")
 
 non_facility_agreements_sf <- read_sf_parquet(
-  "data/processed/non_facility_agreements_sf.parquet"
+  "data/non_facility_agreements_sf.parquet"
 )
 
 facility_agreements_sf <- read_sf_parquet(
-  "data/processed/facility_agreements_sf.parquet"
+  "data/facility_agreements_sf.parquet"
 )
 
 all_agreements_sf <-
@@ -25,5 +25,5 @@ all_agreements_sf <-
 
 write_sf_parquet(
   all_agreements_sf,
-  "data/processed/all_agreements_sf.parquet"
+  "data/all_agreements_sf.parquet"
 )

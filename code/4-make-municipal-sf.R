@@ -8,10 +8,10 @@ sf_use_s2(FALSE)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
 manual_non_facility_polygons <- arrow::read_parquet(
-  "data/processed/manual_non_facility_polygons.parquet"
+  "data/manual_non_facility_polygons.parquet"
 )
 
 YEAR <- 2024
@@ -23,7 +23,9 @@ places_sf <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
     state = str_to_title(STATE_NAME),
     place_guess = str_to_title(NAME),
     statefp = STATEFP,
+    countyfp = NA_character_,
     placefp = PLACEFP,
+    geoid = GEOID,
     geometry
   )
 
@@ -44,7 +46,9 @@ cousubs_sf <-
     state = str_to_title(STATE_NAME),
     place_guess = str_to_title(NAME),
     statefp = STATEFP,
+    countyfp = COUNTYFP,
     placefp = COUSUBFP,
+    geoid = GEOID,
     geometry
   )
 
@@ -110,7 +114,16 @@ municipal_agreements_sf <- agencies_all |>
   ) |>
   left_join(
     places_lookup |>
-      select(state_key, place_key, geometry, src),
+      select(
+        state_key,
+        place_key,
+        statefp,
+        countyfp,
+        placefp,
+        geoid,
+        geometry,
+        src
+      ),
     by = c("state_key", "place_key")
   ) |>
   mutate(
@@ -119,6 +132,13 @@ municipal_agreements_sf <- agencies_all |>
       src,
       paste("manual_municipal_override", src, sep = ":")
     ),
+    state_fips = statefp,
+    county_fips = if_else(
+      !is.na(statefp) & !is.na(countyfp),
+      paste0(statefp, countyfp),
+      NA_character_
+    ),
+    place_fips = placefp,
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
   select(
@@ -143,6 +163,13 @@ municipal_agreements_sf <- agencies_all |>
     moa_pending,
     city_guess,
     city_match,
+    statefp,
+    countyfp,
+    placefp,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
     src,
     manual_match_layer,
     manual_reason,
@@ -156,5 +183,5 @@ municipal_agreements_sf <- agencies_all |>
 
 write_sf_parquet(
   municipal_agreements_sf,
-  "data/processed/municipal_agreements_sf.parquet"
+  "data/municipal_agreements_sf.parquet"
 )

@@ -5,23 +5,23 @@ library(arrow)
 source("code/functions.R")
 
 state_agreements_sf <- read_sf_parquet(
-  "data/processed/state_agreements_sf.parquet"
+  "data/state_agreements_sf.parquet"
 )
 
 county_agreements_sf <- read_sf_parquet(
-  "data/processed/county_agreements_sf.parquet"
+  "data/county_agreements_sf.parquet"
 )
 
 municipal_agreements_sf <- read_sf_parquet(
-  "data/processed/municipal_agreements_sf.parquet"
+  "data/municipal_agreements_sf.parquet"
 )
 
 pa_constable_agreements_sf <- read_sf_parquet(
-  "data/processed/pa_constable_agreements_sf.parquet"
+  "data/pa_constable_agreements_sf.parquet"
 )
 
 university_agreements_sf <- read_sf_parquet(
-  "data/processed/university_agreements_sf.parquet"
+  "data/university_agreements_sf.parquet"
 )
 
 # bind non-facility layers -----------------------------------------------
@@ -79,10 +79,10 @@ non_facility_unmatched <- non_facility_agreements_sf[
 
 readr::write_csv(
   non_facility_unmatched,
-  "data/processed/non_facility_matches_needing_review.csv"
+  "data/non_facility_matches_needing_review.csv"
 )
 
 write_sf_parquet(
   non_facility_agreements_sf,
-  "data/processed/non_facility_agreements_sf.parquet"
+  "data/non_facility_agreements_sf.parquet"
 )

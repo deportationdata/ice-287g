@@ -1,8 +1,0 @@
-source("code/1a-make-state-xwalk.R")
-source("code/1b-process-agencies.R")
-source("code/1c-add-leaic-ori.R")
-source("code/1d-add-crime-ori.R")
-source("code/1e-process-hifld-tables.R")
-source("code/1f-process-manual-inputs.R")
-source("code/1g-process-facility-tables.R")
-source("code/1h-process-university-boundaries.R")

@@ -107,4 +107,4 @@ agencies_all <- participating_agencies |>
     moa_pending
   )
 
-arrow::write_parquet(agencies_all, "data/processed/agencies_all.parquet")
+arrow::write_parquet(agencies_all, "data/agencies_all.parquet")

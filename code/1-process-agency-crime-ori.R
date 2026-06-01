@@ -3,10 +3,10 @@ library(arrow)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/processed/agencies_all.parquet") |>
+agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
 
-crime_lookup <- arrow::read_parquet("data/crime-data-all-states.parquet") |>
+crime_lookup <- arrow::read_parquet("inputs/crime-data-all-states.parquet") |>
   transmute(
     state_key = norm_state(state_name),
     county_key = norm_place(county),
@@ -60,4 +60,4 @@ agencies_all <- agencies_all |>
   ) |>
   select(-state_key, -county_key, -agency_key)
 
-arrow::write_parquet(agencies_all, "data/processed/agencies_all.parquet")
+arrow::write_parquet(agencies_all, "data/agencies_all.parquet")
