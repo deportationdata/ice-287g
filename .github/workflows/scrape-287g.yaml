@@ -28,36 +28,15 @@ jobs:
           cp -r agreements /tmp/old-287g/agreements 2>/dev/null || true
           cp -r sheets /tmp/old-287g/sheets 2>/dev/null || true
 
-      - name: Install R packages
+      - name: Restore R packages
         run: |
-          Rscript --vanilla -e '
-            install.packages(
-              c(
-                "arrow",
-                "digest",
-                "dplyr",
-                "httr",
-                "openxlsx",
-                "readr",
-                "readxl",
-                "rvest",
-                "sf",
-                "sfarrow",
-                "stringdist",
-                "stringr",
-                "tigris",
-                "tidyr",
-                "tidyverse"
-              ),
-              repos = "https://cloud.r-project.org"
-            )
-          '
+          Rscript -e 'renv::restore(prompt = FALSE)'
 
       - name: Run scraper
-        run: Rscript --vanilla code/0-287g-scraper.R
+        run: Rscript code/0-287g-scraper.R
 
       - name: Run deduplicator
-        run: Rscript --vanilla code/0-287g-deduplicate.R
+        run: Rscript code/0-287g-deduplicate.R
 
       - name: Check for changes
         id: check_changes
@@ -87,7 +66,7 @@ jobs:
           done
 
           # Generate change summary comparing old vs new files
-          Rscript --vanilla code/0-287g-diff.R
+          Rscript code/0-287g-diff.R
 
           # If files changed but contents are identical after deduplication, skip
           if grep -qF 'NO_REAL_CHANGES' /tmp/287g-changes.txt; then
