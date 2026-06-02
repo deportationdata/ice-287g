@@ -158,6 +158,82 @@ extract_facility_guess <- function(x) {
     str_to_title()
 }
 
+norm_match_phrase <- function(x) {
+  x |>
+    str_to_lower() |>
+    str_replace_all("&", " and ") |>
+    str_replace_all("\\bst\\.?\\b", "saint") |>
+    str_replace_all("'", "") |>
+    str_replace_all("[^a-z0-9\\s]", " ") |>
+    str_squish() |>
+    str_replace_all("\\s+", " ")
+}
+
+exact_scope_root <- function(x) {
+  x |>
+    norm_match_phrase() |>
+    str_replace_all(
+      "\\b(county|parish|city|town|village|borough|township|municipality)\\b",
+      " "
+    ) |>
+    str_squish() |>
+    str_replace_all("\\s+", " ")
+}
+
+exact_county_suffix_pattern <- function() {
+  paste(
+    "sheriffs? office",
+    "sheriffs? department",
+    "sheriff",
+    "county jail",
+    "parish jail",
+    "jail",
+    "detention center",
+    "detention facility",
+    "adult detention center",
+    "adult detention facility",
+    "correctional facility",
+    "correctional center",
+    "correctional institution",
+    "correctional complex",
+    "law enforcement center",
+    "justice center",
+    "public safety complex",
+    sep = "|"
+  )
+}
+
+is_exact_county_pattern <- function(name, county) {
+  root <- exact_scope_root(county)
+  phrase <- norm_match_phrase(name)
+  suffixes <- exact_county_suffix_pattern()
+
+  !is.na(root) & root != "" &
+    str_detect(
+      phrase,
+      paste0("^", root, "\\s+(county|parish)\\s+(", suffixes, ")\\b")
+    )
+}
+
+is_exact_municipal_pattern <- function(name, city) {
+  root <- exact_scope_root(city)
+  phrase <- norm_match_phrase(name)
+  suffixes <- paste(
+    "city jail",
+    "jail",
+    "police department",
+    "police dept",
+    "pd",
+    sep = "|"
+  )
+
+  !is.na(root) & root != "" &
+    str_detect(
+      phrase,
+      paste0("^", root, "\\s+(", suffixes, ")$")
+    )
+}
+
 extract_university_guess <- function(x) {
   s <- str_squish(x)
 

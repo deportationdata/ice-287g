@@ -72,14 +72,64 @@ fac_287g <- agencies_all |>
     agency_key = norm_key(agency),
     facility_guess = extract_facility_guess(agency),
     facility_guess_key = norm_key(facility_guess),
+    city_guess = extract_city_guess(agency),
+    is_county_exact_agency = is_exact_county_pattern(agency, county),
+    is_municipal_exact_agency = agency_level == "municipal" &
+      is_exact_municipal_pattern(agency, city_guess),
     is_doc_agency = str_detect(str_to_lower(agency), doc_pattern) &
       agency_level == "state"
   )
 
 # match detention facilities to facility datasets ------------------------
 
-facility_exact_matches <- fac_287g |>
+county_pattern_exact_matches <- fac_287g |>
+  filter(!is_doc_agency, is_county_exact_agency) |>
+  inner_join(
+    facility_sources_exact,
+    by = c("state_key", "county_key"),
+    relationship = "many-to-many"
+  ) |>
+  filter(is_exact_county_pattern(facility_name, county)) |>
+  mutate(
+    match_type = "exact_county_pattern_all_facilities",
+    match_score = 1.0
+  ) |>
+  group_by(state, county, agency, support_clean, facility_key) |>
+  arrange(source_rank) |>
+  slice_head(n = 1) |>
+  ungroup()
+
+municipal_pattern_exact_matches <- fac_287g |>
+  filter(!is_doc_agency, is_municipal_exact_agency) |>
+  inner_join(
+    facility_sources_exact |>
+      rename(facility_source_county_key = county_key),
+    by = "state_key",
+    relationship = "many-to-many"
+  ) |>
+  filter(
+    is.na(county_key) | county_key == "" |
+      county_key == facility_source_county_key,
+    is_exact_municipal_pattern(facility_name, city_guess)
+  ) |>
+  mutate(
+    county_key = facility_source_county_key,
+    match_type = "exact_municipal_pattern_facility",
+    match_score = 1.0
+  ) |>
+  group_by(state, county, agency, support_clean, facility_key) |>
+  arrange(source_rank) |>
+  slice_head(n = 1) |>
+  ungroup()
+
+pattern_exact_matches <- bind_rows(
+  county_pattern_exact_matches,
+  municipal_pattern_exact_matches
+)
+
+facility_name_exact_matches <- fac_287g |>
   filter(!is_doc_agency) |>
+  anti_join(pattern_exact_matches, by = c("state", "county", "agency")) |>
   inner_join(
     facility_sources_exact,
     by = c("state_key", "county_key", "facility_guess_key" = "facility_key"),
@@ -93,6 +143,11 @@ facility_exact_matches <- fac_287g |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup()
+
+facility_exact_matches <- bind_rows(
+  pattern_exact_matches,
+  facility_name_exact_matches
+)
 
 facility_unmatched_after_exact <- fac_287g |>
   filter(!is_doc_agency) |>
@@ -298,7 +353,7 @@ non_doc_matches <-
     facility_fuzzy_county,
     facility_fuzzy_state
   ) |>
-  group_by(state, county, agency) |>
+  group_by(state, county, agency, facility_key) |>
   arrange(source_rank, desc(match_score)) |>
   slice_head(n = 1) |>
   ungroup()
@@ -348,9 +403,14 @@ facility_agreements_sf <-
     county_fips = facility_county_fips,
     place_fips = NA_character_,
     geoid = county_fips,
+    is_accepted_exact_match = match_type %in% c(
+      "exact_state_county_facility_name",
+      "exact_county_pattern_all_facilities",
+      "exact_municipal_pattern_facility"
+    ),
     needs_review = needs_review |
-      source != "facilities" |
-      match_type != "exact_state_county_facility_name" |
+      (source != "facilities" & !is_accepted_exact_match) |
+      !is_accepted_exact_match |
       has_addendum |
       moa_pending
   ) |>
