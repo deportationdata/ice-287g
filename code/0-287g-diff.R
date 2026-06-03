@@ -43,11 +43,13 @@ new_agreements <- get_snapshot("agreements")
 old_sheets <- get_snapshot("/tmp/old-287g/sheets")
 new_sheets <- get_snapshot("sheets")
 
-# add category column, handling empty data frames
-if (nrow(old_agreements) > 0) {
-  old_agreements$category <- "agreements"
-} else {
-  old_agreements <- data.frame(
+with_category <- function(snapshot, category) {
+  if (nrow(snapshot) > 0) {
+    snapshot$category <- category
+    return(snapshot)
+  }
+
+  data.frame(
     rel_path = character(),
     full_path = character(),
     file_hash = character(),
@@ -56,41 +58,10 @@ if (nrow(old_agreements) > 0) {
   )
 }
 
-if (nrow(old_sheets) > 0) {
-  old_sheets$category <- "sheets"
-} else {
-  old_sheets <- data.frame(
-    rel_path = character(),
-    full_path = character(),
-    file_hash = character(),
-    category = character(),
-    stringsAsFactors = FALSE
-  )
-}
-
-if (nrow(new_agreements) > 0) {
-  new_agreements$category <- "agreements"
-} else {
-  new_agreements <- data.frame(
-    rel_path = character(),
-    full_path = character(),
-    file_hash = character(),
-    category = character(),
-    stringsAsFactors = FALSE
-  )
-}
-
-if (nrow(new_sheets) > 0) {
-  new_sheets$category <- "sheets"
-} else {
-  new_sheets <- data.frame(
-    rel_path = character(),
-    full_path = character(),
-    file_hash = character(),
-    category = character(),
-    stringsAsFactors = FALSE
-  )
-}
+old_agreements <- with_category(old_agreements, "agreements")
+new_agreements <- with_category(new_agreements, "agreements")
+old_sheets <- with_category(old_sheets, "sheets")
+new_sheets <- with_category(new_sheets, "sheets")
 
 old <- rbind(old_agreements, old_sheets)
 new <- rbind(new_agreements, new_sheets)
