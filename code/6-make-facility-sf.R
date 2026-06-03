@@ -212,13 +212,17 @@ facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
     needs_review = TRUE
   )
 
-# DOC: match to all facilities in state ----------------------------------
+# DOC: match to state-run prison facilities ------------------------------
 
-doc_facility_pattern <- paste(
-  "correctional",
+doc_prison_like_pattern <- paste(
+  "state prison",
   "prison",
   "penitentiary",
-  "detention",
+  "correctional institution",
+  "correctional institute",
+  "correctional facility",
+  "correctional center",
+  "correctional complex",
   "work camp",
   "re-?entry",
   "work release",
@@ -230,40 +234,117 @@ doc_facility_pattern <- paste(
   sep = "|"
 )
 
-doc_exclude_pattern <- paste(
+doc_ambiguous_pattern <- paste(
+  "detention",
+  "juvenile",
+  "rehab",
+  "rehabilitation",
+  "treatment",
+  "public safety complex",
+  "justice center",
+  "law enforcement center",
+  sep = "|"
+)
+
+doc_local_jail_pattern <- paste(
   "county jail",
   "parish jail",
   "city jail",
   "municipal jail",
-  "sheriff",
-  "police",
+  "county detention",
+  "parish detention",
+  "city detention",
+  "municipal detention",
+  "\\bcounty\\b.*\\b(jail|detention|correctional|sheriff|law enforcement|justice|public safety)",
+  "\\bparish\\b.*\\b(jail|detention|correctional|sheriff|law enforcement|justice|public safety)",
+  "\\bcity\\b.*\\b(jail|detention|correctional|law enforcement|justice|public safety)",
+  "\\bmunicipal\\b.*\\b(jail|detention|correctional|law enforcement|justice|public safety)",
+  "sheriffs?.*\\b(jail|detention)",
+  "police.*\\b(jail|detention)",
   "courthouse",
   "regional lock-?up",
+  "law enforcement center",
+  "justice center",
+  "public safety complex",
   sep = "|"
 )
 
 doc_candidates <- fac_287g |>
   filter(is_doc_agency) |>
   inner_join(
-    facility_sources_exact,
+    facility_sources_exact |>
+      rename(facility_source_county_key = county_key),
     by = "state_key",
     relationship = "many-to-many"
+  ) |>
+  mutate(
+    facility_name_clean = str_to_lower(facility_name),
+    doc_is_prison_source = source == "hifld_prisons",
+    doc_has_prison_like_name = str_detect(
+      facility_name_clean,
+      doc_prison_like_pattern
+    ),
+    doc_has_ambiguous_name = str_detect(
+      facility_name_clean,
+      doc_ambiguous_pattern
+    ),
+    doc_has_local_jail_name = str_detect(
+      facility_name_clean,
+      doc_local_jail_pattern
+    ) |
+      is_exact_county_pattern(facility_name, facility_county),
+    doc_match_tier = case_when(
+      doc_has_local_jail_name ~ "doc_excluded_local_jail",
+      doc_is_prison_source & doc_has_prison_like_name ~
+        "doc_exact_state_prison_source",
+      doc_is_prison_source & doc_has_ambiguous_name ~
+        "doc_probable_state_facility",
+      (doc_has_prison_like_name | doc_has_ambiguous_name) ~
+        "doc_needs_research",
+      TRUE ~ "doc_not_correctional_candidate"
+    ),
+    doc_research_reason = case_when(
+      doc_match_tier == "doc_excluded_local_jail" ~
+        "name looks like a local jail/detention/police/sheriff facility",
+      doc_match_tier == "doc_probable_state_facility" ~
+        "ambiguous facility type, but source is hifld_prisons",
+      doc_match_tier == "doc_needs_research" ~
+        "prison-like or ambiguous name from a non-prison-only source",
+      doc_match_tier == "doc_not_correctional_candidate" ~
+        "name/source do not support DOC prison match",
+      TRUE ~ NA_character_
+    )
   )
 
 doc_matches <- doc_candidates |>
-  filter(
-    str_detect(str_to_lower(facility_name), doc_facility_pattern),
-    !str_detect(str_to_lower(facility_name), doc_exclude_pattern)
-  ) |>
+  filter(doc_match_tier %in% c(
+    "doc_exact_state_prison_source",
+    "doc_probable_state_facility"
+  )) |>
   arrange(state, county, agency, source_rank) |>
   group_by(state, county, agency, facility_key) |>
   slice_head(n = 1) |>
   ungroup() |>
   mutate(
-    match_type = "state_doc_all_facilities",
+    county_key = facility_source_county_key,
+    match_type = doc_match_tier,
     match_score = 1,
-    needs_review = TRUE
+    needs_review = match_type == "doc_probable_state_facility"
   )
+
+doc_research <- doc_candidates |>
+  filter(doc_match_tier == "doc_needs_research") |>
+  arrange(state, agency, facility_name, source_rank) |>
+  group_by(state, agency, facility_key) |>
+  slice_head(n = 1) |>
+  ungroup()
+
+doc_excluded_local <- doc_candidates |>
+  filter(doc_match_tier == "doc_excluded_local_jail") |>
+  arrange(state, agency, facility_name, source_rank) |>
+  group_by(state, agency, facility_key) |>
+  slice_head(n = 1) |>
+  ungroup()
 
 # manual matches ---------------------------------------------------------
 
@@ -406,11 +487,14 @@ facility_agreements_sf <-
     is_accepted_exact_match = match_type %in% c(
       "exact_state_county_facility_name",
       "exact_county_pattern_all_facilities",
-      "exact_municipal_pattern_facility"
+      "exact_municipal_pattern_facility",
+      "doc_exact_state_prison_source",
+      "doc_probable_state_facility"
     ),
     needs_review = needs_review |
       (source != "facilities" & !is_accepted_exact_match) |
       !is_accepted_exact_match |
+      match_type == "doc_probable_state_facility" |
       has_addendum |
       moa_pending
   ) |>
@@ -458,6 +542,50 @@ facility_agreements_sf <-
 
 # diagnostics ------------------------------------------------------------
 
+doc_research_out <- doc_research |>
+  as_tibble() |>
+  select(
+    state,
+    county,
+    agency,
+    facility_name,
+    source,
+    doc_match_tier,
+    doc_research_reason,
+    facility_address,
+    facility_city,
+    facility_county,
+    facility_latitude,
+    facility_longitude
+  )
+
+doc_excluded_local_out <- doc_excluded_local |>
+  as_tibble() |>
+  select(
+    state,
+    county,
+    agency,
+    facility_name,
+    source,
+    doc_match_tier,
+    doc_research_reason,
+    facility_address,
+    facility_city,
+    facility_county,
+    facility_latitude,
+    facility_longitude
+  )
+
+readr::write_csv(
+  doc_research_out,
+  "data/doc_facility_matches_needing_research.csv"
+)
+
+readr::write_csv(
+  doc_excluded_local_out,
+  "data/doc_facility_excluded_local_jails.csv"
+)
+
 facility_review <-
   facility_all_matches |>
   as_tibble() |>
@@ -468,19 +596,22 @@ facility_review <-
     flag_state_level_fuzzy = match_type == "fuzzy_state_facility",
     flag_low_confidence_fuzzy = str_detect(match_type, "fuzzy") &
       match_score < 0.85,
+    flag_doc_probable = match_type == "doc_probable_state_facility",
     flag_jails_prisons_source = source == "jails_prisons",
     review_reasons = pmap_chr(
       list(
         flag_missing_coordinates,
         flag_state_level_fuzzy,
         flag_low_confidence_fuzzy,
+        flag_doc_probable,
         flag_jails_prisons_source
       ),
-      \(missing_coords, state_fuzzy, low_fuzzy, jails_source) {
+      \(missing_coords, state_fuzzy, low_fuzzy, doc_probable, jails_source) {
         reasons <- c(
           if (missing_coords) "missing_coordinates",
           if (state_fuzzy) "state_level_fuzzy",
           if (low_fuzzy) "low_confidence_fuzzy",
+          if (doc_probable) "doc_probable_state_facility",
           if (jails_source) "jails_prisons_source"
         )
 
