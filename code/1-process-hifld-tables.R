@@ -12,14 +12,17 @@ YEAR <- 2024
 
 state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 
+# use type (constable, local state agency, ...)
 hifld <- arrow::read_parquet(
   "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-local-law-enforcement-facilities.parquet"
 )
 
+# use type column
 hifld_prisons <- arrow::read_parquet(
   "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-prisons.parquet"
 )
 
+# use type column
 jails_prisons <- arrow::read_parquet(
   "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/jails_prisons.parquet"
 )

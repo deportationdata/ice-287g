@@ -124,10 +124,14 @@ jobs:
             echo ""
             cat /tmp/287g-changes.txt
           } > /tmp/pr-body.txt
+          head -c 60000 /tmp/pr-body.txt > /tmp/pr-body.trimmed.txt
+          if [ "$(wc -c < /tmp/pr-body.txt)" -gt 60000 ]; then
+            printf "\n\n_...truncated at 60k chars._\n" >> /tmp/pr-body.trimmed.txt
+          fi
 
           pr_url=$(gh pr create \
             --title "287(g) update $(date +%Y-%m-%d)" \
-            --body-file /tmp/pr-body.txt \
+            --body-file /tmp/pr-body.trimmed.txt \
             --base main)
           pr_num="${pr_url##*/}"
           echo "pr_url=${pr_url}" >> "$GITHUB_OUTPUT"
