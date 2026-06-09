@@ -279,7 +279,21 @@ doc_candidates <- fac_287g |>
   ) |>
   mutate(
     facility_name_clean = str_to_lower(facility_name),
-    doc_is_prison_source = source == "hifld_prisons",
+    facility_source_type_clean = str_to_upper(str_squish(facility_source_type)),
+    facility_operator_clean = str_to_lower(str_squish(facility_operator_name)),
+    doc_is_state_prison_source = source == "hifld_prisons" &
+      facility_source_type_clean == "STATE",
+    doc_is_local_prison_source = source == "hifld_prisons" &
+      facility_source_type_clean %in% c("COUNTY", "LOCAL"),
+    doc_is_federal_prison_source = source == "hifld_prisons" &
+      facility_source_type_clean == "FEDERAL",
+    doc_is_uncertain_prison_source = source == "hifld_prisons" &
+      facility_source_type_clean %in% c("MULTI", "NOT AVAILABLE"),
+    doc_is_jails_source = source == "jails_prisons",
+    doc_has_doc_operator = str_detect(
+      facility_operator_clean,
+      doc_pattern
+    ),
     doc_has_prison_like_name = str_detect(
       facility_name_clean,
       doc_prison_like_pattern
@@ -293,34 +307,46 @@ doc_candidates <- fac_287g |>
       doc_local_jail_pattern
     ) |
       is_exact_county_pattern(facility_name, facility_county),
+    doc_is_correctional_candidate = source %in% c(
+      "hifld_prisons",
+      "jails_prisons"
+    ) |
+      doc_has_prison_like_name |
+      doc_has_ambiguous_name |
+      doc_has_local_jail_name,
     doc_match_tier = case_when(
-      doc_has_local_jail_name ~ "doc_excluded_local_jail",
-      doc_is_prison_source & doc_has_prison_like_name ~
+      doc_is_state_prison_source ~
         "doc_exact_state_prison_source",
-      doc_is_prison_source & doc_has_ambiguous_name ~
-        "doc_probable_state_facility",
-      (doc_has_prison_like_name | doc_has_ambiguous_name) ~
+      doc_is_uncertain_prison_source ~
         "doc_needs_research",
+      source == "hifld" & (doc_has_prison_like_name | doc_has_ambiguous_name) ~
+        "doc_needs_research",
+      doc_is_jails_source & doc_has_doc_operator ~
+        "doc_needs_research",
+      doc_is_local_prison_source | doc_is_federal_prison_source |
+        doc_is_jails_source | doc_has_local_jail_name ~
+        "doc_excluded_local_jail",
       TRUE ~ "doc_not_correctional_candidate"
     ),
     doc_research_reason = case_when(
+      doc_match_tier == "doc_exact_state_prison_source" ~
+        "hifld_prisons type is STATE",
       doc_match_tier == "doc_excluded_local_jail" ~
-        "name looks like a local jail/detention/police/sheriff facility",
-      doc_match_tier == "doc_probable_state_facility" ~
-        "ambiguous facility type, but source is hifld_prisons",
-      doc_match_tier == "doc_needs_research" ~
-        "prison-like or ambiguous name from a non-prison-only source",
+        "source type indicates local/federal jail or non-DOC facility",
+      doc_match_tier == "doc_needs_research" & doc_is_uncertain_prison_source ~
+        "hifld_prisons type is MULTI or NOT AVAILABLE",
+      doc_match_tier == "doc_needs_research" & source == "hifld" ~
+        "prison-like or ambiguous name from law-enforcement source",
+      doc_match_tier == "doc_needs_research" & doc_is_jails_source ~
+        "ICPSR jails source has DOC-like operator name",
       doc_match_tier == "doc_not_correctional_candidate" ~
-        "name/source do not support DOC prison match",
+        "source type/name do not support DOC prison match",
       TRUE ~ NA_character_
     )
   )
 
 doc_matches <- doc_candidates |>
-  filter(doc_match_tier %in% c(
-    "doc_exact_state_prison_source",
-    "doc_probable_state_facility"
-  )) |>
+  filter(doc_match_tier == "doc_exact_state_prison_source") |>
   arrange(state, county, agency, source_rank) |>
   group_by(state, county, agency, facility_key) |>
   slice_head(n = 1) |>
@@ -329,7 +355,7 @@ doc_matches <- doc_candidates |>
     county_key = facility_source_county_key,
     match_type = doc_match_tier,
     match_score = 1,
-    needs_review = match_type == "doc_probable_state_facility"
+    needs_review = FALSE
   )
 
 doc_research <- doc_candidates |>
@@ -488,13 +514,11 @@ facility_agreements_sf <-
       "exact_state_county_facility_name",
       "exact_county_pattern_all_facilities",
       "exact_municipal_pattern_facility",
-      "doc_exact_state_prison_source",
-      "doc_probable_state_facility"
+      "doc_exact_state_prison_source"
     ),
     needs_review = needs_review |
       (source != "facilities" & !is_accepted_exact_match) |
       !is_accepted_exact_match |
-      match_type == "doc_probable_state_facility" |
       has_addendum |
       moa_pending
   ) |>
@@ -531,6 +555,39 @@ facility_agreements_sf <-
     facility_state,
     facility_state_fips,
     facility_zip,
+    facility_source_type,
+    facility_status,
+    facility_operator_name,
+    facility_source_state_fips,
+    facility_source_county_fips,
+    facility_source_county,
+    facility_population,
+    facility_hold_72,
+    facility_is_regional,
+    facility_is_private,
+    facility_hold_lt_1yr,
+    facility_hold_1yr_plus,
+    facility_hold_lt_72,
+    facility_function_adult,
+    facility_function_work_release,
+    facility_function_reception,
+    facility_function_juvenile,
+    facility_function_medical,
+    facility_function_mental,
+    facility_function_alcohol,
+    facility_function_drug,
+    facility_secure_level,
+    facility_capacity,
+    facility_naics_code,
+    facility_naics_desc,
+    facility_source_url,
+    facility_source_date,
+    facility_website,
+    facility_ci_id,
+    facility_csllea08id,
+    facility_subtype1,
+    facility_subtype2,
+    facility_tribal,
     state_fips,
     county_fips,
     place_fips,
@@ -550,6 +607,11 @@ doc_research_out <- doc_research |>
     agency,
     facility_name,
     source,
+    facility_source_type,
+    facility_operator_name,
+    facility_source_state_fips,
+    facility_source_county_fips,
+    facility_status,
     doc_match_tier,
     doc_research_reason,
     facility_address,
@@ -567,6 +629,11 @@ doc_excluded_local_out <- doc_excluded_local |>
     agency,
     facility_name,
     source,
+    facility_source_type,
+    facility_operator_name,
+    facility_source_state_fips,
+    facility_source_county_fips,
+    facility_status,
     doc_match_tier,
     doc_research_reason,
     facility_address,
@@ -596,22 +663,19 @@ facility_review <-
     flag_state_level_fuzzy = match_type == "fuzzy_state_facility",
     flag_low_confidence_fuzzy = str_detect(match_type, "fuzzy") &
       match_score < 0.85,
-    flag_doc_probable = match_type == "doc_probable_state_facility",
     flag_jails_prisons_source = source == "jails_prisons",
     review_reasons = pmap_chr(
       list(
         flag_missing_coordinates,
         flag_state_level_fuzzy,
         flag_low_confidence_fuzzy,
-        flag_doc_probable,
         flag_jails_prisons_source
       ),
-      \(missing_coords, state_fuzzy, low_fuzzy, doc_probable, jails_source) {
+      \(missing_coords, state_fuzzy, low_fuzzy, jails_source) {
         reasons <- c(
           if (missing_coords) "missing_coordinates",
           if (state_fuzzy) "state_level_fuzzy",
           if (low_fuzzy) "low_confidence_fuzzy",
-          if (doc_probable) "doc_probable_state_facility",
           if (jails_source) "jails_prisons_source"
         )
 
@@ -629,6 +693,11 @@ facility_review <-
     facility_guess,
     facility_name,
     source,
+    facility_source_type,
+    facility_operator_name,
+    facility_source_state_fips,
+    facility_source_county_fips,
+    facility_status,
     match_type,
     match_score,
     facility_address,

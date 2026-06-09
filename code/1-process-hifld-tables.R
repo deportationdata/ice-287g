@@ -2,6 +2,7 @@ library(tidyverse)
 library(sf)
 library(tigris)
 library(arrow)
+library(haven)
 
 options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
@@ -12,26 +13,148 @@ YEAR <- 2024
 
 state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 
-# use type (constable, local state agency, ...)
-hifld <- arrow::read_parquet(
-  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-local-law-enforcement-facilities.parquet"
+ice_facilities_repo <- Sys.getenv(
+  "ICE_DETENTION_FACILITIES_REPO",
+  "../ice-detention-facilities"
 )
 
-# use type column
-hifld_prisons <- arrow::read_parquet(
-  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-prisons.parquet"
-)
+use_local_ice_inputs <- dir.exists(file.path(ice_facilities_repo, "inputs"))
 
-# use type column
-jails_prisons <- arrow::read_parquet(
-  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/jails_prisons.parquet"
-)
+if (use_local_ice_inputs) {
+  hifld <- st_read(
+    file.path(
+      ice_facilities_repo,
+      "inputs/local-law-enforcement-locations-shapefile/Local_Law_Enforcement.shp"
+    ),
+    quiet = TRUE
+  ) |>
+    st_drop_geometry() |>
+    as_tibble() |>
+    transmute(
+      hifld_id = as.character(ID),
+      name = str_squish(NAME),
+      address = ADDRESS,
+      city = str_squish(CITY),
+      state = STATE,
+      zip = ZIP,
+      type = TYPE,
+      status = STATUS,
+      population = as.numeric(POPULATION),
+      county = str_to_title(str_squish(COUNTY)),
+      county_fips = as.character(COUNTYFIPS),
+      latitude = LATITUDE,
+      longitude = LONGITUDE,
+      naics_code = as.character(NAICS_CODE),
+      naics_desc = NAICS_DESC,
+      source_url = SOURCE,
+      source_date = as.character(SOURCEDATE),
+      website = WEBSITE,
+      ci_id = as.character(CI_ID),
+      csllea08id = as.character(CSLLEA08ID),
+      subtype1 = as.character(SUBTYPE1),
+      subtype2 = as.character(SUBTYPE2),
+      tribal = as.character(TRIBAL),
+      date = as.Date("2024-10-07")
+    )
+
+  hifld_prisons <- st_read(
+    file.path(
+      ice_facilities_repo,
+      "inputs/prison-boundaries-1-shapefile/Prison_Boundaries.shp"
+    ),
+    quiet = TRUE
+  ) |>
+    st_transform(crs = 4326) |>
+    st_make_valid() |>
+    st_centroid() |>
+    mutate(
+      longitude = st_coordinates(geometry)[, 1],
+      latitude = st_coordinates(geometry)[, 2]
+    ) |>
+    st_drop_geometry() |>
+    as_tibble() |>
+    transmute(
+      hifld_id = as.character(FACILITYID),
+      name = str_squish(NAME),
+      address = ADDRESS,
+      city = str_squish(CITY),
+      state = STATE,
+      zip = ZIP,
+      type = TYPE,
+      status = STATUS,
+      population = as.numeric(POPULATION),
+      county = str_to_title(str_squish(COUNTY)),
+      county_fips = as.character(COUNTYFIPS),
+      latitude,
+      longitude,
+      naics_code = as.character(NAICS_CODE),
+      naics_desc = NAICS_DESC,
+      source_url = SOURCE,
+      source_date = as.character(SOURCEDATE),
+      website = WEBSITE,
+      secure_level = SECURELVL,
+      capacity = as.numeric(CAPACITY),
+      date = as.Date("2024-10-07")
+    )
+
+  jails_prisons <- haven::read_dta(
+    file.path(
+      ice_facilities_repo,
+      "inputs/icpsr-38323/ICPSR-38323-0001-Data.dta"
+    )
+  ) |>
+    transmute(
+      bjs_facility_ID = JURISID,
+      source_facility_id = FACID,
+      name = str_squish(FACNAME),
+      operator_name = str_squish(RUNAME),
+      address = FACADDRESS,
+      city = str_squish(FACCITY),
+      state = FACSTATE,
+      zip = FACZIP,
+      state_fips = STATEFIPS,
+      county_fips = CNTYFIPS,
+      county = str_to_title(str_squish(COUNTY)),
+      status = as.character(STATUS),
+      is_regional = as.character(ISREGIONAL),
+      is_private = as.character(ISPRIVATE),
+      hold_72 = case_when(
+        HOLD72PLUS == 1 ~ "Over 72",
+        HOLD72PLUS == 0 ~ "Under 72",
+        TRUE ~ NA_character_
+      ),
+      hold_lt_1yr = as.character(HOLDLT1YR),
+      hold_1yr_plus = as.character(HOLD1YRPLUS),
+      hold_lt_72 = as.character(HOLDLT72),
+      function_adult = as.character(FCNADULT),
+      function_work_release = as.character(FCNWORKREL),
+      function_reception = as.character(FCNRECEPTION),
+      function_juvenile = as.character(FCNJUV),
+      function_medical = as.character(FCNMEDICAL),
+      function_mental = as.character(FCNMENTAL),
+      function_alcohol = as.character(FCNALCOHOL),
+      function_drug = as.character(FCNDRUG),
+      date = as.Date("2020-01-01")
+    )
+} else {
+  hifld <- arrow::read_parquet(
+    "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-local-law-enforcement-facilities.parquet"
+  )
+
+  hifld_prisons <- arrow::read_parquet(
+    "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-prisons.parquet"
+  )
+
+  jails_prisons <- arrow::read_parquet(
+    "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/jails_prisons.parquet"
+  )
+}
 
 counties_lookup <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
   st_transform(4326) |>
   transmute(
-    src_county = str_to_title(NAME),
-    src_county_fips = paste0(STATEFP, COUNTYFP),
+    src_county_spatial = str_to_title(NAME),
+    src_county_fips_spatial = paste0(STATEFP, COUNTYFP),
     county_key_spatial = norm_place(NAME),
     geometry
   )
@@ -48,8 +171,37 @@ hifld_raw <- bind_rows(
       src_zip = zip,
       src_type = type,
       src_status = status,
-      src_population = NA_real_,
+      src_population = as.numeric(population),
       src_hold_72 = NA,
+      src_operator_name = NA_character_,
+      src_state_fips = NA_character_,
+      src_county = county,
+      src_county_fips = county_fips,
+      src_is_regional = NA_character_,
+      src_is_private = NA_character_,
+      src_hold_lt_1yr = NA_character_,
+      src_hold_1yr_plus = NA_character_,
+      src_hold_lt_72 = NA_character_,
+      src_function_adult = NA_character_,
+      src_function_work_release = NA_character_,
+      src_function_reception = NA_character_,
+      src_function_juvenile = NA_character_,
+      src_function_medical = NA_character_,
+      src_function_mental = NA_character_,
+      src_function_alcohol = NA_character_,
+      src_function_drug = NA_character_,
+      src_secure_level = NA_character_,
+      src_capacity = NA_real_,
+      src_naics_code = naics_code,
+      src_naics_desc = naics_desc,
+      src_source_url = source_url,
+      src_source_date = source_date,
+      src_website = website,
+      src_ci_id = ci_id,
+      src_csllea08id = csllea08id,
+      src_subtype1 = subtype1,
+      src_subtype2 = subtype2,
+      src_tribal = tribal,
       src_latitude = latitude,
       src_longitude = longitude,
       src_date = date
@@ -67,6 +219,35 @@ hifld_raw <- bind_rows(
       src_status = status,
       src_population = population,
       src_hold_72 = NA,
+      src_operator_name = NA_character_,
+      src_state_fips = NA_character_,
+      src_county = county,
+      src_county_fips = county_fips,
+      src_is_regional = NA_character_,
+      src_is_private = NA_character_,
+      src_hold_lt_1yr = NA_character_,
+      src_hold_1yr_plus = NA_character_,
+      src_hold_lt_72 = NA_character_,
+      src_function_adult = NA_character_,
+      src_function_work_release = NA_character_,
+      src_function_reception = NA_character_,
+      src_function_juvenile = NA_character_,
+      src_function_medical = NA_character_,
+      src_function_mental = NA_character_,
+      src_function_alcohol = NA_character_,
+      src_function_drug = NA_character_,
+      src_secure_level = secure_level,
+      src_capacity = capacity,
+      src_naics_code = naics_code,
+      src_naics_desc = naics_desc,
+      src_source_url = source_url,
+      src_source_date = source_date,
+      src_website = website,
+      src_ci_id = NA_character_,
+      src_csllea08id = NA_character_,
+      src_subtype1 = NA_character_,
+      src_subtype2 = NA_character_,
+      src_tribal = NA_character_,
       src_latitude = latitude,
       src_longitude = longitude,
       src_date = date
@@ -80,10 +261,39 @@ hifld_raw <- bind_rows(
       src_city = str_squish(city),
       src_state = str_squish(state),
       src_zip = zip,
-      src_type = NA_character_,
-      src_status = NA_character_,
+      src_type = "JAILS",
+      src_status = status,
       src_population = NA_real_,
       src_hold_72 = hold_72,
+      src_operator_name = operator_name,
+      src_state_fips = state_fips,
+      src_county = county,
+      src_county_fips = county_fips,
+      src_is_regional = is_regional,
+      src_is_private = is_private,
+      src_hold_lt_1yr = hold_lt_1yr,
+      src_hold_1yr_plus = hold_1yr_plus,
+      src_hold_lt_72 = hold_lt_72,
+      src_function_adult = function_adult,
+      src_function_work_release = function_work_release,
+      src_function_reception = function_reception,
+      src_function_juvenile = function_juvenile,
+      src_function_medical = function_medical,
+      src_function_mental = function_mental,
+      src_function_alcohol = function_alcohol,
+      src_function_drug = function_drug,
+      src_secure_level = NA_character_,
+      src_capacity = NA_real_,
+      src_naics_code = NA_character_,
+      src_naics_desc = NA_character_,
+      src_source_url = NA_character_,
+      src_source_date = NA_character_,
+      src_website = NA_character_,
+      src_ci_id = NA_character_,
+      src_csllea08id = NA_character_,
+      src_subtype1 = NA_character_,
+      src_subtype2 = NA_character_,
+      src_tribal = NA_character_,
       src_latitude = NA_real_,
       src_longitude = NA_real_,
       src_date = date
@@ -109,17 +319,24 @@ hifld_counties_from_xy <- hifld_raw |>
   distinct(hifld_row_id, .keep_all = TRUE) |>
   select(
     hifld_row_id,
-    src_county,
-    src_county_fips,
+    src_county_spatial,
+    src_county_fips_spatial,
     county_key_spatial
   )
 
 hifld_tbl <- hifld_raw |>
   left_join(hifld_counties_from_xy, by = "hifld_row_id") |>
-  mutate(county_key = county_key_spatial) |>
+  mutate(
+    src_county = coalesce(src_county, src_county_spatial),
+    src_county_fips = coalesce(src_county_fips, src_county_fips_spatial),
+    county_key = coalesce(norm_place(src_county), county_key_spatial),
+    src_state_fips = coalesce(src_state_fips, str_sub(src_county_fips, 1, 2))
+  ) |>
   select(
     -hifld_row_id,
     -state_full,
+    -src_county_spatial,
+    -src_county_fips_spatial,
     -county_key_spatial
   )
 
@@ -145,6 +362,39 @@ hifld_facility_tbl <- hifld_tbl |>
     facility_latitude = src_latitude,
     facility_longitude = src_longitude,
     facility_field_office = NA_character_,
+    facility_source_type = src_type,
+    facility_status = src_status,
+    facility_operator_name = src_operator_name,
+    facility_source_state_fips = src_state_fips,
+    facility_source_county_fips = src_county_fips,
+    facility_source_county = src_county,
+    facility_population = src_population,
+    facility_hold_72 = src_hold_72,
+    facility_is_regional = src_is_regional,
+    facility_is_private = src_is_private,
+    facility_hold_lt_1yr = src_hold_lt_1yr,
+    facility_hold_1yr_plus = src_hold_1yr_plus,
+    facility_hold_lt_72 = src_hold_lt_72,
+    facility_function_adult = src_function_adult,
+    facility_function_work_release = src_function_work_release,
+    facility_function_reception = src_function_reception,
+    facility_function_juvenile = src_function_juvenile,
+    facility_function_medical = src_function_medical,
+    facility_function_mental = src_function_mental,
+    facility_function_alcohol = src_function_alcohol,
+    facility_function_drug = src_function_drug,
+    facility_secure_level = src_secure_level,
+    facility_capacity = src_capacity,
+    facility_naics_code = src_naics_code,
+    facility_naics_desc = src_naics_desc,
+    facility_source_url = src_source_url,
+    facility_source_date = src_source_date,
+    facility_website = src_website,
+    facility_ci_id = src_ci_id,
+    facility_csllea08id = src_csllea08id,
+    facility_subtype1 = src_subtype1,
+    facility_subtype2 = src_subtype2,
+    facility_tribal = src_tribal,
     state_key,
     county_key,
     facility_key = agency_key_src

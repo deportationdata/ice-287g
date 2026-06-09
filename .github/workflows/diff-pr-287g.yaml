@@ -62,7 +62,8 @@ jobs:
           Rscript --vanilla -e '
             install.packages(
               c("arrow", "dplyr", "tidyr", "stringr"),
-              dependencies = c("Depends", "Imports", "LinkingTo")
+              dependencies = c("Depends", "Imports", "LinkingTo"),
+              repos = "https://cloud.r-project.org"
             )
           '
 
