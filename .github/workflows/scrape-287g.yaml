@@ -168,3 +168,7 @@ jobs:
           gh api -X POST "repos/${{ github.repository }}/dispatches" \
             -f event_type=diff-pr \
             -F "client_payload[pr_number]=${{ steps.create_pr.outputs.pr_number }}"
+
+      - name: Clean up temp files
+        if: always()
+        run: rm -rf /tmp/old-287g /tmp/287g-changes.txt /tmp/pr-body*.txt
