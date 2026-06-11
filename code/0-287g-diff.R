@@ -23,11 +23,7 @@ get_snapshot <- function(base_path) {
   )
 
   files <- files[!file.info(files)$isdir]
-  rel_paths <- list.files(
-    base_path,
-    recursive = TRUE,
-    full.names = FALSE
-  )
+  rel_paths <- substring(files, nchar(base_path) + 2)
 
   data.frame(
     rel_path = rel_paths,
@@ -37,10 +33,26 @@ get_snapshot <- function(base_path) {
   )
 }
 
-old_agreements <- get_snapshot("/tmp/old-287g/agreements")
+get_snapshot_or_manifest <- function(base_path, manifest_path) {
+  if (file.exists(manifest_path)) {
+    manifest <- readRDS(manifest_path)
+    manifest$full_path <- file.path(base_path, manifest$rel_path)
+    return(manifest[, c("rel_path", "full_path", "file_hash")])
+  }
+
+  get_snapshot(base_path)
+}
+
+old_agreements <- get_snapshot_or_manifest(
+  "/tmp/old-287g/agreements",
+  "/tmp/old-287g/agreements.rds"
+)
 new_agreements <- get_snapshot("agreements")
 
-old_sheets <- get_snapshot("/tmp/old-287g/sheets")
+old_sheets <- get_snapshot_or_manifest(
+  "/tmp/old-287g/sheets",
+  "/tmp/old-287g/sheets.rds"
+)
 new_sheets <- get_snapshot("sheets")
 
 with_category <- function(snapshot, category) {
