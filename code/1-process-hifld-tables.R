@@ -11,6 +11,20 @@ source("code/functions.R")
 
 YEAR <- 2024
 
+as_numeric_scalar <- function(x) {
+  if (is.list(x) && !inherits(x, "data.frame")) {
+    x <- purrr::map_chr(x, function(value) {
+      if (length(value) == 0 || all(is.na(value))) {
+        return(NA_character_)
+      }
+
+      as.character(value[[1]])
+    })
+  }
+
+  suppressWarnings(as.numeric(x))
+}
+
 state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 
 ice_facilities_repo <- Sys.getenv(
@@ -39,7 +53,7 @@ if (use_local_ice_inputs) {
       zip = ZIP,
       type = TYPE,
       status = STATUS,
-      population = as.numeric(POPULATION),
+      population = as_numeric_scalar(POPULATION),
       county = str_to_title(str_squish(COUNTY)),
       county_fips = as.character(COUNTYFIPS),
       latitude = LATITUDE,
@@ -82,7 +96,7 @@ if (use_local_ice_inputs) {
       zip = ZIP,
       type = TYPE,
       status = STATUS,
-      population = as.numeric(POPULATION),
+      population = as_numeric_scalar(POPULATION),
       county = str_to_title(str_squish(COUNTY)),
       county_fips = as.character(COUNTYFIPS),
       latitude,
@@ -93,7 +107,7 @@ if (use_local_ice_inputs) {
       source_date = as.character(SOURCEDATE),
       website = WEBSITE,
       secure_level = SECURELVL,
-      capacity = as.numeric(CAPACITY),
+      capacity = as_numeric_scalar(CAPACITY),
       date = as.Date("2024-10-07")
     )
 
@@ -171,7 +185,7 @@ hifld_raw <- bind_rows(
       src_zip = zip,
       src_type = type,
       src_status = status,
-      src_population = as.numeric(population),
+      src_population = as_numeric_scalar(population),
       src_hold_72 = NA,
       src_operator_name = NA_character_,
       src_state_fips = NA_character_,
@@ -217,7 +231,7 @@ hifld_raw <- bind_rows(
       src_zip = zip,
       src_type = type,
       src_status = status,
-      src_population = population,
+      src_population = as_numeric_scalar(population),
       src_hold_72 = NA,
       src_operator_name = NA_character_,
       src_state_fips = NA_character_,
@@ -237,7 +251,7 @@ hifld_raw <- bind_rows(
       src_function_alcohol = NA_character_,
       src_function_drug = NA_character_,
       src_secure_level = secure_level,
-      src_capacity = capacity,
+      src_capacity = as_numeric_scalar(capacity),
       src_naics_code = naics_code,
       src_naics_desc = naics_desc,
       src_source_url = source_url,
