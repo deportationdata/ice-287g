@@ -8,8 +8,23 @@ library(stringr)
 # base 287(g) page URL
 url <- "https://www.ice.gov/identify-and-arrest/287g"
 
+ice_get <- function(url, ...) {
+  RETRY(
+    "GET",
+    url,
+    user_agent("Mozilla/5.0"),
+    timeout(60),
+    times = 4,
+    pause_base = 2,
+    pause_cap = 30,
+    terminate_on = c(400, 401, 403, 404),
+    ...
+  )
+}
+
 # get page content
-results <- GET(url, user_agent("Mozilla/5.0"))
+results <- ice_get(url)
+stop_for_status(results)
 page <- read_html(content(results, as = "text", encoding = "UTF-8"))
 
 # function to normalize ICE URLs
@@ -65,7 +80,7 @@ verified_links <- c()
 for (candidate in candidate_links) {
   test <- tryCatch(
     {
-      response <- GET(candidate, user_agent("Mozilla/5.0"))
+      response <- ice_get(candidate)
       status <- status_code(response)
       ct <- headers(response)[["content-type"]]
       cd <- headers(response)[["content-disposition"]]
@@ -136,7 +151,7 @@ dir.create(results_folder, showWarnings = FALSE, recursive = TRUE)
 download_excel_from_url <- function(url, folder, label = "file") {
   tryCatch(
     {
-      results <- GET(url, user_agent("Mozilla/5.0"))
+      results <- ice_get(url)
       stop_for_status(results)
 
       # try to get filename from content-disposition header first
@@ -313,7 +328,7 @@ for (i in seq_along(hyperlinks_list)) {
   tryCatch(
     {
       Sys.sleep(1)
-      results <- GET(hyperlink, user_agent("Mozilla/5.0"))
+      results <- ice_get(hyperlink)
 
       if (status_code(results) == 200) {
         # prefer content-disposition filename, fall back to URL basename
