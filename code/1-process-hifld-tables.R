@@ -11,15 +11,53 @@ source("code/functions.R")
 
 YEAR <- 2024
 
-as_numeric_scalar <- function(x) {
-  if (is.list(x) && !inherits(x, "data.frame")) {
-    x <- purrr::map_chr(x, function(value) {
-      if (length(value) == 0 || all(is.na(value))) {
-        return(NA_character_)
-      }
+first_scalar <- function(value) {
+  if (is.null(value) || length(value) == 0) {
+    return(NA_character_)
+  }
 
-      as.character(value[[1]])
+  if (is.data.frame(value)) {
+    if (nrow(value) == 0 || ncol(value) == 0) {
+      return(NA_character_)
+    }
+
+    for (item in as.list(value[1, , drop = FALSE])) {
+      scalar <- first_scalar(item)
+
+      if (!is.na(scalar)) {
+        return(scalar)
+      }
+    }
+
+    return(NA_character_)
+  }
+
+  if (is.list(value)) {
+    for (item in value) {
+      scalar <- first_scalar(item)
+
+      if (!is.na(scalar)) {
+        return(scalar)
+      }
+    }
+
+    return(NA_character_)
+  }
+
+  if (all(is.na(value))) {
+    return(NA_character_)
+  }
+
+  as.character(value[[1]])
+}
+
+as_numeric_scalar <- function(x) {
+  if (is.data.frame(x)) {
+    x <- purrr::map_chr(seq_len(nrow(x)), function(i) {
+      first_scalar(x[i, , drop = FALSE])
     })
+  } else if (is.list(x)) {
+    x <- purrr::map_chr(x, first_scalar)
   }
 
   suppressWarnings(as.numeric(x))
