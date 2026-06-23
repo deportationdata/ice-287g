@@ -1,5 +1,6 @@
 match_layer,state,county,agency,geom_class,needs_review,state_match,county_match,city_guess,city_match,manual_match_layer,src,manual_reason,manual_note,university_name,university_guess,university_guess_final,municipality_guess,municipality_type_hint,pa_constable_jurisdiction,resolved_county,county_match_status,review_reason,vtd_name,ward_name,ward_vtd_qa_status
 county,Mississippi,Pearl County,Pearl River County Sheriff's Department,county_polygon,TRUE,NA,Pearl County,NA,NA,NA,tigris_county,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+county,Tennessee,Louden County,Louden County Sheriff's Office,county_polygon,TRUE,NA,Louden County,NA,NA,NA,tigris_county,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 county,West Virginia,Kenawha County,Kanawha County Sheriff's Office,county_polygon,TRUE,NA,Kenawha County,NA,NA,NA,tigris_county,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 university,Florida,NA,Tallahassee State College Police Department,university_polygon,TRUE,NA,NA,NA,NA,NA,unmatched_university_boundary,NA,NA,NA,Tallahassee State College,Tallahassee State College,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Alabama,Tallapoosa County,Jackson's Gap Police Department,municipal_polygon,TRUE,NA,NA,Jackson's Gap,Jackson's Gap,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
@@ -16,6 +17,8 @@ municipal,Missouri,St. Louis County,Saint Ann Police Department,municipal_polygo
 municipal,Missouri,St. Charles County,Saint Charles County Police Department,municipal_polygon,TRUE,NA,NA,Saint Charles County,Saint Charles County,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Missouri,Washington County,Washington County Sheriff's Office,municipal_polygon,TRUE,NA,NA,Washington County Sheriff's,Washington County Sheriff's,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,New Hampshire,Hillsborough County,Hillsboro Police Department,municipal_polygon,TRUE,NA,NA,Hillsboro,Hillsboro,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,New Hamsphire,Strafford County,New Durham Police Department,municipal_polygon,TRUE,NA,NA,New Durham,New Durham,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,New Hamsphire,Rockingham County,South Hampton Police Department,municipal_polygon,TRUE,NA,NA,South Hampton,South Hampton,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Oklahoma,Haskell County,Haskell County Sheriff's Office,municipal_polygon,TRUE,NA,NA,Haskell County Sheriff's,Haskell County Sheriff's,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Pennsylvania,Pike County,Eastern Pike Regional Police Department,municipal_polygon,TRUE,NA,NA,Eastern Pike Regional,Eastern Pike Regional,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Pennsylvania,Greene County,Greene Washington Regional Police Department,municipal_polygon,TRUE,NA,NA,Greene Washington Regional,Greene Washington Regional,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
@@ -27,9 +30,11 @@ municipal,Pennsylvania,Lancaster County,Susquehanna Regional Police Department,m
 municipal,Pennsylvania,York County,York County Regional Police Department,municipal_polygon,TRUE,NA,NA,York County Regional,York County Regional,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Bexar County,Bexar County Constable Precinct 3,municipal_polygon,TRUE,NA,NA,Bexar County Constable Precinct 3,Bexar County Constable Precinct 3,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Blanco County,Blanco County Constable Precinct 4,municipal_polygon,TRUE,NA,NA,Blanco County Constable Precinct 4,Blanco County Constable Precinct 4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Cass County,Cass County Constable Precinct 3,municipal_polygon,TRUE,NA,NA,Cass County Constable Precinct 3,Cass County Constable Precinct 3,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Montgomery County,"Cut ""N"" Shoot Police Department",municipal_polygon,TRUE,NA,NA,"Cut ""N"" Shoot","Cut ""N"" Shoot",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Delta County,Delta County Constable Precinct 5,municipal_polygon,TRUE,NA,NA,Delta County Constable Precinct 5,Delta County Constable Precinct 5,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Edwards County,Edwards County Constable Precinct 1,municipal_polygon,TRUE,NA,NA,Edwards County Constable Precinct 1,Edwards County Constable Precinct 1,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Fannin County,Fannin County Constable Precinct 1,municipal_polygon,TRUE,NA,NA,Fannin County Constable Precinct 1,Fannin County Constable Precinct 1,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Fannin County,Fannin County Constable Precinct 3,municipal_polygon,TRUE,NA,NA,Fannin County Constable Precinct 3,Fannin County Constable Precinct 3,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Freestone County,Freestone County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Freestone County Constable Precinct 2,Freestone County Constable Precinct 2,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Galveston County,Galveston County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Galveston County Constable Precinct 2,Galveston County Constable Precinct 2,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
@@ -37,13 +42,21 @@ municipal,Texas,Galveston County,Galveston County Constable's Office Pct.1,munic
 municipal,Texas,Galveston County,Galveston County Constable's Office Pct.4,municipal_polygon,TRUE,NA,NA,Galveston County Constable's,Galveston County Constable's,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Guadalupe County,Guadalupe County Constable Precinct 1,municipal_polygon,TRUE,NA,NA,Guadalupe County Constable Precinct 1,Guadalupe County Constable Precinct 1,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Guadalupe County,Guadalupe County Constable Precinct 4,municipal_polygon,TRUE,NA,NA,Guadalupe County Constable Precinct 4,Guadalupe County Constable Precinct 4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Jasper County,Jasper County Constable Precinct 6,municipal_polygon,TRUE,NA,NA,Jasper County Constable Precinct 6,Jasper County Constable Precinct 6,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Kinney County,Kinney County Constable's Office,municipal_polygon,TRUE,NA,NA,Kinney County Constable's,Kinney County Constable's,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Lavaca County,Lavaca County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Lavaca County Constable Precinct 2,Lavaca County Constable Precinct 2,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Liberty County,Liberty County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Liberty County Constable Precinct 2,Liberty County Constable Precinct 2,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Liberty County,Liberty County Constable Precinct 4,municipal_polygon,TRUE,NA,NA,Liberty County Constable Precinct 4,Liberty County Constable Precinct 4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Liberty County,Liberty County Constable Precinct 6,municipal_polygon,TRUE,NA,NA,Liberty County Constable Precinct 6,Liberty County Constable Precinct 6,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Guadalupe Conty,New Berlin Marshal's Office,municipal_polygon,TRUE,NA,NA,New Berlin Marshal's,New Berlin Marshal's,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Nueces County,Nueces County Constable Precinct 1,municipal_polygon,TRUE,NA,NA,Nueces County Constable Precinct 1,Nueces County Constable Precinct 1,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Nueces County,Nueces County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Nueces County Constable Precinct 2,Nueces County Constable Precinct 2,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Parker County,Parker County Constable Precinct 4,municipal_polygon,TRUE,NA,NA,Parker County Constable Precinct 4,Parker County Constable Precinct 4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Bexar County,Saint Hedwig Marshal's Office,municipal_polygon,TRUE,NA,NA,Saint Hedwig Marshal's,Saint Hedwig Marshal's,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Gonzales County,Smiley City Marshal's Office,municipal_polygon,TRUE,NA,NA,Smiley City Marshal's,Smiley City Marshal's,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Wilson County,Stockdale Marshal's Office,municipal_polygon,TRUE,NA,NA,Stockdale Marshal's,Stockdale Marshal's,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Trinity County,Trinity County Constable Precinct 1,municipal_polygon,TRUE,NA,NA,Trinity County Constable Precinct 1,Trinity County Constable Precinct 1,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Trinity County,Trinity County Constable Precinct 2,municipal_polygon,TRUE,NA,NA,Trinity County Constable Precinct 2,Trinity County Constable Precinct 2,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+municipal,Texas,Trinity County,Trinity County Constable Precinct 4,municipal_polygon,TRUE,NA,NA,Trinity County Constable Precinct 4,Trinity County Constable Precinct 4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Walker County,Walker County Constable Pct 3,municipal_polygon,TRUE,NA,NA,Walker County Constable Pct 3,Walker County Constable Pct 3,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,West Virginia,Ohio County,Village of Clearview Police Department,municipal_polygon,TRUE,NA,NA,Village Of Clearview,Village Of Clearview,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
