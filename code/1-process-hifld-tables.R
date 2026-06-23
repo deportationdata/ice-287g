@@ -63,6 +63,16 @@ as_numeric_scalar <- function(x) {
   suppressWarnings(as.numeric(x))
 }
 
+ensure_columns <- function(x, defaults) {
+  for (col in names(defaults)) {
+    if (!col %in% names(x)) {
+      x[[col]] <- defaults[[col]]
+    }
+  }
+
+  x
+}
+
 state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 
 ice_facilities_repo <- Sys.getenv(
@@ -199,6 +209,66 @@ if (use_local_ice_inputs) {
 
   jails_prisons <- arrow::read_parquet(
     "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/jails_prisons.parquet"
+  )
+
+  hifld <- ensure_columns(
+    hifld,
+    list(
+      population = NA_real_,
+      county = NA_character_,
+      county_fips = NA_character_,
+      naics_code = NA_character_,
+      naics_desc = NA_character_,
+      source_url = NA_character_,
+      source_date = NA_character_,
+      website = NA_character_,
+      ci_id = NA_character_,
+      csllea08id = NA_character_,
+      subtype1 = NA_character_,
+      subtype2 = NA_character_,
+      tribal = NA_character_
+    )
+  )
+
+  hifld_prisons <- ensure_columns(
+    hifld_prisons,
+    list(
+      population = NA_real_,
+      county = NA_character_,
+      county_fips = NA_character_,
+      naics_code = NA_character_,
+      naics_desc = NA_character_,
+      source_url = NA_character_,
+      source_date = NA_character_,
+      website = NA_character_,
+      secure_level = NA_character_,
+      capacity = NA_real_
+    )
+  )
+
+  jails_prisons <- ensure_columns(
+    jails_prisons,
+    list(
+      bjs_facility_ID = NA_character_,
+      operator_name = NA_character_,
+      state_fips = NA_character_,
+      county = NA_character_,
+      county_fips = NA_character_,
+      status = NA_character_,
+      is_regional = NA_character_,
+      is_private = NA_character_,
+      hold_lt_1yr = NA_character_,
+      hold_1yr_plus = NA_character_,
+      hold_lt_72 = NA_character_,
+      function_adult = NA_character_,
+      function_work_release = NA_character_,
+      function_reception = NA_character_,
+      function_juvenile = NA_character_,
+      function_medical = NA_character_,
+      function_mental = NA_character_,
+      function_alcohol = NA_character_,
+      function_drug = NA_character_
+    )
   )
 }
 
