@@ -1,4 +1,6 @@
 match_layer,state,county,agency,geom_class,needs_review,state_match,county_match,city_guess,city_match,manual_match_layer,src,manual_reason,manual_note,university_name,university_guess,university_guess_final,municipality_guess,municipality_type_hint,pa_constable_jurisdiction,resolved_county,county_match_status,review_reason,vtd_name,ward_name,ward_vtd_qa_status
+county,Kentucky,Adaitr County,Adair County Sheriff's Office,county_polygon,TRUE,NA,Adaitr County,NA,NA,NA,tigris_county,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+county,Louisiana,Richland County,Richland Parish Sheriff's Office,county_polygon,TRUE,NA,Richland County,NA,NA,NA,tigris_county,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 county,Mississippi,Pearl County,Pearl River County Sheriff's Department,county_polygon,TRUE,NA,Pearl County,NA,NA,NA,tigris_county,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 county,Tennessee,Louden County,Louden County Sheriff's Office,county_polygon,TRUE,NA,Louden County,NA,NA,NA,tigris_county,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 county,Texas,Zavala Couny,Zavala County Sheriff's Office,county_polygon,TRUE,NA,Zavala Couny,NA,NA,NA,tigris_county,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
