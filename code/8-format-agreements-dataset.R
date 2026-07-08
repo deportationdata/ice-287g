@@ -27,3 +27,23 @@ write_sf_parquet(
   all_agreements_sf,
   "data/all_agreements_sf.parquet"
 )
+
+all_agreements_sf |>
+  group_by(
+    agency,
+    state,
+    support_type,
+    agency_level,
+    geom_class,
+    has_addendum,
+    moa_pending,
+    state_fips
+  ) |>
+  summarize(
+    match_layer = sort(unique(match_layer)),
+    geometry = st_union(geometry),
+    .groups = "drop"
+  ) |>
+  write_sf_parquet(
+    "data/agreement-level-sf.parquet"
+  )
