@@ -1,7 +1,10 @@
 #!/usr/bin/env Rscript
-# Diff two all_agreements_sf.parquet files (main vs PR) and emit a markdown
-# summary suitable for a PR comment. Geometry is dropped so location changes
-# surface through the non-geometry columns that feed the output.
+# Diff two agreements parquet files (main vs PR) and emit a markdown summary
+# suitable for a PR comment. Geometry is dropped so location changes surface
+# through the non-geometry columns that feed the output. The caller supplies
+# the sticky-comment marker so one comment can hold several diffs.
+#
+# Usage: diff-agreements-pr.R <main_path> <pr_path> [label]
 
 suppressMessages({
   library(arrow)
@@ -13,18 +16,17 @@ suppressMessages({
 args <- commandArgs(trailingOnly = TRUE)
 main_path <- args[1]
 pr_path <- args[2]
-MARKER <- "<!-- pr-diff-bot -->"
+label <- if (length(args) >= 3) args[3] else "all_agreements_sf.parquet"
 MAX_ROWS <- 100
 
-cat(MARKER, "\n", sep = "")
-cat("## `all_agreements_sf.parquet` diff vs `main`\n\n")
+cat(sprintf("## `%s` diff vs `main`\n\n", label))
 
 if (!file.exists(main_path) || file.size(main_path) == 0) {
-  cat("_No `all_agreements_sf.parquet` on `main` - skipping diff._\n")
+  cat(sprintf("_No `%s` on `main` - skipping diff._\n", label))
   quit(status = 0)
 }
 if (!file.exists(pr_path) || file.size(pr_path) == 0) {
-  cat("_No `all_agreements_sf.parquet` on this branch - nothing to diff._\n")
+  cat(sprintf("_No `%s` on this branch - nothing to diff._\n", label))
   quit(status = 0)
 }
 

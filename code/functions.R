@@ -1,5 +1,7 @@
 norm_key <- function(x) {
   x |>
+    # deal with ~ and accents and curly apostrophes correctly
+    stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
     str_replace_all("&", " and ") |>
     str_replace_all("\\bst\\.?\\b", "saint") |>
@@ -72,13 +74,46 @@ is_pa_constable_agency <- function(state, agency) {
 
 norm_state <- function(x) {
   x |>
+    stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
     str_replace_all("[^a-z]", "")
 }
 
+# snap a malformed state name to the closed 56-name vocabulary ("New
+# Hamsphire" -> "New Hampshire"); only fires when the name is not already
+# valid, the best candidate is unique, and the distance is tiny
+snap_state_name <- function(state, valid_states, max_dist = 2) {
+  key <- norm_state(state)
+  valid_key <- norm_state(valid_states)
+  vapply(
+    seq_along(key),
+    function(i) {
+      if (is.na(key[i]) || key[i] %in% valid_key) {
+        return(state[i])
+      }
+      d <- stringdist::stringdist(key[i], valid_key, method = "osa")
+      hits <- which(d == min(d))
+      if (min(d) <= max_dist && length(hits) == 1) {
+        valid_states[hits]
+      } else {
+        state[i]
+      }
+    },
+    character(1)
+  )
+}
+
+# apostrophes are deleted (not spaced) so "Jackson's Gap" keys as
+# "jacksons gap"; St./Ste. are spelled out before the period is stripped so
+# "St. Ann" and "Saint Ann" share a key (ste must run first: \bst\b does not
+# match inside "ste")
 norm_place <- function(x) {
   x |>
+    stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
+    str_replace_all("'", "") |>
+    str_replace_all("\\bste\\.?\\b", "sainte") |>
+    str_replace_all("\\bst\\.?\\b", "saint") |>
     str_replace_all(
       "\\b(county|city|town|village|borough|township|municipality)\\b",
       " "
@@ -87,11 +122,64 @@ norm_place <- function(x) {
     str_squish()
 }
 
+# parish -> county makes ICE's "Richland County" match Louisiana's "Richland
+# Parish"; "city" is deliberately untouched so Virginia independent cities
+# (Fairfax city) stay distinct from their namesake counties
 norm_county <- function(x) {
   x |>
+    stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
+    str_replace_all("'", "") |>
+    str_replace_all("\\bste\\.?\\b", "sainte") |>
+    str_replace_all("\\bst\\.?\\b", "saint") |>
+    str_replace_all("\\bparish\\b", "county") |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
     str_squish()
+}
+
+# for agreements whose exact key join found no polygon: score all candidates
+# in the same state's lookup by Jaro-Winkler distance on the normalized key
+# (mirrors the stringdist cascade in 6-make-facility-sf.R), rank by distance
+# then same-county preference then src_rank, and keep the top 3 per agreement
+# with the diagnostics accept/suggest decisions need
+fuzzy_polygon_candidates <- function(unmatched, lookup, max_dist) {
+  lookup_tbl <- lookup |>
+    sf::st_drop_geometry() |>
+    rename(cand_match_key = match_key)
+
+  unmatched |>
+    as_tibble() |>
+    select(.row_id, state_key, match_key, county_key_agency) |>
+    filter(!is.na(match_key), match_key != "") |>
+    inner_join(lookup_tbl, by = "state_key", relationship = "many-to-many") |>
+    mutate(
+      match_dist = stringdist::stringdist(
+        match_key,
+        cand_match_key,
+        method = "jw",
+        p = 0.1
+      )
+    ) |>
+    filter(!is.na(match_dist), match_dist <= max_dist) |>
+    group_by(.row_id) |>
+    mutate(
+      n_within_threshold = n_distinct(geoid),
+      county_pref = if_else(
+        !is.na(cand_county_key) &
+          !is.na(county_key_agency) &
+          cand_county_key == county_key_agency,
+        0L,
+        1L
+      ),
+      unique_best = n_distinct(geoid[match_dist == min(match_dist)]) == 1
+    ) |>
+    arrange(match_dist, county_pref, src_rank, geoid, .by_group = TRUE) |>
+    # the places lookup carries one row per intersecting county; keep the
+    # best-ranked row per candidate polygon
+    distinct(geoid, .keep_all = TRUE) |>
+    slice_head(n = 3) |>
+    mutate(cand_rank = row_number()) |>
+    ungroup()
 }
 
 extract_city_guess <- function(x) {
@@ -144,6 +232,7 @@ extract_facility_guess <- function(x) {
 
 norm_match_phrase <- function(x) {
   x |>
+    stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
     str_replace_all("&", " and ") |>
     str_replace_all("\\bst\\.?\\b", "saint") |>
@@ -166,6 +255,7 @@ exact_county_suffix_pattern <- function() {
   paste(
     "sheriffs? office",
     "sheriffs? department",
+    "sheriffs? jail",
     "sheriff",
     "county jail",
     "parish jail",
@@ -190,7 +280,8 @@ is_exact_county_pattern <- function(name, county) {
   phrase <- norm_match_phrase(name)
   suffixes <- exact_county_suffix_pattern()
 
-  !is.na(root) & root != "" &
+  !is.na(root) &
+    root != "" &
     str_detect(
       phrase,
       paste0("^", root, "\\s+(county|parish)\\s+(", suffixes, ")\\b")
@@ -209,7 +300,8 @@ is_exact_municipal_pattern <- function(name, city) {
     sep = "|"
   )
 
-  !is.na(root) & root != "" &
+  !is.na(root) &
+    root != "" &
     str_detect(
       phrase,
       paste0("^", root, "\\s+(", suffixes, ")$")
@@ -266,7 +358,10 @@ pa_constable_clean_municipality <- function(x) {
     str_replace_all(regex("\\btwp\\.?\\b", ignore_case = TRUE), "Township") |>
     str_replace_all(regex("\\bboro\\.?\\b", ignore_case = TRUE), "Borough") |>
     str_replace_all(regex("\\bSo\\.?\\b", ignore_case = TRUE), "South") |>
-    str_replace_all(regex("\\bSouthhampton\\b", ignore_case = TRUE), "Southampton") |>
+    str_replace_all(
+      regex("\\bSouthhampton\\b", ignore_case = TRUE),
+      "Southampton"
+    ) |>
     str_replace_all(
       regex("\\bEast Pennsylvania Township\\b", ignore_case = TRUE),
       "East Pennsboro Township"
@@ -305,7 +400,10 @@ extract_pa_constable_parts <- function(x) {
     )
 
     municipality_guess <- s |>
-      str_remove(regex("^\\s*Pennsylvania\\s+State\\s+Constable'?s?\\s+Office,?\\s*", ignore_case = TRUE)) |>
+      str_remove(regex(
+        "^\\s*Pennsylvania\\s+State\\s+Constable'?s?\\s+Office,?\\s*",
+        ignore_case = TRUE
+      )) |>
       str_remove(regex("\\bPA\\s+State\\s+Constable\\b", ignore_case = TRUE)) |>
       str_remove(regex("\\bConstable'?s?\\s+Office\\b", ignore_case = TRUE)) |>
       str_remove(regex("\\bConstables\\s+Office\\b", ignore_case = TRUE)) |>
@@ -314,7 +412,10 @@ extract_pa_constable_parts <- function(x) {
         "\\b([0-9]+(?:st|nd|rd|th)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)\\s+ward\\b",
         ignore_case = TRUE
       )) |>
-      str_remove(regex("\\b(?:precinct|pct\\.?)[[:space:]]*[0-9]+\\b", ignore_case = TRUE)) |>
+      str_remove(regex(
+        "\\b(?:precinct|pct\\.?)[[:space:]]*[0-9]+\\b",
+        ignore_case = TRUE
+      )) |>
       str_remove(regex("\\bOffice\\b", ignore_case = TRUE)) |>
       str_replace_all(",", " ") |>
       pa_constable_clean_municipality()

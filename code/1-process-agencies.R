@@ -15,6 +15,8 @@ if (length(agency_files) == 0) {
   stop("No participating agencies file found.")
 }
 
+state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
+
 folder_stamp <- sub(
   ".*sheets_(\\d{8}_\\d{6}).*",
   "\\1",
@@ -62,6 +64,11 @@ agencies_all <- participating_agencies |>
     )
   ) |>
   mutate(
+    state_raw = state,
+    state = snap_state_name(state, state_xwalk$state_full),
+    state_fuzzy_fixed = state != state_raw
+  ) |>
+  mutate(
     agency_level = case_when(
       type_clean %in% c("state agency", "state") ~ "state",
       type_clean == "county" ~ "county",
@@ -100,11 +107,14 @@ agencies_all <- participating_agencies |>
       has_addendum ~ TRUE,
       moa_pending ~ TRUE,
       agency_count > 1 ~ TRUE,
+      state_fuzzy_fixed ~ TRUE,
       TRUE ~ FALSE
     )
   ) |>
   select(
     state,
+    state_raw,
+    state_fuzzy_fixed,
     county,
     agency,
     support_type,

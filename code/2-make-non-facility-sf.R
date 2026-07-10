@@ -32,6 +32,7 @@ states_lookup <- tigris::states(cb = TRUE, year = YEAR, class = "sf") |>
   st_cast("MULTIPOLYGON") |>
   transmute(
     match_key = norm_state(NAME),
+    cand_name = NAME,
     cand_county_key = NA_character_,
     state_fips = STATEFP,
     county_fips = NA_character_,
@@ -51,6 +52,7 @@ counties_lookup <- counties_raw |>
   transmute(
     state_key = norm_state(STATE_NAME),
     match_key = norm_county(NAMELSAD),
+    cand_name = NAMELSAD,
     cand_county_key = NA_character_,
     state_fips = STATEFP,
     county_fips = paste0(STATEFP, COUNTYFP),
@@ -84,6 +86,7 @@ places_lookup <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(
     state_key = norm_state(STATE_NAME),
     match_key = norm_place(NAME),
+    cand_name = NAME,
     state_fips = STATEFP,
     county_fips = NA_character_,
     place_fips = PLACEFP,
@@ -112,6 +115,7 @@ cousubs_lookup <- unique(counties_raw$STATEFP) |>
   transmute(
     state_key = norm_state(STATE_NAME),
     match_key = norm_place(NAME),
+    cand_name = NAME,
     cand_county_key,
     state_fips = STATEFP,
     county_fips = paste0(STATEFP, COUNTYFP),
@@ -145,6 +149,13 @@ manual_overrides <- manual_non_facility_polygons |>
 # automatic one, normalize it to the lookup's match key, join candidates,
 # prefer lower src_rank then candidates in the agreement's own county, and
 # flag agreements whose top candidates remain tied.
+#
+# Rows the exact join leaves unmatched get a state-blocked fuzzy rescue pass
+# (ICE ships typos like "Adaitr County"). fuzzy_mode = "accept" patches in
+# the unique best candidate (flagged needs_review, src suffixed ":fuzzy");
+# "suggest" only reports candidates. Manual-override rows are never
+# second-guessed. Returns list(matches, fuzzy) — fuzzy feeds the
+# unmatched_polygon_suggestions.csv review sheet.
 
 match_polygon_layer <- function(
   layer,
@@ -152,8 +163,11 @@ match_polygon_layer <- function(
   lookup,
   auto_match_fn,
   match_key_fn,
-  join_on_state = TRUE
+  join_on_state = TRUE,
+  fuzzy_mode = c("off", "accept", "suggest"),
+  fuzzy_max_dist = 0.12
 ) {
+  fuzzy_mode <- match.arg(fuzzy_mode)
   base <- agencies_all |>
     left_join(manual_overrides, by = c("agency", "state", "county")) |>
     filter(
@@ -206,7 +220,7 @@ match_polygon_layer <- function(
     slice_head(n = 1) |>
     ungroup()
 
-  resolved |>
+  out <- resolved |>
     mutate(
       match_ambiguous = candidate_count > 1 & top_ties > 1,
       src = if_else(
@@ -218,8 +232,109 @@ match_polygon_layer <- function(
           paste0("manual_", layer, "_override")
         }
       ),
-      needs_review = needs_review | st_is_empty(geometry) | match_ambiguous
+      needs_review = needs_review | st_is_empty(geometry) | match_ambiguous,
+      match_fuzzy = FALSE,
+      match_fuzzy_dist = NA_real_,
+      fuzzy_matched_name = NA_character_
     )
+
+  fuzzy_report <- tibble()
+
+  if (fuzzy_mode != "off") {
+    unmatched <- out |>
+      filter(st_is_empty(geometry), is.na(manual_match))
+    ids <- unmatched |>
+      as_tibble() |>
+      select(.row_id, state, county, agency, match_value)
+
+    cands <- fuzzy_polygon_candidates(unmatched, lookup, fuzzy_max_dist)
+
+    accepted_ids <- integer(0)
+    if (fuzzy_mode == "accept" && nrow(cands) > 0) {
+      accepted <- cands |> filter(cand_rank == 1L, unique_best)
+      accepted_ids <- accepted$.row_id
+
+      if (nrow(accepted) > 0) {
+        lookup_value_cols <- setdiff(
+          names(sf::st_drop_geometry(lookup)),
+          c("match_key", "state_key")
+        )
+        lookup_one <- lookup |>
+          select(-match_key, -any_of("state_key")) |>
+          group_by(geoid) |>
+          slice_head(n = 1) |>
+          ungroup()
+
+        fuzzy_rows <- out |>
+          filter(.row_id %in% accepted$.row_id) |>
+          select(-all_of(c(lookup_value_cols, "geometry"))) |>
+          left_join(
+            accepted |> select(.row_id, geoid, match_dist),
+            by = ".row_id"
+          ) |>
+          left_join(as_tibble(lookup_one), by = "geoid") |>
+          mutate(
+            match_fuzzy = TRUE,
+            match_fuzzy_dist = match_dist,
+            fuzzy_matched_name = cand_name,
+            src = paste0(boundary_src, ":fuzzy"),
+            needs_review = TRUE
+          ) |>
+          select(-match_dist)
+
+        out <- bind_rows(
+          out |> filter(!.row_id %in% accepted$.row_id),
+          fuzzy_rows
+        )
+      }
+    }
+
+    cand_report <- if (nrow(cands) > 0) {
+      cands |>
+        left_join(ids, by = ".row_id") |>
+        transmute(
+          status = if_else(
+            .row_id %in% accepted_ids & cand_rank == 1L,
+            "auto_accepted",
+            "suggestion"
+          ),
+          layer = .env$layer,
+          state,
+          county,
+          agency,
+          match_value,
+          suggested_name = cand_name,
+          suggested_geoid = geoid,
+          boundary_src,
+          match_dist,
+          n_within_threshold,
+          unique_best
+        )
+    } else {
+      tibble()
+    }
+
+    no_cand <- ids |>
+      filter(!.row_id %in% cands$.row_id) |>
+      transmute(
+        status = "no_candidate",
+        layer = .env$layer,
+        state,
+        county,
+        agency,
+        match_value,
+        suggested_name = NA_character_,
+        suggested_geoid = NA_character_,
+        boundary_src = NA_character_,
+        match_dist = NA_real_,
+        n_within_threshold = NA_integer_,
+        unique_best = NA
+      )
+
+    fuzzy_report <- bind_rows(cand_report, no_cand)
+  }
+
+  list(matches = out, fuzzy = fuzzy_report)
 }
 
 select_layer_columns <- function(x, extra_cols) {
@@ -246,6 +361,9 @@ select_layer_columns <- function(x, extra_cols) {
       moa_pending,
       all_of(extra_cols),
       match_ambiguous,
+      match_fuzzy,
+      match_fuzzy_dist,
+      fuzzy_matched_name,
       state_fips,
       county_fips,
       place_fips,
@@ -260,15 +378,20 @@ select_layer_columns <- function(x, extra_cols) {
 }
 
 # state agreements ---------------------------------------------------------
+#
+# no fuzzy pass: malformed state names are snapped at ingestion against the
+# closed state vocabulary (snap_state_name in 1-process-agencies.R)
 
-state_agreements_sf <- match_polygon_layer(
+state_result <- match_polygon_layer(
   layer = "state",
   polygon_class = "state_polygon",
   lookup = states_lookup,
   auto_match_fn = \(x) x$state,
   match_key_fn = norm_state,
   join_on_state = FALSE
-) |>
+)
+
+state_agreements_sf <- state_result$matches |>
   rename(state_match = match_value) |>
   select_layer_columns(c("state_match", "state_abbr"))
 
@@ -278,14 +401,21 @@ write_sf_parquet(
 )
 
 # county agreements --------------------------------------------------------
+#
+# fuzzy auto-accept: county names within a state are a closed vocabulary, so
+# a tight-threshold unique best candidate is safe (still needs_review = TRUE)
 
-county_agreements_sf <- match_polygon_layer(
+county_result <- match_polygon_layer(
   layer = "county",
   polygon_class = "county_polygon",
   lookup = counties_lookup,
   auto_match_fn = \(x) x$county,
-  match_key_fn = norm_county
-) |>
+  match_key_fn = norm_county,
+  fuzzy_mode = "accept",
+  fuzzy_max_dist = 0.12
+)
+
+county_agreements_sf <- county_result$matches |>
   rename(county_match = match_value) |>
   select_layer_columns("county_match")
 
@@ -295,14 +425,22 @@ write_sf_parquet(
 )
 
 # municipal agreements -----------------------------------------------------
+#
+# suggestion-only: place/cousub names are an open-ish vocabulary, so
+# candidates go to the review CSV for a human to promote into
+# inputs/manual-non-facility-polygons.csv
 
-municipal_agreements_sf <- match_polygon_layer(
+municipal_result <- match_polygon_layer(
   layer = "municipal",
   polygon_class = "municipal_polygon",
   lookup = municipal_lookup,
   auto_match_fn = \(x) extract_city_guess(x$agency),
-  match_key_fn = norm_place
-) |>
+  match_key_fn = norm_place,
+  fuzzy_mode = "suggest",
+  fuzzy_max_dist = 0.25
+)
+
+municipal_agreements_sf <- municipal_result$matches |>
   rename(
     city_guess = auto_match,
     city_match = match_value
@@ -312,4 +450,32 @@ municipal_agreements_sf <- match_polygon_layer(
 write_sf_parquet(
   municipal_agreements_sf,
   "data/municipal_agreements_sf.parquet"
+)
+
+# fuzzy suggestions review sheet --------------------------------------------
+#
+# One row per (unmatched agreement, candidate polygon), plus no_candidate
+# rows for agreements nothing came close to. The manual_* columns are
+# paste-ready for inputs/manual-non-facility-polygons.csv; promoted rows
+# become exact manual matches on the next run and leave the fuzzy path.
+
+unmatched_polygon_suggestions <- bind_rows(
+  county_result$fuzzy,
+  municipal_result$fuzzy
+) |>
+  mutate(
+    manual_match_layer = layer,
+    manual_match_name = suggested_name,
+    manual_reason = "fuzzy_promoted",
+    manual_note = if_else(
+      is.na(match_dist),
+      NA_character_,
+      sprintf("jw=%.3f", match_dist)
+    )
+  ) |>
+  arrange(status, layer, state, county, agency, match_dist)
+
+write_csv(
+  unmatched_polygon_suggestions,
+  "data/unmatched_polygon_suggestions.csv"
 )
