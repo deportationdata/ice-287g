@@ -1,8 +1,8 @@
 qa_flags,state,county,agency,city_guess,facility_name,facility_city,facility_county,facility_source_county,facility_source_county_fips,facility_source_type,source,match_type,match_score,agreement_needs_review,facility_address
 fuzzy_match; county_mismatch,Louisiana,Jefferson Parish,Kenner Police Department,Kenner,KENNER CITY JAIL,KENNER,Jefferson,Jefferson,22051,LOCAL,hifld_prisons,fuzzy_state_facility,1,TRUE,500 VETERANS BLVD
 fuzzy_match; county_mismatch,Louisiana,Tangipahoa Parish,Hammond Police Department,Hammond,HAMMOND CITY JAIL,HAMMOND,Tangipahoa,Tangipahoa,22105,LOCAL,hifld_prisons,fuzzy_state_facility,1,TRUE,303 EAST THOMAS STREET
-,Alaska,NA,Kodiak Police Department,Kodiak,KODIAK JAIL,KODIAK,Kodiak Island,Kodiak Island,02150,LOCAL,hifld_prisons,exact_municipal_pattern_facility,1,FALSE,2160 MILL BAY RD
 ,Alaska,NA,Kodiak Police Department,Kodiak,KODIAK POLICE DEPARTMENT,KODIAK,Kodiak Island,Kodiak Island,02150,LOCAL POLICE DEPARTMENT,hifld,exact_municipal_pattern_facility,1,FALSE,217 LOWER MILL BAY ROAD
+,Alaska,NA,Kodiak Police Department,Kodiak,Kodiak City Jail,Kodiak,Kodiak Island,NA,NA,NA,facilities,exact_municipal_pattern_facility,1,FALSE,2160 Mill Bay Rd
 ,Arizona,NA,Mesa Police Department,Mesa,MESA POLICE DEPARTMENT,MESA,Maricopa,Maricopa,04013,LOCAL POLICE DEPARTMENT,hifld,exact_municipal_pattern_facility,1,FALSE,130 NORTH ROBSON
 ,Indiana,Harrison County,Corydon Police Department,Corydon,CORYDON POLICE DEPARTMENT,CORYDON,Harrison,Harrison,18061,LOCAL POLICE DEPARTMENT,hifld,exact_municipal_pattern_facility,1,TRUE,113 NORTH OAK STREET
 ,Missouri,Barry County,Washburn Police Department,Washburn,WASHBURN POLICE DEPARTMENT,WASHBURN,Barry,Barry,29009,LOCAL POLICE DEPARTMENT,hifld,exact_municipal_pattern_facility,1,TRUE,321 MAIN STREET

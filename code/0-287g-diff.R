@@ -2,15 +2,17 @@ suppressPackageStartupMessages({
   library(digest)
 })
 
+# must match the algorithm used for the /tmp/old-287g manifests written by
+# .github/workflows/scrape-287g.yaml (tools::md5sum), or every persisting file
+# compares as "changed"
 get_file_hash <- function(path) {
-  digest(file = path, algo = "sha256")
+  digest(file = path, algo = "md5")
 }
 
 get_snapshot <- function(base_path) {
   if (!dir.exists(base_path)) {
     return(data.frame(
       rel_path = character(),
-      full_path = character(),
       file_hash = character(),
       stringsAsFactors = FALSE
     ))
@@ -27,7 +29,6 @@ get_snapshot <- function(base_path) {
 
   data.frame(
     rel_path = rel_paths,
-    full_path = files,
     file_hash = vapply(files, get_file_hash, character(1)),
     stringsAsFactors = FALSE
   )
@@ -36,8 +37,7 @@ get_snapshot <- function(base_path) {
 get_snapshot_or_manifest <- function(base_path, manifest_path) {
   if (file.exists(manifest_path)) {
     manifest <- readRDS(manifest_path)
-    manifest$full_path <- file.path(base_path, manifest$rel_path)
-    return(manifest[, c("rel_path", "full_path", "file_hash")])
+    return(manifest[, c("rel_path", "file_hash")])
   }
 
   get_snapshot(base_path)
@@ -63,7 +63,6 @@ with_category <- function(snapshot, category) {
 
   data.frame(
     rel_path = character(),
-    full_path = character(),
     file_hash = character(),
     category = character(),
     stringsAsFactors = FALSE

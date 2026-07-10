@@ -2,6 +2,8 @@ library(tidyverse)
 library(sf)
 library(arrow)
 
+sf_use_s2(FALSE)
+
 source("code/functions.R")
 
 state_agreements_sf <- read_sf_parquet(
@@ -25,19 +27,14 @@ university_agreements_sf <- read_sf_parquet(
 )
 
 # bind non-facility layers -----------------------------------------------
+# every layer is already written in EPSG:4326
 
 non_facility_agreements_sf <- bind_rows(
-  state_agreements_sf |> st_transform(4326) |> mutate(match_layer = "state"),
-  county_agreements_sf |> st_transform(4326) |> mutate(match_layer = "county"),
-  university_agreements_sf |>
-    st_transform(4326) |>
-    mutate(match_layer = "university"),
-  municipal_agreements_sf |>
-    st_transform(4326) |>
-    mutate(match_layer = "municipal"),
-  pa_constable_agreements_sf |>
-    st_transform(4326) |>
-    mutate(match_layer = "pa_constable")
+  state_agreements_sf |> mutate(match_layer = "state"),
+  county_agreements_sf |> mutate(match_layer = "county"),
+  university_agreements_sf |> mutate(match_layer = "university"),
+  municipal_agreements_sf |> mutate(match_layer = "municipal"),
+  pa_constable_agreements_sf |> mutate(match_layer = "pa_constable")
 ) |>
   st_as_sf()
 
@@ -58,6 +55,7 @@ non_facility_unmatched <- non_facility_agreements_sf[
       "county_match",
       "city_guess",
       "city_match",
+      "match_ambiguous",
       "manual_match_layer",
       "src",
       "manual_reason",

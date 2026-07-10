@@ -4,12 +4,6 @@ library(arrow)
 
 source("code/functions.R")
 
-flag_list <- function(...) {
-  flags <- c(...)
-  flags <- flags[!is.na(flags) & flags != ""]
-  paste(flags, collapse = "; ")
-}
-
 facility_agreements_sf <- read_sf_parquet(
   "data/facility_agreements_sf.parquet"
 ) |>
@@ -24,9 +18,9 @@ doc_excluded_local <- readr::read_csv(
 
 doc_excluded_local_audit <- doc_excluded_local |>
   mutate(
-    facility_name_clean = str_to_lower(facility_name),
+    facility_name_clean = str_to_lower(coalesce(facility_name, "")),
     operator_clean = str_to_lower(coalesce(facility_operator_name, "")),
-    source_type_clean = str_to_upper(str_squish(facility_source_type)),
+    source_type_clean = str_to_upper(str_squish(coalesce(facility_source_type, ""))),
     audit_flags = pmap_chr(
       list(facility_name_clean, operator_clean, source_type_clean),
       \(name, operator, source_type) {
@@ -104,10 +98,8 @@ county_facility_qa <- facility_agreements_sf |>
     agency_county_key = norm_place(county),
     facility_county_key = norm_place(facility_county),
     source_county_key = norm_place(facility_source_county),
-    county_keys_match = agency_county_key %in% c(
-      facility_county_key,
-      source_county_key
-    ),
+    county_keys_match = coalesce(agency_county_key == facility_county_key, FALSE) |
+      coalesce(agency_county_key == source_county_key, FALSE),
     qa_flags = pmap_chr(
       list(
         match_type,
@@ -171,7 +163,8 @@ municipal_facility_qa <- facility_agreements_sf |>
     facility_county_key = norm_place(facility_county),
     source_county_key = norm_place(facility_source_county),
     county_keys_match = is.na(agency_county_key) | agency_county_key == "" |
-      agency_county_key %in% c(facility_county_key, source_county_key),
+      coalesce(agency_county_key == facility_county_key, FALSE) |
+      coalesce(agency_county_key == source_county_key, FALSE),
     qa_flags = pmap_chr(
       list(
         match_type,

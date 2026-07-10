@@ -79,8 +79,8 @@ pa_county_key <- function(x) {
 
 pasda_lookup <- pasda_municipalities |>
   st_transform(4326) |>
+  st_cast("MULTIPOLYGON") |>
   mutate(
-    lookup_id = row_number(),
     src = "pasda_municipalities_2026",
     state_fips = str_pad(as.character(FIPS_STATE), 2, pad = "0"),
     countyfp = str_pad(as.character(FIPS_COUNT), 3, pad = "0"),
@@ -94,7 +94,6 @@ pasda_lookup <- pasda_municipalities |>
     municipality_key = norm_place(municipality_match)
   ) |>
   select(
-    lookup_id,
     src,
     state_fips,
     county_fips,
@@ -110,8 +109,8 @@ pasda_lookup <- pasda_municipalities |>
 
 vtd_lookup <- lrc_voting_districts |>
   st_transform(4326) |>
+  st_cast("MULTIPOLYGON") |>
   mutate(
-    lookup_id = row_number(),
     src = "lrc_voting_districts_2021",
     state_fips = STATEFP20,
     county_fips = paste0(STATEFP20, COUNTYFP20),
@@ -126,7 +125,6 @@ vtd_lookup <- lrc_voting_districts |>
     municipality_key = norm_place(municipality_match)
   ) |>
   select(
-    lookup_id,
     src,
     state_fips,
     county_fips,
@@ -157,12 +155,14 @@ ward_component_counts <- vtd_lookup |>
 
 ward_lookup <- lrc_wards |>
   st_transform(4326) |>
+  st_cast("MULTIPOLYGON") |>
   left_join(lrc_counties, by = c("FIPS" = "county_fips")) |>
   mutate(
-    lookup_id = row_number(),
     src = "lrc_wards_2021",
     state_fips = "42",
-    county_fips = FIPS,
+    # the wards shapefile carries a 3-digit county FIPS; every other layer
+    # writes the 5-digit state+county code
+    county_fips = paste0("42", FIPS),
     place_fips = as.character(FIPS_MCD),
     geoid = as.character(cou_cbt_wa),
     municipality_match = str_to_title(MUNICIPALI),
@@ -186,7 +186,6 @@ ward_lookup <- lrc_wards |>
     )
   ) |>
   select(
-    lookup_id,
     src,
     state_fips,
     county_fips,
@@ -204,10 +203,7 @@ ward_lookup <- lrc_wards |>
   )
 
 pa_constables <- agencies_all |>
-  filter(
-    state == "Pennsylvania",
-    str_detect(str_to_lower(agency), "\\bconstables?\\b")
-  ) |>
+  filter(is_pa_constable_agency(state, agency)) |>
   mutate(
     pa_constable_row_id = row_number(),
     source_county_key = pa_county_key(county)
@@ -232,21 +228,13 @@ filter_candidates <- function(candidates) {
     )
 }
 
+# keep only constables with exactly one candidate; ambiguous ones fall
+# through to the unmatched/review path
 select_unique_matches <- function(candidates, match_type) {
   candidates |>
     add_count(pa_constable_row_id, name = "candidate_count") |>
-    group_by(pa_constable_row_id) |>
-    arrange(src, lookup_id) |>
-    slice_head(n = 1) |>
-    ungroup() |>
-    mutate(
-      match_type = if_else(
-        candidate_count == 1L,
-        match_type,
-        paste0("ambiguous_", match_type)
-      )
-    ) |>
-    filter(candidate_count == 1L)
+    filter(candidate_count == 1L) |>
+    mutate(match_type = match_type)
 }
 
 ward_matches <- pa_constables |>
@@ -365,49 +353,22 @@ unmatched <- pa_constables |>
     needs_geometry_review
   )
 
+# empty MULTIPOLYGON keeps the geometry type consistent with the matched rows
 unmatched_sf <- st_sf(
   unmatched,
   geometry = st_sfc(
-    rep(list(st_geometrycollection()), nrow(unmatched)),
+    rep(list(st_multipolygon()), nrow(unmatched)),
     crs = st_crs(4326)
   )
 )
 
+# one row per pa_constable_row_id, so the join below hits every constable
 match_sf <- bind_rows(pa_matches, unmatched_sf) |>
   st_as_sf()
-match_index <- match(
-  pa_constables$pa_constable_row_id,
-  match_sf$pa_constable_row_id
-)
-match_geometry <- st_geometry(match_sf)
 
-pa_constable_agreements_tbl <- pa_constables |>
-  left_join(st_drop_geometry(match_sf), by = "pa_constable_row_id") |>
-  mutate(
-    match_type = coalesce(match_type, "unmatched_pa_constable_geometry"),
-    county_match_status = coalesce(
-      county_match_status,
-      if_else(is.na(source_county_key), "county_missing", "county_not_resolved")
-    ),
-    needs_geometry_review = coalesce(needs_geometry_review, TRUE)
-  )
-
-pa_constable_agreements_sf <- st_sf(
-  pa_constable_agreements_tbl,
-  geometry = st_sfc(
-    map(
-      match_index,
-      \(i) {
-        if (is.na(i)) {
-          st_geometrycollection()
-        } else {
-          match_geometry[[i]]
-        }
-      }
-    ),
-    crs = st_crs(4326)
-  )
-) |>
+pa_constable_agreements_sf <- pa_constables |>
+  left_join(as_tibble(match_sf), by = "pa_constable_row_id") |>
+  st_as_sf() |>
   mutate(
     needs_review = needs_review | needs_geometry_review,
     review_reason = case_when(

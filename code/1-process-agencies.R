@@ -27,6 +27,13 @@ folder_time <- as.POSIXct(
   tz = "UTC"
 )
 
+if (anyNA(folder_time)) {
+  stop(
+    "Could not parse a sheets_YYYYMMDD_HHMMSS timestamp from: ",
+    paste(agency_files[is.na(folder_time)], collapse = ", ")
+  )
+}
+
 latest_agency_file <- agency_files[which.max(folder_time)]
 
 participating_agencies <- read_excel(latest_agency_file)
@@ -37,14 +44,14 @@ agencies_all <- participating_agencies |>
     county = str_to_title(str_trim(COUNTY)),
     agency = str_squish(`LAW ENFORCEMENT AGENCY`),
     support_type = str_squish(`SUPPORT TYPE`),
-    type_clean = str_to_lower(str_trim(TYPE)),
-    support_clean = str_to_lower(str_trim(`SUPPORT TYPE`)),
+    type_clean = str_to_lower(str_squish(TYPE)),
+    support_clean = str_to_lower(str_squish(`SUPPORT TYPE`)),
     has_addendum = !(is.na(ADDENDUM) | ADDENDUM %in% c("", "NA")),
     moa_pending = str_detect(str_to_lower(str_trim(MOA)), "pending")
   ) |>
   mutate(
     state = if_else(
-      agency == "Pittsburgh Police Department" & state == "New Hampshire",
+      agency == "Pittsburgh Police Department" & state == "New Hampshire", # TODO: are you sure this isn't https://pittsburg-nh.gov/pittsburg-police-department/?
       "Pennsylvania",
       state
     ),
@@ -74,12 +81,14 @@ agencies_all <- participating_agencies |>
         "county_polygon",
       support_clean == "task force model" & agency_level == "municipal" ~
         "municipal_polygon",
-      support_clean %in% c("jail enforcement model", "warrant service officer") ~
+      support_clean %in%
+        c("jail enforcement model", "warrant service officer") ~
         "facility_point",
       TRUE ~ "unknown"
     ),
     geom_class = if_else(
-      state == "Tennessee" & str_detect(str_to_lower(agency), "\\bconstables?\\b"),
+      state == "Tennessee" &
+        str_detect(str_to_lower(agency), "\\bconstables?\\b"),
       "county_polygon",
       geom_class
     )

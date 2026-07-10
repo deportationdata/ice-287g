@@ -2,7 +2,6 @@ library(tidyverse)
 library(sf)
 library(tigris)
 library(arrow)
-library(haven)
 
 options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
@@ -11,56 +10,25 @@ source("code/functions.R")
 
 YEAR <- 2024
 
-first_scalar <- function(value) {
-  if (is.null(value) || length(value) == 0) {
-    return(NA_character_)
-  }
-
-  if (is.data.frame(value)) {
-    if (nrow(value) == 0 || ncol(value) == 0) {
-      return(NA_character_)
-    }
-
-    for (item in as.list(value[1, , drop = FALSE])) {
-      scalar <- first_scalar(item)
-
-      if (!is.na(scalar)) {
-        return(scalar)
-      }
-    }
-
-    return(NA_character_)
-  }
-
-  if (is.list(value)) {
-    for (item in value) {
-      scalar <- first_scalar(item)
-
-      if (!is.na(scalar)) {
-        return(scalar)
-      }
-    }
-
-    return(NA_character_)
-  }
-
-  if (all(is.na(value))) {
-    return(NA_character_)
-  }
-
-  as.character(value[[1]])
+as_numeric_scalar <- function(x) {
+  suppressWarnings(as.numeric(x))
 }
 
-as_numeric_scalar <- function(x) {
-  if (is.data.frame(x)) {
-    x <- purrr::map_chr(seq_len(nrow(x)), function(i) {
-      first_scalar(x[i, , drop = FALSE])
-    })
-  } else if (is.list(x)) {
-    x <- purrr::map_chr(x, first_scalar)
+# columns the shared transmute below cannot proceed without; a remote schema
+# change should fail loudly here rather than produce silently-empty output
+assert_columns <- function(x, cols, label) {
+  missing <- setdiff(cols, names(x))
+
+  if (length(missing) > 0) {
+    stop(
+      label,
+      " is missing required column(s): ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
   }
 
-  suppressWarnings(as.numeric(x))
+  x
 }
 
 ensure_columns <- function(x, defaults) {
@@ -120,145 +88,20 @@ read_parquet_retry <- function(path, times = 4, timeout_seconds = 300) {
 
 state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 
-ice_facilities_repo <- Sys.getenv(
-  "ICE_DETENTION_FACILITIES_REPO",
-  "../ice-detention-facilities"
-)
-
-use_local_ice_inputs <- dir.exists(file.path(ice_facilities_repo, "inputs"))
-
-if (use_local_ice_inputs) {
-  hifld <- st_read(
-    file.path(
-      ice_facilities_repo,
-      "inputs/local-law-enforcement-locations-shapefile/Local_Law_Enforcement.shp"
-    ),
-    quiet = TRUE
+hifld <- read_parquet_retry(
+  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-local-law-enforcement-facilities.parquet"
+) |>
+  assert_columns(
+    c("hifld_id", "name", "state", "latitude", "longitude", "date"),
+    label = "hifld-local-law-enforcement-facilities.parquet"
   ) |>
-    st_drop_geometry() |>
-    as_tibble() |>
-    transmute(
-      hifld_id = as.character(ID),
-      name = str_squish(NAME),
-      address = ADDRESS,
-      city = str_squish(CITY),
-      state = STATE,
-      zip = ZIP,
-      type = TYPE,
-      status = STATUS,
-      population = as_numeric_scalar(POPULATION),
-      county = str_to_title(str_squish(COUNTY)),
-      county_fips = as.character(COUNTYFIPS),
-      latitude = LATITUDE,
-      longitude = LONGITUDE,
-      naics_code = as.character(NAICS_CODE),
-      naics_desc = NAICS_DESC,
-      source_url = SOURCE,
-      source_date = as.character(SOURCEDATE),
-      website = WEBSITE,
-      ci_id = as.character(CI_ID),
-      csllea08id = as.character(CSLLEA08ID),
-      subtype1 = as.character(SUBTYPE1),
-      subtype2 = as.character(SUBTYPE2),
-      tribal = as.character(TRIBAL),
-      date = as.Date("2024-10-07")
-    )
-
-  hifld_prisons <- st_read(
-    file.path(
-      ice_facilities_repo,
-      "inputs/prison-boundaries-1-shapefile/Prison_Boundaries.shp"
-    ),
-    quiet = TRUE
-  ) |>
-    st_transform(crs = 4326) |>
-    st_make_valid() |>
-    st_centroid() |>
-    mutate(
-      longitude = st_coordinates(geometry)[, 1],
-      latitude = st_coordinates(geometry)[, 2]
-    ) |>
-    st_drop_geometry() |>
-    as_tibble() |>
-    transmute(
-      hifld_id = as.character(FACILITYID),
-      name = str_squish(NAME),
-      address = ADDRESS,
-      city = str_squish(CITY),
-      state = STATE,
-      zip = ZIP,
-      type = TYPE,
-      status = STATUS,
-      population = as_numeric_scalar(POPULATION),
-      county = str_to_title(str_squish(COUNTY)),
-      county_fips = as.character(COUNTYFIPS),
-      latitude,
-      longitude,
-      naics_code = as.character(NAICS_CODE),
-      naics_desc = NAICS_DESC,
-      source_url = SOURCE,
-      source_date = as.character(SOURCEDATE),
-      website = WEBSITE,
-      secure_level = SECURELVL,
-      capacity = as_numeric_scalar(CAPACITY),
-      date = as.Date("2024-10-07")
-    )
-
-  jails_prisons <- haven::read_dta(
-    file.path(
-      ice_facilities_repo,
-      "inputs/icpsr-38323/ICPSR-38323-0001-Data.dta"
-    )
-  ) |>
-    transmute(
-      bjs_facility_ID = JURISID,
-      source_facility_id = FACID,
-      name = str_squish(FACNAME),
-      operator_name = str_squish(RUNAME),
-      address = FACADDRESS,
-      city = str_squish(FACCITY),
-      state = FACSTATE,
-      zip = FACZIP,
-      state_fips = STATEFIPS,
-      county_fips = CNTYFIPS,
-      county = str_to_title(str_squish(COUNTY)),
-      status = as.character(STATUS),
-      is_regional = as.character(ISREGIONAL),
-      is_private = as.character(ISPRIVATE),
-      hold_72 = case_when(
-        HOLD72PLUS == 1 ~ "Over 72",
-        HOLD72PLUS == 0 ~ "Under 72",
-        TRUE ~ NA_character_
-      ),
-      hold_lt_1yr = as.character(HOLDLT1YR),
-      hold_1yr_plus = as.character(HOLD1YRPLUS),
-      hold_lt_72 = as.character(HOLDLT72),
-      function_adult = as.character(FCNADULT),
-      function_work_release = as.character(FCNWORKREL),
-      function_reception = as.character(FCNRECEPTION),
-      function_juvenile = as.character(FCNJUV),
-      function_medical = as.character(FCNMEDICAL),
-      function_mental = as.character(FCNMENTAL),
-      function_alcohol = as.character(FCNALCOHOL),
-      function_drug = as.character(FCNDRUG),
-      date = as.Date("2020-01-01")
-    )
-} else {
-  hifld <- read_parquet_retry(
-    "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-local-law-enforcement-facilities.parquet"
-  )
-
-  hifld_prisons <- read_parquet_retry(
-    "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-prisons.parquet"
-  )
-
-  jails_prisons <- read_parquet_retry(
-    "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/jails_prisons.parquet"
-  )
-
-  hifld <- ensure_columns(
-    hifld,
+  ensure_columns(
     list(
+      address = NA_character_,
+      city = NA_character_,
+      zip = NA_character_,
+      type = NA_character_,
+      status = NA_character_,
       population = NA_real_,
       county = NA_character_,
       county_fips = NA_character_,
@@ -275,9 +118,20 @@ if (use_local_ice_inputs) {
     )
   )
 
-  hifld_prisons <- ensure_columns(
-    hifld_prisons,
+hifld_prisons <- read_parquet_retry(
+  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-prisons.parquet"
+) |>
+  assert_columns(
+    c("hifld_id", "name", "state", "latitude", "longitude", "date"),
+    label = "hifld-prisons.parquet"
+  ) |>
+  ensure_columns(
     list(
+      address = NA_character_,
+      city = NA_character_,
+      zip = NA_character_,
+      type = NA_character_,
+      status = NA_character_,
       population = NA_real_,
       county = NA_character_,
       county_fips = NA_character_,
@@ -291,11 +145,21 @@ if (use_local_ice_inputs) {
     )
   )
 
-  jails_prisons <- ensure_columns(
-    jails_prisons,
+jails_prisons <- read_parquet_retry(
+  "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/jails_prisons.parquet"
+) |>
+  assert_columns(
+    c("name", "state", "date"),
+    label = "jails_prisons.parquet"
+  ) |>
+  ensure_columns(
     list(
       bjs_facility_ID = NA_character_,
       operator_name = NA_character_,
+      address = NA_character_,
+      city = NA_character_,
+      zip = NA_character_,
+      hold_72 = NA_character_,
       state_fips = NA_character_,
       county = NA_character_,
       county_fips = NA_character_,
@@ -315,7 +179,6 @@ if (use_local_ice_inputs) {
       function_drug = NA_character_
     )
   )
-}
 
 counties_lookup <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
   st_transform(4326) |>
@@ -481,7 +344,7 @@ hifld_counties_from_xy <- hifld_raw |>
     crs = 4326,
     remove = FALSE
   ) |>
-  st_join(counties_lookup, join = st_within, left = TRUE) |>
+  st_join(counties_lookup, join = st_intersects, left = TRUE) |>
   st_drop_geometry() |>
   distinct(hifld_row_id, .keep_all = TRUE) |>
   select(
@@ -516,7 +379,6 @@ hifld_facility_tbl <- hifld_tbl |>
       src_dataset == "jails_prisons" ~ 4L,
       TRUE ~ 99L
     ),
-    detention_facility_code = src_id,
     facility_name = src_name,
     facility_address = src_address,
     facility_city = src_city,
@@ -525,10 +387,8 @@ hifld_facility_tbl <- hifld_tbl |>
     facility_state = src_state,
     facility_state_fips = str_sub(src_county_fips, 1, 2),
     facility_zip = src_zip,
-    facility_address_full = NA_character_,
     facility_latitude = src_latitude,
     facility_longitude = src_longitude,
-    facility_field_office = NA_character_,
     facility_source_type = src_type,
     facility_status = src_status,
     facility_operator_name = src_operator_name,

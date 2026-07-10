@@ -13,37 +13,15 @@ norm_key <- function(x) {
       " "
     ) |>
     str_replace_all("\\b(of|the|and|for)\\b", " ") |>
-    str_replace_all("[^a-z0-9]", "") |>
-    str_squish()
+    str_replace_all("[^a-z0-9]", "")
 }
 
-read_sf_parquet <- function(path, crs = 4326) {
-  if (requireNamespace("sfarrow", quietly = TRUE)) {
-    return(sfarrow::st_read_parquet(path))
-  }
-
-  x <- arrow::read_parquet(path)
-  if (!"geometry" %in% names(x)) {
-    stop("No geometry column found in ", path)
-  }
-
-  geom <- sf::st_as_sfc(x$geometry, EWKB = FALSE, crs = crs)
-  x$geometry <- NULL
-  sf::st_as_sf(x, sf_column_name = "geometry", geometry = geom)
+read_sf_parquet <- function(path) {
+  sfarrow::st_read_parquet(path)
 }
 
 write_sf_parquet <- function(x, path) {
-  if (requireNamespace("sfarrow", quietly = TRUE)) {
-    return(sfarrow::st_write_parquet(x, path))
-  }
-
-  geom <- sf::st_as_binary(sf::st_geometry(x), EWKB = FALSE)
-  out <- sf::st_drop_geometry(x)
-  out$geometry <- structure(
-    as.list(geom),
-    class = c("arrow_binary", "blob", "vctrs_list_of", "vctrs_vctr", "list")
-  )
-  arrow::write_parquet(out, path)
+  sfarrow::st_write_parquet(x, path)
 }
 
 normalize_agencies_all <- function(x) {
@@ -77,11 +55,25 @@ normalize_agencies_all <- function(x) {
   x
 }
 
+# collapse a set of optional flags into a "; "-separated string, dropping
+# NA/empty entries (used by the facility and QA review sheets)
+flag_list <- function(...) {
+  flags <- c(...)
+  flags <- flags[!is.na(flags) & flags != ""]
+  paste(flags, collapse = "; ")
+}
+
+# PA constables are routed to 4a-make-pa-constable-sf.R and must be excluded
+# from the municipal layer; keep the predicate in one place
+is_pa_constable_agency <- function(state, agency) {
+  state == "Pennsylvania" &
+    str_detect(str_to_lower(agency), "\\bconstables?\\b")
+}
+
 norm_state <- function(x) {
   x |>
     str_to_lower() |>
-    str_replace_all("[^a-z]", "") |>
-    str_squish()
+    str_replace_all("[^a-z]", "")
 }
 
 norm_place <- function(x) {
@@ -92,16 +84,14 @@ norm_place <- function(x) {
       " "
     ) |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
-    str_squish() |>
-    str_replace_all("\\s+", " ")
+    str_squish()
 }
 
 norm_county <- function(x) {
   x |>
     str_to_lower() |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
-    str_squish() |>
-    str_replace_all("\\s+", " ")
+    str_squish()
 }
 
 extract_city_guess <- function(x) {
@@ -141,12 +131,6 @@ extract_facility_guess <- function(x) {
     "\\1 Jail"
   )
 
-  s <- str_replace(
-    s,
-    regex("(?i)^(.+?)\\s+Department\\s+of\\s+Corrections$"),
-    "\\1 Department of Corrections"
-  )
-
   s <- str_replace_all(
     s,
     regex("(?i)corrections department"),
@@ -165,8 +149,7 @@ norm_match_phrase <- function(x) {
     str_replace_all("\\bst\\.?\\b", "saint") |>
     str_replace_all("'", "") |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
-    str_squish() |>
-    str_replace_all("\\s+", " ")
+    str_squish()
 }
 
 exact_scope_root <- function(x) {
@@ -176,8 +159,7 @@ exact_scope_root <- function(x) {
       "\\b(county|parish|city|town|village|borough|township|municipality)\\b",
       " "
     ) |>
-    str_squish() |>
-    str_replace_all("\\s+", " ")
+    str_squish()
 }
 
 exact_county_suffix_pattern <- function() {

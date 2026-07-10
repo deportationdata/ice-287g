@@ -147,6 +147,34 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 results_folder <- file.path(base_results_folder, paste0("sheets_", timestamp))
 dir.create(results_folder, showWarnings = FALSE, recursive = TRUE)
 
+# derive a safe filename from a response's content-disposition header, falling
+# back to the URL basename and then to `fallback`
+filename_from_response <- function(response, url, fallback) {
+  cd <- headers(response)[["content-disposition"]]
+
+  if (!is.null(cd) && grepl("filename=", cd)) {
+    file_name_only <- str_split(cd, "filename=", n = 2)[[1]][2]
+    file_name_only <- str_remove(file_name_only, ";.*$")
+    file_name_only <- str_trim(file_name_only)
+    # strip ALL quotes: a doubled trailing quote once survived anchored
+    # stripping and saved a sheet ending in `.xlsx"` that the downstream
+    # participatingAgencies glob could not see
+    file_name_only <- str_remove_all(file_name_only, "[\"']")
+  } else {
+    file_name_only <- basename(str_split(url, "\\?")[[1]][1])
+  }
+
+  if (
+    is.na(file_name_only) ||
+      file_name_only == "" ||
+      !grepl("\\.", file_name_only)
+  ) {
+    file_name_only <- fallback
+  }
+
+  file_name_only
+}
+
 # function to download and save excel files
 download_excel_from_url <- function(url, folder, label = "file") {
   tryCatch(
@@ -154,26 +182,11 @@ download_excel_from_url <- function(url, folder, label = "file") {
       results <- ice_get(url)
       stop_for_status(results)
 
-      # try to get filename from content-disposition header first
-      cd <- headers(results)[["content-disposition"]]
-
-      if (!is.null(cd) && grepl("filename=", cd)) {
-        file_name_only <- str_split(cd, "filename=", n = 2)[[1]][2]
-        file_name_only <- str_remove(file_name_only, ";.*$")
-        file_name_only <- str_trim(file_name_only)
-        file_name_only <- str_remove_all(file_name_only, "^[\"']|[\"']$")
-      } else {
-        # fall back to last segment of URL
-        file_name_only <- basename(str_split(url, "\\?")[[1]][1])
-
-        if (
-          is.na(file_name_only) ||
-            file_name_only == "" ||
-            !grepl("\\.", file_name_only)
-        ) {
-          file_name_only <- paste0(label, ".xlsx")
-        }
-      }
+      file_name_only <- filename_from_response(
+        results,
+        url,
+        fallback = paste0(label, ".xlsx")
+      )
 
       dir.create(folder, showWarnings = FALSE, recursive = TRUE)
 
@@ -263,6 +276,16 @@ get_hyperlink_for_row <- function(row_idx) {
   return(NULL)
 }
 
+# the hyperlink column lives in column G; a narrower sheet means the layout
+# changed and scraping links would silently return nothing
+if (ncol(df) < 7) {
+  stop(
+    "Participating agencies sheet has ",
+    ncol(df),
+    " columns; expected at least 7 (hyperlinks in column G)."
+  )
+}
+
 # collect hyperlink, state, and agency values
 hyperlinks_list <- c()
 states_list <- c()
@@ -270,11 +293,6 @@ agencies_list <- c()
 
 for (i in seq_len(nrow(df))) {
   row <- df[i, ]
-
-  # need at least 7 columns
-  if (ncol(df) < 7) {
-    next
-  }
 
   state <- as.character(row[[1]])
   agency_name <- as.character(row[[2]])
@@ -331,25 +349,11 @@ for (i in seq_along(hyperlinks_list)) {
       results <- ice_get(hyperlink)
 
       if (status_code(results) == 200) {
-        # prefer content-disposition filename, fall back to URL basename
-        cd <- headers(results)[["content-disposition"]]
-
-        if (!is.null(cd) && grepl("filename=", cd)) {
-          file_name_only <- str_split(cd, "filename=", n = 2)[[1]][2]
-          file_name_only <- str_remove(file_name_only, ";.*$")
-          file_name_only <- str_trim(file_name_only)
-          file_name_only <- str_remove_all(file_name_only, "^[\"']|[\"']$")
-        } else {
-          file_name_only <- basename(str_split(hyperlink, "\\?")[[1]][1])
-
-          if (
-            is.na(file_name_only) ||
-              file_name_only == "" ||
-              !grepl("\\.", file_name_only)
-          ) {
-            file_name_only <- paste0(safe_agency_name, "_agreement")
-          }
-        }
+        file_name_only <- filename_from_response(
+          results,
+          hyperlink,
+          fallback = paste0(safe_agency_name, "_agreement")
+        )
 
         file_name <- file.path(agency_folder, file_name_only)
         writeBin(content(results, as = "raw"), file_name)

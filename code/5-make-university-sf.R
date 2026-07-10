@@ -2,6 +2,8 @@ library(tidyverse)
 library(sf)
 library(arrow)
 
+sf_use_s2(FALSE)
+
 source("code/functions.R")
 
 agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
@@ -11,15 +13,23 @@ manual_non_facility_polygons <- arrow::read_parquet(
 )
 state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 university_boundaries <- read_sf_parquet(
-  "data/university_boundaries.parquet",
-  crs = 3857
+  "data/university_boundaries.parquet"
 )
 
 # university boundary lookup ---------------------------------------------
+#
+# Deduplicate to one polygon per (state, normalized name): several campuses
+# can share a normalized name, and an un-deduplicated lookup would fan each
+# agency out into duplicate rows. Keep the largest campus and flag the
+# agreement for review when a name was ambiguous.
 
 university_lookup <-
   university_boundaries |>
+  # area in the source's projected CRS: with s2 off, st_area on lon-lat
+  # coordinates would require lwgeom; a projected CRS needs neither
+  mutate(campus_area = st_area(geometry)) |>
   st_transform(4326) |>
+  st_cast("MULTIPOLYGON") |>
   mutate(
     university_name = str_squish(NAME),
     state_abbr = str_to_upper(str_squish(STATE))
@@ -29,7 +39,20 @@ university_lookup <-
     university_key = norm_key(university_name),
     state_key = norm_state(state_full)
   ) |>
-  select(university_name, university_key, state_key, state_fips, geometry)
+  select(
+    university_name,
+    university_key,
+    state_key,
+    state_fips,
+    campus_area,
+    geometry
+  ) |>
+  add_count(state_key, university_key, name = "university_key_matches") |>
+  group_by(state_key, university_key) |>
+  arrange(desc(campus_area), university_name, .by_group = TRUE) |>
+  slice_head(n = 1) |>
+  ungroup() |>
+  select(-campus_area)
 
 # manual name overrides --------------------------------------------------
 
@@ -97,8 +120,9 @@ university_agreements_sf <- agencies_all |>
     county_fips = NA_character_,
     place_fips = NA_character_,
     geoid = NA_character_,
+    match_ambiguous = coalesce(university_key_matches > 1, FALSE),
     needs_geometry_review = is.na(university_name) | st_is_empty(geometry),
-    needs_review = needs_review | needs_geometry_review
+    needs_review = needs_review | needs_geometry_review | match_ambiguous
   ) |>
   select(
     state,
@@ -123,6 +147,7 @@ university_agreements_sf <- agencies_all |>
     university_name,
     university_guess,
     university_guess_final,
+    match_ambiguous,
     state_fips,
     county_fips,
     place_fips,

@@ -3,12 +3,13 @@ library(sf)
 library(stringdist)
 library(arrow)
 
+sf_use_s2(FALSE)
+
 source("code/functions.R")
 
 agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
-facilities_tbl <- read_sf_parquet("data/facilities_tbl.parquet") |>
-  st_drop_geometry()
+facilities_tbl <- arrow::read_parquet("data/facilities_tbl.parquet")
 hifld_facility_tbl <- arrow::read_parquet(
   "data/hifld_facility_tbl.parquet"
 )
@@ -69,7 +70,6 @@ fac_287g <- agencies_all |>
   mutate(
     state_key = norm_state(state),
     county_key = norm_place(county),
-    agency_key = norm_key(agency),
     facility_guess = extract_facility_guess(agency),
     facility_guess_key = norm_key(facility_guess),
     city_guess = extract_city_guess(agency),
@@ -189,11 +189,13 @@ facility_unmatched_after_fuzzy_county <-
 
 facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
   inner_join(
-    facility_sources_exact,
+    facility_sources_exact |>
+      rename(facility_source_county_key = county_key),
     by = "state_key",
     relationship = "many-to-many"
   ) |>
   mutate(
+    county_key = facility_source_county_key,
     match_dist = stringdist(
       facility_guess_key,
       facility_key,
@@ -307,13 +309,6 @@ doc_candidates <- fac_287g |>
       doc_local_jail_pattern
     ) |
       is_exact_county_pattern(facility_name, facility_county),
-    doc_is_correctional_candidate = source %in% c(
-      "hifld_prisons",
-      "jails_prisons"
-    ) |
-      doc_has_prison_like_name |
-      doc_has_ambiguous_name |
-      doc_has_local_jail_name,
     doc_match_tier = case_when(
       doc_is_state_prison_source ~
         "doc_exact_state_prison_source",
@@ -424,13 +419,11 @@ manual_matches <-
     moa_pending,
     state_key,
     county_key,
-    agency_key,
     facility_guess,
     facility_guess_key,
     is_doc_agency,
     source = "manual",
     source_rank = 0L,
-    detention_facility_code = NA_character_,
     facility_name = manual_facility_name,
     facility_address = manual_address,
     facility_city = manual_city,
@@ -439,12 +432,8 @@ manual_matches <-
     facility_state = coalesce(manual_state, state),
     facility_state_fips = NA_character_,
     facility_zip = manual_zip,
-    facility_address_full = str_squish(
-      paste(manual_address, manual_city, manual_state, manual_zip, sep = ", ")
-    ),
     facility_latitude = latitude,
     facility_longitude = longitude,
-    facility_field_office = NA_character_,
     facility_key = norm_key(manual_facility_name),
     match_type = "manual",
     match_score = 1,
@@ -495,13 +484,19 @@ readr::write_csv(
 
 # facility point sf layer ------------------------------------------------
 
+# every facility-model agreement is kept: matches without coordinates and
+# fully-unmatched agencies get an empty POINT (na.fail = FALSE) and are
+# flagged for review, mirroring how the polygon layers handle unmatched rows
 facility_agreements_sf <-
-  facility_all_matches |>
-  filter(!is.na(facility_latitude), !is.na(facility_longitude)) |>
+  bind_rows(
+    facility_all_matches,
+    facility_unmatched_final
+  ) |>
   st_as_sf(
     coords = c("facility_longitude", "facility_latitude"),
     crs = 4326,
-    remove = FALSE
+    remove = FALSE,
+    na.fail = FALSE
   ) |>
   mutate(
     geom_class = "facility_point",
@@ -517,8 +512,8 @@ facility_agreements_sf <-
       "doc_exact_state_prison_source"
     ),
     needs_review = needs_review |
-      (source != "facilities" & !is_accepted_exact_match) |
       !is_accepted_exact_match |
+      st_is_empty(geometry) |
       has_addendum |
       moa_pending
   ) |>
@@ -672,14 +667,12 @@ facility_review <-
         flag_jails_prisons_source
       ),
       \(missing_coords, state_fuzzy, low_fuzzy, jails_source) {
-        reasons <- c(
+        flag_list(
           if (missing_coords) "missing_coordinates",
           if (state_fuzzy) "state_level_fuzzy",
           if (low_fuzzy) "low_confidence_fuzzy",
           if (jails_source) "jails_prisons_source"
         )
-
-        paste(reasons, collapse = "; ")
       }
     )
   ) |>
