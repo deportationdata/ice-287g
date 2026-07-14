@@ -1,91 +1,52 @@
+library(tidyverse)
 library(digest)
 
-# --- Helper function to get file hash ---
+trees <- c("agreements", "sheets")
 
-get_file_hash <- function(filepath) {
-  digest(file = filepath, algo = "sha256")
-}
+# Delete files whose content duplicates a same-group file from an earlier
+# snapshot. Both trees are laid out <tree>/<tree>_YYYYMMDD_HHMMSS/..., so a
+# file's group is its directory with the snapshot component removed:
+# agreements/<state>/<agency> for agreements (two agencies with byte-identical
+# files each keep their copy), the tree root for sheets. Files in different
+# groups are never compared. The snapshot timestamp is parsed and ordered on
+# explicitly, so the oldest copy wins by date rather than by path sort order
+# (a file with no parseable timestamp sorts last and loses to any dated copy).
+tibble(path = list.files(trees, recursive = TRUE, full.names = TRUE)) |>
+  mutate(
+    snapshot = ymd_hms(str_extract(path, "[0-9]{8}_[0-9]{6}")),
+    group = str_remove(dirname(path), "/[^/]+"),
+    hash = map_chr(path, function(p) {
+      tryCatch(digest(file = p, algo = "sha256"), error = function(e) NA_character_)
+    })
+  ) |>
+  filter(!is.na(hash)) |>
+  arrange(snapshot, path) |>
+  group_by(group, hash) |>
+  filter(row_number() > 1) |> # the earliest-snapshot file per group+hash survives
+  ungroup() |>
+  pull(path) |>
+  walk(function(p) {
+    cat(sprintf("Deleting: %s\n", p))
+    file.remove(p)
+  })
 
-# --- Remove duplicate files ---
-
-# Removes files whose content duplicates an earlier file (sorted order, so the
-# oldest snapshot wins) within the same dedup group. `group_fn` maps a file
-# path to its scope: files in different groups are never compared, so two
-# different agencies that receive byte-identical agreement files each keep
-# their copy.
-remove_duplicate_files <- function(base_path, group_fn = function(path) "") {
-  seen_files <- list()
-
-  all_files <- sort(list.files(base_path, recursive = TRUE, full.names = TRUE))
-
-  for (file_path in all_files) {
-    if (!file.exists(file_path) || file.info(file_path)$isdir) {
-      next
+# Prune empty directories. The rev() is load-bearing: list.dirs returns every
+# parent before its descendants, so walking in reverse visits each directory
+# only after all of its children. Combined with checking emptiness at deletion
+# time (not up front), a parent whose only child was just pruned goes too.
+# This re-scans the filesystem rather than deriving dirs from the deletions
+# above, because it must also catch dirs that were already empty (e.g. an
+# agency folder whose download failed).
+list.dirs(trees, recursive = TRUE, full.names = TRUE) |>
+  setdiff(trees) |>
+  rev() |>
+  walk(function(d) {
+    if (length(list.files(d, all.files = TRUE, no.. = TRUE)) == 0) {
+      # unlink() needs recursive = TRUE to remove a directory at all;
+      # the empty check above ensures nothing else is deleted
+      unlink(d, recursive = TRUE)
+      cat(sprintf("Deleted: %s\n", d))
     }
-
-    file_hash <- tryCatch(
-      get_file_hash(file_path),
-      error = function(e) NULL
-    )
-
-    if (is.null(file_hash)) {
-      next
-    }
-
-    key <- paste(group_fn(file_path), file_hash, sep = "::")
-
-    if (is.null(seen_files[[key]])) {
-      seen_files[[key]] <- file_path
-    } else {
-      cat(sprintf("Deleting: %s\n", file_path))
-      file.remove(file_path)
-    }
-  }
-}
-
-# agreements/<agreements_TIMESTAMP>/<state>/<agency>/<file>: dedup within the
-# same state/agency across snapshots, never across agencies
-agreement_group <- function(path) {
-  dirname(sub("^agreements/[^/]+/", "", path))
-}
-
-# --- Delete empty directories ---
-
-delete_empty_dirs <- function(base_path) {
-  # list.dirs returns parents before children; reverse for bottom-up
-  all_dirs <- list.dirs(base_path, recursive = TRUE, full.names = TRUE)
-  all_dirs <- rev(all_dirs)
-
-  for (dir_path in all_dirs) {
-    # skip the root itself
-    if (normalizePath(dir_path) == normalizePath(base_path)) {
-      next
-    }
-
-    contents <- list.files(dir_path, all.files = TRUE, no.. = TRUE)
-
-    if (length(contents) == 0) {
-      tryCatch(
-        {
-          # unlink() needs recursive = TRUE to remove a directory at all;
-          # the empty check above ensures nothing else is deleted
-          unlink(dir_path, recursive = TRUE)
-          cat(sprintf("Deleted: %s\n", dir_path))
-        },
-        error = function(e) {
-          cat(sprintf("Error deleting: %s\n", dir_path))
-        }
-      )
-    }
-  }
-}
-
-# --- Run deduplication pipeline ---
-
-remove_duplicate_files("agreements", agreement_group)
-delete_empty_dirs("agreements")
-
-remove_duplicate_files("sheets")
-delete_empty_dirs("sheets")
+  })
 
 cat("Deduplication complete.\n")

@@ -1,0 +1,40 @@
+name: Notify slicer-shiny-app of 287(g) update
+
+# When the shipped artifact lands on main, poke slicer-shiny-app so its
+# build-duckdb workflow rebuilds the 287g dataset immediately instead of
+# waiting for the weekly cron. Uses the `ddo-bot` GitHub App installed on
+# slicer-shiny-app; the App is NOT installed on this repo — we just hold
+# its secrets here and mint a cross-repo installation token.
+#
+# Required repo secrets:
+#   - DDO_BOT_APP_ID       (same value as in deportationdata.org)
+#   - DDO_BOT_PRIVATE_KEY  (same value as in deportationdata.org)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/agreement-level-sf.parquet'
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Generate App token scoped to slicer-shiny-app
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.DDO_BOT_APP_ID }}
+          private-key: ${{ secrets.DDO_BOT_PRIVATE_KEY }}
+          owner: deportationdata
+          repositories: slicer-shiny-app
+
+      - name: Dispatch data-changed event
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api -X POST repos/deportationdata/slicer-shiny-app/dispatches \
+            -f event_type=data-changed \
+            -f 'client_payload[datasets]=287g'

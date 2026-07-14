@@ -108,7 +108,8 @@ municipal_pattern_exact_matches <- fac_287g |>
     relationship = "many-to-many"
   ) |>
   filter(
-    is.na(county_key) | county_key == "" |
+    is.na(county_key) |
+      county_key == "" |
       county_key == facility_source_county_key,
     is_exact_municipal_pattern(facility_name, city_guess)
   ) |>
@@ -318,8 +319,10 @@ doc_candidates <- fac_287g |>
         "doc_needs_research",
       doc_is_jails_source & doc_has_doc_operator ~
         "doc_needs_research",
-      doc_is_local_prison_source | doc_is_federal_prison_source |
-        doc_is_jails_source | doc_has_local_jail_name ~
+      doc_is_local_prison_source |
+        doc_is_federal_prison_source |
+        doc_is_jails_source |
+        doc_has_local_jail_name ~
         "doc_excluded_local_jail",
       TRUE ~ "doc_not_correctional_candidate"
     ),
@@ -505,12 +508,13 @@ facility_agreements_sf <-
     county_fips = facility_county_fips,
     place_fips = NA_character_,
     geoid = county_fips,
-    is_accepted_exact_match = match_type %in% c(
-      "exact_state_county_facility_name",
-      "exact_county_pattern_all_facilities",
-      "exact_municipal_pattern_facility",
-      "doc_exact_state_prison_source"
-    ),
+    is_accepted_exact_match = match_type %in%
+      c(
+        "exact_state_county_facility_name",
+        "exact_county_pattern_all_facilities",
+        "exact_municipal_pattern_facility",
+        "doc_exact_state_prison_source"
+      ),
     needs_review = needs_review |
       !is_accepted_exact_match |
       st_is_empty(geometry) |

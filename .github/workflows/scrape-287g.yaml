@@ -4,14 +4,32 @@ on:
   schedule:
     - cron: '0 8 * * *' # every day at 08:00 UTC
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run scrape + pipeline but skip commit/push/PR (for testing)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   pull-requests: write
 
+# one scrape at a time; a manual dispatch overlapping the cron queues instead
+# of racing on the branch/push
+concurrency:
+  group: scrape-287g
+  cancel-in-progress: false
+
 jobs:
   scrape:
     runs-on: [self-hosted]
+    timeout-minutes: 120
+
+    env:
+      RENV_PATHS_CACHE: ~/renv-cache
+      RENV_CONFIG_PPM_ENABLED: FALSE
+      RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/manylinux_2_28/latest
 
     steps:
       - uses: actions/checkout@v4
@@ -51,33 +69,25 @@ jobs:
             snapshot("sheets", "/tmp/old-287g/sheets.rds")
           '
 
-      - name: Install R packages
+      - name: Restore R packages (renv)
+        # no --vanilla here: the project .Rprofile bootstraps renv itself.
+        # Exporting R_LIBS makes every later `Rscript --vanilla` step (and
+        # run_ci.sh, which disables the renv autoloader) resolve packages from
+        # the renv project library instead of reinstalling anything.
         run: |
-          Rscript --vanilla -e '
-            install.packages(
-              c(
-                "arrow",
-                "digest",
-                "dplyr",
-                "httr",
-                "openxlsx",
-                "readr",
-                "readxl",
-                "rvest",
-                "sf",
-                "sfarrow",
-                "stringdist",
-                "stringr",
-                "tigris",
-                "tidyr",
-                "tidyverse"
-              ),
-              repos = "https://cloud.r-project.org"
-            )
-          '
+          uname -sm
+          Rscript -e 'renv::hydrate(); renv::restore(prompt = FALSE)'
+          echo "R_LIBS=$(Rscript -e 'cat(renv::paths$library())')" >> "$GITHUB_ENV"
 
       - name: Run scraper
-        run: Rscript --vanilla code/0-287g-scraper.R
+        # the ICE site is flaky; retry transient failures before giving up
+        run: |
+          for attempt in 1 2 3; do
+            Rscript --vanilla code/0-287g-scraper.R && exit 0
+            echo "::warning::scrape attempt ${attempt} failed"
+            sleep 60
+          done
+          exit 1
 
       - name: Run deduplicator
         run: Rscript --vanilla code/0-287g-deduplicate.R
@@ -128,8 +138,17 @@ jobs:
           bash code/run_ci.sh
           git add data/
 
-      - name: Commit and push
+      - name: Upload QA review files
         if: steps.check_changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-review-${{ github.run_id }}
+          path: data/*.csv
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Commit and push
+        if: steps.check_changes.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -137,7 +156,7 @@ jobs:
           git push --set-upstream origin HEAD
 
       - name: Create pull request
-        if: steps.check_changes.outputs.changed == 'true'
+        if: steps.check_changes.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
         id: create_pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -172,3 +191,18 @@ jobs:
       - name: Clean up temp files
         if: always()
         run: rm -rf /tmp/old-287g /tmp/287g-changes.txt /tmp/pr-body*.txt
+
+  # second safety layer beyond the inline scraper retry: rerun failed jobs
+  # up to two more times (transient runner/network trouble)
+  rerun-on-failure:
+    needs: [scrape]
+    if: failure() && fromJSON(github.run_attempt) < 3
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh run rerun ${{ github.run_id }} --failed

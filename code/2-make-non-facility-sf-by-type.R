@@ -27,7 +27,8 @@ YEAR <- 2024
 # municipalities), state_fips/county_fips/place_fips/geoid, boundary_src,
 # src_rank, geometry.
 
-states_lookup <- tigris::states(cb = TRUE, year = YEAR, class = "sf") |>
+states_lookup <-
+  tigris::states(cb = TRUE, year = YEAR, class = "sf") |>
   st_transform(4326) |>
   st_cast("MULTIPOLYGON") |>
   transmute(
@@ -76,11 +77,13 @@ county_names_by_fp <- counties_raw |>
 # a place intersecting several counties gets one candidate row per county —
 # without this, same-named places in different counties of a state could not
 # be disambiguated by the agreement's county
-county_key_polygons <- counties_raw |>
+county_key_polygons <-
+  counties_raw |>
   st_transform(4326) |>
   transmute(cand_county_key = norm_place(NAMELSAD))
 
-places_lookup <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
+places_lookup <-
+  tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
   st_transform(4326) |>
   st_cast("MULTIPOLYGON") |>
   transmute(
@@ -97,7 +100,8 @@ places_lookup <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
   ) |>
   st_join(county_key_polygons, join = st_intersects, left = TRUE)
 
-cousubs_lookup <- unique(counties_raw$STATEFP) |>
+cousubs_lookup <-
+  unique(counties_raw$STATEFP) |>
   map(
     \(fp) {
       tigris::county_subdivisions(
@@ -131,7 +135,8 @@ municipal_lookup <- bind_rows(places_lookup, cousubs_lookup)
 
 # manual overrides ---------------------------------------------------------
 
-manual_overrides <- manual_non_facility_polygons |>
+manual_overrides <-
+  manual_non_facility_polygons |>
   select(
     agency,
     state,
@@ -176,13 +181,13 @@ match_polygon_layer <- function(
     )
 
   if (layer == "municipal") {
-    base <- base |>
-      filter(!is_pa_constable_agency(state, agency))
+    base <- filter(base, !is_pa_constable_agency(state, agency))
   }
 
   join_cols <- if (join_on_state) c("state_key", "match_key") else "match_key"
 
-  resolved <- base |>
+  resolved <-
+    base |>
     mutate(
       .row_id = row_number(),
       manual_match = if_else(
@@ -391,7 +396,8 @@ state_result <- match_polygon_layer(
   join_on_state = FALSE
 )
 
-state_agreements_sf <- state_result$matches |>
+state_agreements_sf <-
+  state_result$matches |>
   rename(state_match = match_value) |>
   select_layer_columns(c("state_match", "state_abbr"))
 
@@ -415,7 +421,8 @@ county_result <- match_polygon_layer(
   fuzzy_max_dist = 0.12
 )
 
-county_agreements_sf <- county_result$matches |>
+county_agreements_sf <-
+  county_result$matches |>
   rename(county_match = match_value) |>
   select_layer_columns("county_match")
 
@@ -440,7 +447,8 @@ municipal_result <- match_polygon_layer(
   fuzzy_max_dist = 0.25
 )
 
-municipal_agreements_sf <- municipal_result$matches |>
+municipal_agreements_sf <-
+  municipal_result$matches |>
   rename(
     city_guess = auto_match,
     city_match = match_value
@@ -459,10 +467,11 @@ write_sf_parquet(
 # paste-ready for inputs/manual-non-facility-polygons.csv; promoted rows
 # become exact manual matches on the next run and leave the fuzzy path.
 
-unmatched_polygon_suggestions <- bind_rows(
-  county_result$fuzzy,
-  municipal_result$fuzzy
-) |>
+unmatched_polygon_suggestions <-
+  bind_rows(
+    county_result$fuzzy,
+    municipal_result$fuzzy
+  ) |>
   mutate(
     manual_match_layer = layer,
     manual_match_name = suggested_name,

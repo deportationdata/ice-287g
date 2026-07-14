@@ -12,9 +12,10 @@ manual_non_facility_polygons <- arrow::read_parquet(
   "data/manual_non_facility_polygons.parquet"
 )
 state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
-university_boundaries <- read_sf_parquet(
-  "data/university_boundaries.parquet"
-)
+university_boundaries <- st_read(
+  "inputs/colleges-and-universities-campuses/CollegeUniversityCampuses.shp"
+) |>
+  select(NAME, STATE)
 
 # university boundary lookup ---------------------------------------------
 #
@@ -58,8 +59,8 @@ university_lookup <-
 
 university_name_overrides <-
   tribble(
-    ~university_guess, ~university_guess_fixed,
-    "Florida A&M University", "Florida Agricultural And Mechanical University"
+    ~university_guess        , ~university_guess_fixed                          ,
+    "Florida A&M University" , "Florida Agricultural And Mechanical University"
   )
 
 # manual university overrides -------------------------------------------
@@ -77,8 +78,8 @@ university_overrides <-
   )
 
 # university agreements --------------------------------------------------
-
-university_agreements_sf <- agencies_all |>
+university_agreements_sf <-
+  agencies_all |>
   left_join(
     university_overrides,
     by = c("agency", "state", "county")

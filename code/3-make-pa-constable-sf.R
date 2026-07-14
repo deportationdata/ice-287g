@@ -1,19 +1,19 @@
 library(tidyverse)
 library(sf)
+library(tigris)
 library(arrow)
 
+options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
 
 source("code/functions.R")
 
-agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
-  normalize_agencies_all()
+# same vintage as 2-make-non-facility-sf-by-type.R so the cache is shared
+YEAR <- 2024
 
-# municipality boundaries from PA Spatial Data Access
-pasda_municipalities <- st_read(
-  "inputs/2026-pennsylvania-municipalities/PaMunicipalities2026_04.shp",
-  quiet = TRUE
-)
+agencies_all <-
+  arrow::read_parquet("data/agencies_all.parquet") |>
+  normalize_agencies_all()
 
 # voting district boundaries from PA Legislative Reapportionment Commission (LRC)
 lrc_voting_districts <- st_read(
@@ -27,22 +27,23 @@ lrc_wards <- st_read(
   quiet = TRUE
 )
 
-# county boundaries from PA LRC
-lrc_counties <- st_read(
-  "inputs/2021-pennsylvania-lrc-voting-district-boundaries/WP_Counties.shp",
-  quiet = TRUE
-) |>
+# county names from tigris (3-digit FIPS -> name); county geometry is never
+# used here, only names for candidate filtering and QA columns
+pa_counties <-
+  tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
   st_drop_geometry() |>
+  filter(STATEFP == "42") |>
   transmute(
-    county_fips = FIPS,
-    resolved_county = str_to_title(NAME20)
+    county_fips = COUNTYFP,
+    resolved_county = NAME
   )
 
-muni_type_from_pasda <- function(x) {
+muni_type_from_namelsad <- function(x) {
   case_when(
-    str_detect(x, "TWP") ~ "township",
-    x == "BORO" ~ "borough",
-    x == "CITY" ~ "city",
+    str_detect(x, " township$") ~ "township",
+    str_detect(x, " borough$") ~ "borough",
+    str_detect(x, " city$") ~ "city",
+    str_detect(x, " municipality$") ~ "municipality",
     TRUE ~ NA_character_
   )
 }
@@ -77,19 +78,27 @@ pa_county_key <- function(x) {
     norm_place()
 }
 
-pasda_lookup <- pasda_municipalities |>
+# in PA every municipality (township, borough, city) is a county
+# subdivision, and NAMELSAD carries the type suffix needed to disambiguate
+# same-named municipalities (e.g. Troy township vs Troy borough)
+cousub_lookup <-
+  tigris::county_subdivisions(
+    state = "42",
+    cb = TRUE,
+    year = YEAR,
+    class = "sf"
+  ) |>
   st_transform(4326) |>
   st_cast("MULTIPOLYGON") |>
+  left_join(pa_counties, by = c("COUNTYFP" = "county_fips")) |>
   mutate(
-    src = "pasda_municipalities_2026",
-    state_fips = str_pad(as.character(FIPS_STATE), 2, pad = "0"),
-    countyfp = str_pad(as.character(FIPS_COUNT), 3, pad = "0"),
-    county_fips = paste0(state_fips, countyfp),
-    place_fips = as.character(FIPS_MUN_C),
-    geoid = as.character(GEOID),
-    resolved_county = str_to_title(COUNTY_NAM),
-    municipality_match = str_to_title(MUNICIPAL1),
-    municipality_type = muni_type_from_pasda(CLASS_OF_M),
+    src = paste0("tigris_cousub_", YEAR),
+    state_fips = STATEFP,
+    county_fips = paste0(STATEFP, COUNTYFP),
+    place_fips = COUSUBFP,
+    geoid = GEOID,
+    municipality_match = NAME,
+    municipality_type = muni_type_from_namelsad(NAMELSAD),
     resolved_county_key = pa_county_key(resolved_county),
     municipality_key = norm_place(municipality_match)
   ) |>
@@ -142,7 +151,8 @@ vtd_lookup <- lrc_voting_districts |>
     geometry
   )
 
-ward_component_counts <- vtd_lookup |>
+ward_component_counts <-
+  vtd_lookup |>
   st_drop_geometry() |>
   filter(!is.na(ward_number)) |>
   count(
@@ -153,10 +163,11 @@ ward_component_counts <- vtd_lookup |>
     name = "ward_component_vtd_count"
   )
 
-ward_lookup <- lrc_wards |>
+ward_lookup <-
+  lrc_wards |>
   st_transform(4326) |>
   st_cast("MULTIPOLYGON") |>
-  left_join(lrc_counties, by = c("FIPS" = "county_fips")) |>
+  left_join(pa_counties, by = c("FIPS" = "county_fips")) |>
   mutate(
     src = "lrc_wards_2021",
     state_fips = "42",
@@ -202,7 +213,8 @@ ward_lookup <- lrc_wards |>
     geometry
   )
 
-pa_constables <- agencies_all |>
+pa_constables <-
+  agencies_all |>
   filter(is_pa_constable_agency(state, agency)) |>
   mutate(
     pa_constable_row_id = row_number(),
@@ -261,12 +273,12 @@ precinct_matches <- pa_constables |>
 municipality_matches <- pa_constables |>
   filter(pa_constable_jurisdiction == "municipality") |>
   inner_join(
-    pasda_lookup,
+    cousub_lookup,
     by = "municipality_key",
     relationship = "many-to-many"
   ) |>
   filter_candidates() |>
-  select_unique_matches("pasda_municipality")
+  select_unique_matches("tigris_cousub")
 
 pa_matches <- bind_rows(
   ward_matches,

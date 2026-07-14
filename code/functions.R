@@ -1,3 +1,79 @@
+# readxl drops embedded hyperlinks, so pull them out of the xlsx internals:
+# each linked cell carries a relationship id that maps to the target url in
+# the sheet's .rels file. Returns one row per linked cell: col (letter),
+# row (excel row, header = row 1), url.
+xlsx_hyperlinks <- function(path, sheet = 1) {
+  files <- sprintf(
+    c("xl/worksheets/sheet%d.xml", "xl/worksheets/_rels/sheet%d.xml.rels"),
+    sheet
+  )
+  tmp <- tempfile()
+  unzip(path, files = files, exdir = tmp)
+
+  cells <- xml2::xml_find_all(
+    xml2::read_xml(file.path(tmp, files[1])),
+    ".//d1:hyperlink"
+  )
+  rels <- xml2::xml_find_all(
+    xml2::read_xml(file.path(tmp, files[2])),
+    ".//d1:Relationship"
+  )
+
+  tibble(
+    ref = xml2::xml_attr(cells, "ref"),
+    id = xml2::xml_attr(cells, "id")
+  ) |>
+    left_join(
+      tibble(
+        id = xml2::xml_attr(rels, "Id"),
+        url = xml2::xml_attr(rels, "Target")
+      ),
+      by = "id"
+    ) |>
+    transmute(
+      col = str_extract(ref, "^[A-Z]+"),
+      row = as.integer(str_extract(ref, "\\d+$")),
+      url
+    )
+}
+
+# MOA links are hand-pasted into the sheet, so unwrap Outlook safelinks
+# wrappers and fix the pasted-URL typos seen so far (chrome-extension
+# prefixes, https:/ with one slash, http) to recover the real ice.gov url
+clean_moa_urls <- function(url) {
+  url |>
+    map_chr(\(u) {
+      if (str_detect(u, "safelinks\\.protection\\.outlook\\.com")) {
+        URLdecode(str_extract(u, "(?<=[?&]url=)[^&]+"))
+      } else {
+        u
+      }
+    }) |>
+    str_remove("^chrome-extension://[a-z]+/") |>
+    str_replace("^https?:/(?=[^/])", "https://") |>
+    str_replace("^http://", "https://")
+}
+
+# attach each sheet row's MOA hyperlink as moa_link (NA where the row has
+# none, e.g. pending agreements)
+add_moa_links <- function(x, path) {
+  moa_col <- LETTERS[match("MOA", names(x))]
+
+  if (is.na(moa_col)) {
+    stop("Participating agencies sheet has no MOA column; layout changed?")
+  }
+
+  x |>
+    mutate(excel_row = row_number() + 1) |> # sheet rows sit one below the header row
+    left_join(
+      xlsx_hyperlinks(path) |>
+        filter(col == moa_col) |>
+        transmute(excel_row = row, moa_link = clean_moa_urls(url)),
+      by = "excel_row"
+    ) |>
+    select(-excel_row)
+}
+
 norm_key <- function(x) {
   x |>
     # deal with ~ and accents and curly apostrophes correctly
@@ -65,7 +141,7 @@ flag_list <- function(...) {
   paste(flags, collapse = "; ")
 }
 
-# PA constables are routed to 4a-make-pa-constable-sf.R and must be excluded
+# PA constables are routed to 3-make-pa-constable-sf.R and must be excluded
 # from the municipal layer; keep the predicate in one place
 is_pa_constable_agency <- function(state, agency) {
   state == "Pennsylvania" &
@@ -120,6 +196,76 @@ norm_place <- function(x) {
     ) |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
     str_squish()
+}
+
+# county key for the ORI crosswalk join: LEAIC county names drop the
+# "Parish" suffix that the ICE sheets carry ("BEAUREGARD" vs "Beauregard
+# Parish"), so parish is stripped alongside norm_place's county/city/...
+# list; "#N/A"-style sentinels in the ICE sheets become NA so they never
+# key-match anything
+norm_ori_county <- function(x) {
+  x <- if_else(
+    str_to_lower(str_squish(x)) %in% c("#na", "#n/a", "na", "n/a", ""),
+    NA_character_,
+    x
+  )
+  x |>
+    norm_place() |>
+    str_replace_all("\\bparish\\b", " ") |>
+    str_squish()
+}
+
+# LEAIC/NCIC names abbreviate heavily ("CONSTABLE PCT. 3", "NORTHERN YORK
+# CO. REGIONAL", "BESSEMER BORO"), so expand before keying; transliteration
+# runs first so curly-apostrophe possessives ("Sheriff’s") hit the
+# singularization, which makes sheriff's/sheriffs/sheriff share a key
+expand_leaic_abbrev <- function(x) {
+  x |>
+    stringi::stri_trans_general("Latin-ASCII") |>
+    str_to_lower() |>
+    str_replace_all("\\bpct\\.?\\s*", " precinct ") |>
+    str_replace_all("\\bco\\.?\\b", " county ") |>
+    str_replace_all("\\bregl\\.?\\b", " regional ") |>
+    str_replace_all("\\btwp\\.?\\b", " township ") |>
+    str_replace_all("\\bboro\\.?\\b", " borough ") |>
+    str_replace_all("\\bhwy\\.?\\b", " highway ") |>
+    str_replace_all("\\bdept\\.?\\b", " department ") |>
+    # "departement" is an ICE-sheet typo; "departmen" is what survives
+    # LEAIC's 50-character name truncation
+    str_replace_all("\\bdepartement\\b", " department ") |>
+    str_replace_all("\\bdepartmen\\b", " department ") |>
+    str_replace_all("\\bpd\\b", " police department ") |>
+    str_replace_all("\\buniv\\.?\\b", " university ") |>
+    str_replace_all("\\b(sheriff|constable|marshal)'?s?\\b", "\\1 ") |>
+    # fuse so norm_key does not strip the words separately: "Department of
+    # Public Safety" must not collapse to the bare place/state name, which
+    # is how "Arkansas Department of Public Safety" would otherwise key
+    # identically to "Arkansas City Police Department"
+    str_replace_all("\\bpublic safety\\b", " publicsafety ")
+}
+
+# agency key for the ORI crosswalk join: aggressive — drops the
+# jurisdiction-type and police/department filler words via norm_key
+norm_ori_agency <- function(x) {
+  x |>
+    expand_leaic_abbrev() |>
+    norm_key()
+}
+
+# full-name key: same abbreviation expansion but keeps every word, so
+# "Melbourne Police Department" and "Melbourne Village Police Department"
+# stay distinct where norm_ori_agency collapses both to "melbourne"
+norm_ori_fullname <- function(x) {
+  x |>
+    expand_leaic_abbrev() |>
+    str_replace_all("[^a-z0-9]", "")
+}
+
+# fuzzy-ORI guard: precinct/ward/troop numbers must agree exactly — a fuzzy
+# hit that turns "Constable Precinct 3" into "CONSTABLE PCT. 1" is a
+# different agency with its own ORI
+key_digits <- function(x) {
+  vapply(str_extract_all(x, "[0-9]+"), paste, character(1), collapse = "-")
 }
 
 # parish -> county makes ICE's "Richland County" match Louisiana's "Richland

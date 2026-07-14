@@ -1,0 +1,152 @@
+state,county,agency,ORI9,source,note
+Alaska,,Alaska Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Arizona,,Arizona Department of Corrections,AZ0079300,leaic:AZ DEPART OF CORRECTIONS PHOENIX,"state DOC law enforcement, Phoenix HQ"
+Arizona,Pinal County,Pinal County Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Arkansas,Independence County,16th Judicial Distric Drug Task Force,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Arkansas,Pulaksi County,Arkansas Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Arkansas,Pulaski County,Arkansas Department of Public Safety,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Arkansas,Pulaski County,Arkansas Department of Public Safety-Crime Information Center,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Arkansas,Pulaski County,Arkansas Division of Law Enforcement Standards and Training,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Arkansas,,Arkansas National Guard,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Arkansas,Columbia County,Taylor Police Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Commonwealth of the Northern Mariana Islands,#Na,CNMI Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Commonwealth of the Northern Mariana Islands,#Na,CNMI Department of Public Safety,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,,Boca Raton Police Services Department,FL0500200,leaic:BOCA RATON POLICE DEPARTMENT,"same agency, styled Police Services Department"
+Florida,Escambia County,District Board of Trustees of Pensacola State College,FL0179100,leaic:PENSACOLA STATE COLLEGE,college police department; board is the signatory
+Florida,Escambia County,Escambia County Board of County Commissioners/ Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,,Florida A&M University Board of Trustees,FL0370700,leaic:FLORIDA A & M UNIVERSITY POLICE,university police department; board is the signatory
+Florida,Broward County,Florida Atlantic Police Department,FL0503700,leaic:FLORIDA ATLANTIC UNIVERSITY POLICE,"FAU police; sheet lists Broward (Davie campus), HQ in Palm Beach"
+Florida,,Florida Department of Corrections,FL0372900,crime:Department of Corrections Office of the Inspector General Leon County,"FDC's law-enforcement arm, Tallahassee HQ"
+Florida,,"Florida Department of Environmental Protection, Division of Law Enforcement",FL037A20X,crime:Department of Environmental Protection Law Enforcement Leon,Tallahassee HQ row
+Florida,#Na,"Florida Department of Financial Services, Criminal Investigation Division",FL0371700,crime:State Treasurer's Office Division of Insurance Fraud,DFS is the Treasurer's successor; insurance-fraud division is its criminal-investigations arm
+Florida,,"Florida Department of Highway Safety and Motor Vehicles, Division of Highway Patrol",FLFHP0000,leaic:FLORIDA HIGHWAY PATROL,FHP statewide parent ORI
+Florida,,Florida Department of Lottery Services,FL0371600,leaic:DEPT OF LOTTERY DIV OF SECURITY TALLAHASSEE,lottery division of security
+Florida,,Florida Division of Alcoholic Beverages and Tobacco,FL0370200,leaic:FLORIDA DEPT OF BPR - DIVISION OF ALCOHOLIC BEVERAGES,Tallahassee HQ row
+Florida,#Na,Florida Fish & Wildlife Conservation Commission,FL0370800,leaic:FL FISH AND WILDLIFE CONSERVATION COMMISSION,Leon (Tallahassee HQ) row; regional offices have their own ORIs
+Florida,,Florida National Guard,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,,Florida State Guard,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Gulf County,Gulf County Board of County Commissioners /Detention Facility,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Jackson County,Jackson County Correctional Facility,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Miami-Dade County,Miami-Dade Corrections and Rehabilitation,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Miami-Dade County,Miami-Dade Sheriff's Office,FL0130000,leaic:MIAMI-DADE (COUNTY) POLICE DEPARTMENT,Miami-Dade PD became the Sheriff's Office in 2025
+Florida,#Na,Office of the State Attorney Sixth Judicial Circuit,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Lee County,"Office of the State Attorney, 20th Judicial Circuit",,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Okaloosa County,Okaloosa County Board of County Commissioners/ Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Orange County,Orange County Corrections Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Osceola County,Osceola County Corrections Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,Pasco County,Pasco County Board of County Commissioners/ Pasco County Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Florida,,Sunny Isles Police Department,FL0135100,leaic:SUNNY ISLES BEACH POLICE DEPARTMENT,city is Sunny Isles Beach
+Florida,,Tallahassee State College Police Department,FL0372200,leaic:TALLAHASSEE COMMUNITY COLLEGE POLICE,TCC renamed Tallahassee State College in 2024
+Florida,Volusia County,Volusia County Division of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Georgia,,Georgia Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Guam,Kattan District,Office Of The Attorney General,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Indiana,Henry County,Greensboro Police Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Indiana,Hendricks County,Hendricks County Prosecutor's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Indiana,Putnam County,Indiana Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Indiana,Marion County,Indiana Department of Homeland Security,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Indiana,Henry County,Kennard Police Department,IN0330800,leaic:KENNARD PD NEW CASTLE,Henry County town PD
+Indiana,Dekalb County,Waterloo Marshal's Office,IN0170400,leaic:WATERLOO POLICE,town marshal is the town police
+Indiana,Dearborn County,West Harrison Police Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Indiana,White County,Wolcott Police Department,IN0910400,leaic:WOLCOTT MARSHAL'S OFFICE WOLCOTT,town marshal is the town police
+Kentucky,Grayson County,Grayson County Detention Center,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Kentucky,Oldham County,Oldham County Detention Center,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Louisiana,Livingston Parish,Denham Springs City Marshal,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Louisiana,East Feliciana Parish,Jackson Marshals Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Louisiana,#Na,Louisiana Department of Public Safety & Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Louisiana,,Louisiana Department of Wildlife & Fisheries,LA0170800,leaic:LOUSIANA WILDLIFE AND FISHERIES DEPT - ENFORCEMENT,"enforcement division, Baton Rouge"
+Louisiana,,Louisiana Military Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Louisiana,Allen Parish,Ward 5 Marshal's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Massachusetts,,Massachusetts Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Mississippi,,Mississippi Attorney General's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Mississippi,Hinds County,Mississippi Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Mississippi,Hinds County,Mississippi Department of Public Safety,MSDPS0100,leaic:MS DEPART OF PUBLIC SAFETY,DPS row in Rankin County
+Mississippi,Hinds County,Mississippi Department of Wildlife Fisheries and Parks,MS0251400,leaic:DEPT OF WILDLIFE CONSERVATION ENF DIV JACKSON,"enforcement division, Jackson"
+Mississippi,Hinds County,Mississippi Office of the State Auditor,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Mississippi,Prentiss Couty,Prentiss County Constable Northern District,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Missouri,,Missouri Highway Patrol,MOMHP0000,leaic:MISSOURI STATE HIGHWAY PATROL,statewide parent ORI
+Missouri,North County,North County Police Cooperative,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Montana,,Montana Department of Justice,MT0251100,leaic:MT DOJ DCI CRIMINAL INVESTIGATION,"DOJ's Division of Criminal Investigation, Helena"
+Nebraska,Lincoln County,Nebraska Department of Correctional Services,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+New York,Nassau County,Nassau County Sheriff's Office,NY0299000,leaic:NASSAU CO SHERIFF'S DEPARTMENT MINEOLA,sheriff's HQ row; the plain-name LEAIC row carries no ORI
+Oklahoma,Kay County,Office of The District Attorney - Eighth District,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Oklahoma,,Oklahoma Bureau of Investigation,OK0BI0100,leaic:OK STATE BUREAU OF INVESTIGATION,OSBI HQ row carries no ORI in LEAIC; this is its first numbered ORI
+Oklahoma,,Oklahoma Department of Public Safety,OKOHP0000,leaic:OKLAHOMA HIGHWAY PATROL,DPS row carries no ORI in LEAIC; OHP is DPS's sworn division
+Oklahoma,Okmulgee County,Okmulgee County District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Cambria County,Cambria County Prison,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Westmoreland County,Constable Unity Township,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Mercer County,Coolspring Township Constable's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Franklin County,County of Franklin / Franklin County Jail,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,,Damascus Township Constable,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,,East Donegal Township Constables Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Cumberland County,East Pennsylvania Township Constable Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Franklin County,Fannett Township Constables Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Tioga County,Gaines Township PA State Constable,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Erie County,Greene Township Constable's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Lancaster County,Lancaster County District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Delaware County,Lansdowne Borough Constable's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Lebanon County,Lebanon County District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Miffin County,Lewistown Borough Constable's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Westmoreland County,Lower Burrell Fourth Ward Constable,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Luzerne County,Luzerne County District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Lawrence,Mahoning Township Police Department,PA0372000,crime:Mahoning Township Police Department Lawrence County,"Lawrence County township, distinct from Carbon and Montour namesakes"
+Pennsylvania,,Northwest Regional Police Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Chester County,Pennsylvania State Constable Office Honey Brook Precinct 1,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Cumberland County,Pennsylvania State Constable's Office So Middleton Twp,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Cumberland County,"Pennsylvania State Constable's Office, Cooke Township",,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,,Preston Township Constable's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,,Sewickley Township Constable's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Pike County,Shohola Township Constable's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Somerset County,Somerset County District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Cumberland County,"Southhampton Twp. Cumberland City, Constables Office",,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Bradford County,Troy Township PA State Constable,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Pennsylvania,Wyoming County,Wyoming County District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+South Dakota,#Na,South Dakota Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Bradley County,Bradley County Constable District 1,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Bradley County,Bradley County Constable District 5,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Bradley County,Bradley County Constable District 6,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Bradley County,Bradley County Constable District 7,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Grundy County,Grundy County Constable District 3,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Moore County,Metropolitan Moore County Sheriff's Office,TN0640000,leaic:MOORE COUNTY SHERIFF'S OFFICE,Lynchburg-Moore metro government
+Tennessee,Monroe County,Monroe County Constable District 2,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Polk County,Polk County Constable District 2,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Polk County,Polk County Constable District 4,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Sevier County,Sevier County Constable District 5,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,Sullivan County,Sullivan County Constable District 1,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Tennessee,,Tennessee Department of Corrections,TN0194100,leaic:DEPT OF CORRECTION INT A,"TDOC internal affairs, its law-enforcement arm"
+Tennessee,,Tennessee Department of Safety and Homeland Security,TNTHP0000,leaic:TENNESSEE DEPARTMENT OF SAFETY,department renamed to add Homeland Security in 2012
+Texas,Blanco County,Blanco County Constable Precinct 4,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Caldwell County,Caldwell County Constable Precinct 2,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Fannin County,Fannin County Criminal District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Freestone County,Freestone County Constable Precinct 2,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Freestone County,Freestone County Constable Precinct 3,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Guadalupe County,Guadalupe County Constable Precinct 1,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Jasper County,Jasper County Constable Precinct 6,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Johnson County,Johnson County District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Kinney County,Kinney County Constable's Office,TX1360100,crime:Kinney County Constable Precinct 1,single-constable county
+Texas,Kleberg County,Kleberg County Attorney's Specialized Crimes & Narcotics Task Force,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Liberty County,Liberty County Constable Precinct 2,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Liberty County,Liberty County Constable Precinct 4,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Liberty County,Liberty County Constable Precinct 6,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Guadalupe Conty,New Berlin Marshal's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Nueces County,Nueces County Constable Precinct 2,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Nueces County,Nueces County Constable Precinct 3,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Nueces County,Nueces County Constable Precinct 4,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Nueces County,Nueces County Constable Precinct 5,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Parker County,Parker County (County) Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Parker County,Parker County District Attorney's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Bexar County,Saint Hedwig Marshal's Office,TX0157100,crime:Saint Hedwig Police Department,town marshal is the town police
+Texas,Gonzales County,Smiley City Marshal's Office,TX0891000,crime:Smiley Police Department,town marshal is the town police; LEAIC lists the older ORI TX0890300
+Texas,Wilson County,Stockdale Marshal's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,#Na,Texas Department of Public Safety - Texas Highway Patrol,TX0000000,leaic:TEXAS DEPARTMENT OF PUBLIC SAFETY,DPS statewide parent ORI
+Texas,#Na,Texas Department of Public Safety- Criminal Investigations Division,TX0000000,leaic:TEXAS DEPARTMENT OF PUBLIC SAFETY,DPS statewide parent ORI
+Texas,,Texas National Guard,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,,Texas Office of the Attorney General,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Trinity County,Trinity County Constable Precinct 2,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Trinity County,Trinity County Constable Precinct 4,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Texas,Walker County,Walker County Constable Pct 3,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Utah,,Utah Department of Corrections,UT0185000,crime:Utah Department of Corrections Law Enforcement Bureau,DOC law enforcement bureau
+Virginia,#Na,"Rappahannock, Shenandoah, Warren Regional Jail Authority",,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Virginia,,Southwest Virginia Regional Jail Authority,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+West Virginia,,West Virginia Division of Corrections and Rehabilitation,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+West Virginia,,West Virginia National Guard,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
+Wyoming,Laramie County,Wyoming State Highway Patrol,WYWHP0000,leaic:WYOMING HIGHWAY PATROL,statewide parent ORI

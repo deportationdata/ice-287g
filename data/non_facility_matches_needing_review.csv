@@ -1,30 +1,13 @@
 match_layer,state,county,agency,geom_class,needs_review,state_match,county_match,city_guess,city_match,match_ambiguous,manual_match_layer,src,manual_reason,manual_note,university_name,university_guess,university_guess_final,municipality_guess,municipality_type_hint,pa_constable_jurisdiction,resolved_county,county_match_status,review_reason,vtd_name,ward_name,ward_vtd_qa_status
-county,Kentucky,Adaitr County,Adair County Sheriff's Office,county_polygon,TRUE,NA,Adaitr County,NA,NA,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-county,Louisiana,Richland County,Richland Parish Sheriff's Office,county_polygon,TRUE,NA,Richland County,NA,NA,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-county,Mississippi,Pearl County,Pearl River County Sheriff's Department,county_polygon,TRUE,NA,Pearl County,NA,NA,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-county,Tennessee,Louden County,Louden County Sheriff's Office,county_polygon,TRUE,NA,Louden County,NA,NA,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-county,Texas,Zavala Couny,Zavala County Sheriff's Office,county_polygon,TRUE,NA,Zavala Couny,NA,NA,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-county,West Virginia,Kenawha County,Kanawha County Sheriff's Office,county_polygon,TRUE,NA,Kenawha County,NA,NA,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-university,Florida,NA,Tallahassee State College Police Department,university_polygon,TRUE,NA,NA,NA,NA,FALSE,NA,unmatched_university_boundary,NA,NA,NA,Tallahassee State College,Tallahassee State College,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,Alabama,Tallapoosa County,Jackson's Gap Police Department,municipal_polygon,TRUE,NA,NA,Jackson's Gap,Jackson's Gap,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,Florida,Broward County,Florida Atlantic Police Department,municipal_polygon,TRUE,NA,NA,Florida Atlantic,Florida Atlantic,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Florida,NA,Melbourne International Airport Police Department,municipal_polygon,TRUE,NA,NA,Melbourne International Airport,Melbourne International Airport,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,Florida,St. Luice County,Port Saint Lucie Police Department,municipal_polygon,TRUE,NA,NA,Port Saint Lucie,Port Saint Lucie,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Florida,NA,Sanford Airport Police Department,municipal_polygon,TRUE,NA,NA,Sanford Airport,Sanford Airport,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Florida,NA,Sarasota Manatee Airport Authority Police Department,municipal_polygon,TRUE,NA,NA,Sarasota Manatee Airport Authority,Sarasota Manatee Airport Authority,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,Florida,NA,Sunny Isles Police Department,municipal_polygon,TRUE,NA,NA,Sunny Isles,Sunny Isles,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Indiana,Dekalb County,Waterloo Marshal's Office,municipal_polygon,TRUE,NA,NA,Waterloo Marshal's,Waterloo Marshal's,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,Kentucky,Bell County,Middlesboro Police Department,municipal_polygon,TRUE,NA,NA,Middlesboro,Middlesboro,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Louisiana,Livingston Parish,Denham Springs City Marshal,municipal_polygon,TRUE,NA,NA,Denham Springs City Marshal,Denham Springs City Marshal,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Louisiana,East Feliciana Parish,Jackson Marshals Office,municipal_polygon,TRUE,NA,NA,Jackson Marshals,Jackson Marshals,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Louisiana,Allen Parish,Ward 5 Marshal's Office,municipal_polygon,TRUE,NA,NA,Ward 5 Marshal's,Ward 5 Marshal's,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Mississippi,Prentiss Couty,Prentiss County Constable Northern District,municipal_polygon,TRUE,NA,NA,Prentiss County Constable Northern District,Prentiss County Constable Northern District,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,Missouri,St. Louis County,Saint Ann Police Department,municipal_polygon,TRUE,NA,NA,Saint Ann,Saint Ann,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,Missouri,St. Charles County,Saint Charles County Police Department,municipal_polygon,TRUE,NA,NA,Saint Charles County,Saint Charles County,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Missouri,Washington County,Washington County Sheriff's Office,municipal_polygon,TRUE,NA,NA,Washington County Sheriff's,Washington County Sheriff's,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,New Hampshire,Hillsborough County,Hillsboro Police Department,municipal_polygon,TRUE,NA,NA,Hillsboro,Hillsboro,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,New Hamsphire,Strafford County,New Durham Police Department,municipal_polygon,TRUE,NA,NA,New Durham,New Durham,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,New Hamsphire,Rockingham County,South Hampton Police Department,municipal_polygon,TRUE,NA,NA,South Hampton,South Hampton,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Oklahoma,Haskell County,Haskell County Sheriff's Office,municipal_polygon,TRUE,NA,NA,Haskell County Sheriff's,Haskell County Sheriff's,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Pennsylvania,Pike County,Eastern Pike Regional Police Department,municipal_polygon,TRUE,NA,NA,Eastern Pike Regional,Eastern Pike Regional,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Pennsylvania,Greene County,Greene Washington Regional Police Department,municipal_polygon,TRUE,NA,NA,Greene Washington Regional,Greene Washington Regional,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
@@ -37,7 +20,6 @@ municipal,Pennsylvania,York County,York County Regional Police Department,munici
 municipal,Texas,Bexar County,Bexar County Constable Precinct 3,municipal_polygon,TRUE,NA,NA,Bexar County Constable Precinct 3,Bexar County Constable Precinct 3,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Blanco County,Blanco County Constable Precinct 4,municipal_polygon,TRUE,NA,NA,Blanco County Constable Precinct 4,Blanco County Constable Precinct 4,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Cass County,Cass County Constable Precinct 3,municipal_polygon,TRUE,NA,NA,Cass County Constable Precinct 3,Cass County Constable Precinct 3,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
-municipal,Texas,Montgomery County,"Cut ""N"" Shoot Police Department",municipal_polygon,TRUE,NA,NA,"Cut ""N"" Shoot","Cut ""N"" Shoot",FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Delta County,Delta County Constable Precinct 5,municipal_polygon,TRUE,NA,NA,Delta County Constable Precinct 5,Delta County Constable Precinct 5,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Edwards County,Edwards County Constable Precinct 1,municipal_polygon,TRUE,NA,NA,Edwards County Constable Precinct 1,Edwards County Constable Precinct 1,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
 municipal,Texas,Fannin County,Fannin County Constable Precinct 1,municipal_polygon,TRUE,NA,NA,Fannin County Constable Precinct 1,Fannin County Constable Precinct 1,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA

@@ -41,54 +41,9 @@ ensure_columns <- function(x, defaults) {
   x
 }
 
-read_parquet_retry <- function(path, times = 4, timeout_seconds = 300) {
-  old_timeout <- getOption("timeout")
-  options(timeout = max(old_timeout, timeout_seconds))
-  on.exit(options(timeout = old_timeout), add = TRUE)
-
-  last_error <- NULL
-
-  for (attempt in seq_len(times)) {
-    result <- tryCatch(
-      arrow::read_parquet(path),
-      error = function(e) {
-        last_error <<- e
-        NULL
-      }
-    )
-
-    if (!is.null(result)) {
-      return(result)
-    }
-
-    if (attempt < times) {
-      pause <- min(10 * attempt, 60)
-      message(
-        "Failed to read parquet on attempt ",
-        attempt,
-        " of ",
-        times,
-        "; retrying in ",
-        pause,
-        " seconds: ",
-        conditionMessage(last_error)
-      )
-      Sys.sleep(pause)
-    }
-  }
-
-  stop(
-    "Failed to read parquet after ",
-    times,
-    " attempts: ",
-    conditionMessage(last_error),
-    call. = FALSE
-  )
-}
-
 state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
 
-hifld <- read_parquet_retry(
+hifld <- arrow::read_parquet(
   "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-local-law-enforcement-facilities.parquet"
 ) |>
   assert_columns(
@@ -118,7 +73,7 @@ hifld <- read_parquet_retry(
     )
   )
 
-hifld_prisons <- read_parquet_retry(
+hifld_prisons <- arrow::read_parquet(
   "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/hifld-prisons.parquet"
 ) |>
   assert_columns(
@@ -145,7 +100,7 @@ hifld_prisons <- read_parquet_retry(
     )
   )
 
-jails_prisons <- read_parquet_retry(
+jails_prisons <- arrow::read_parquet(
   "https://github.com/deportationdata/ice-detention-facilities/raw/refs/heads/main/data/jails_prisons.parquet"
 ) |>
   assert_columns(

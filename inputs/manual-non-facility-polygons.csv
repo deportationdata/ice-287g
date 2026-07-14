@@ -2,3 +2,9 @@ agency,state,county,manual_match_layer,manual_match_name,manual_reason,manual_no
 Saint Francois County Sheriff's Office,Missouri,Saint Francois County,county,St. Francois County,county_name_fix,
 Custer County Sheriff's Office,Oklahoma,Custer Countey,county,Custer County,county_typo,
 Hopewell County Sheriff's Office,Virginia,Hopewell County,county,Hopewell City,independent_city_fix,
+Middlesboro Police Department,Kentucky,Bell County,municipal,Middlesborough,place_name_variant,census place spells it Middlesborough
+Hillsboro Police Department,New Hampshire,Hillsborough County,municipal,Hillsborough,place_name_variant,
+Sunny Isles Police Department,Florida,,municipal,Sunny Isles Beach,place_name_variant,
+"Cut ""N"" Shoot Police Department",Texas,Montgomery County,municipal,Cut and Shoot,place_name_variant,
+Tallahassee State College Police Department,Florida,,university,Tallahassee Community College,university_name_fix,Tallahassee State College is the 2024 rename of Tallahassee Community College
+Florida Atlantic Police Department,Florida,Broward County,university,Florida Atlantic University,university_reclass,ICE lists it as municipality; campus polygon is the jurisdiction

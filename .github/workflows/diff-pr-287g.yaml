@@ -7,6 +7,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'data/all_agreements_sf.parquet'
+      - 'data/agreement-level-sf.parquet'
   workflow_dispatch:
     inputs:
       pr_number:
@@ -18,9 +19,14 @@ permissions:
   contents: read
   pull-requests: write
 
+concurrency:
+  group: diff-pr-287g-${{ github.event.pull_request.number || github.event.client_payload.pr_number || github.event.inputs.pr_number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   diff:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Resolve PR ref
@@ -46,6 +52,7 @@ jobs:
           sparse-checkout: |
             code/diff-agreements-pr.R
             data/all_agreements_sf.parquet
+            data/agreement-level-sf.parquet
           sparse-checkout-cone-mode: false
 
       - name: Checkout main into _main/
@@ -56,6 +63,7 @@ jobs:
           lfs: false
           sparse-checkout: |
             data/all_agreements_sf.parquet
+            data/agreement-level-sf.parquet
           sparse-checkout-cone-mode: false
 
       - name: Set up R
@@ -65,21 +73,33 @@ jobs:
           use-public-rspm: true
 
       - name: Install minimal R deps
-        run: |
-          Rscript --vanilla -e '
-            install.packages(
-              c("arrow", "dplyr", "tidyr", "stringr"),
-              dependencies = c("Depends", "Imports", "LinkingTo"),
-              repos = "https://cloud.r-project.org"
-            )
-          '
+        # setup-r-dependencies caches the installed library across runs (keyed
+        # on the packages list + R version), so warm runs skip the install.
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            arrow
+            dplyr
+            tidyr
+            stringr
+          cache-version: 1
 
       - name: Run diff script
+        # diff both the row-level artifact and the deduplicated file that
+        # slicer-shiny-app consumes from main; one sticky comment holds both
         run: |
-          Rscript --vanilla code/diff-agreements-pr.R \
-            _main/data/all_agreements_sf.parquet \
-            data/all_agreements_sf.parquet \
-            > /tmp/pr-diff-comment.md
+          {
+            echo "<!-- pr-diff-bot -->"
+            Rscript code/diff-agreements-pr.R \
+              _main/data/all_agreements_sf.parquet \
+              data/all_agreements_sf.parquet \
+              "all_agreements_sf.parquet"
+            echo
+            Rscript code/diff-agreements-pr.R \
+              _main/data/agreement-level-sf.parquet \
+              data/agreement-level-sf.parquet \
+              "agreement-level-sf.parquet (shipped to slicer)"
+          } > /tmp/pr-diff-comment.md
           head -c 60000 /tmp/pr-diff-comment.md > /tmp/pr-diff-comment.trimmed.md
           if [ $(wc -c < /tmp/pr-diff-comment.md) -gt 60000 ]; then
             printf "\n\n_...truncated at 60k chars._\n" >> /tmp/pr-diff-comment.trimmed.md
@@ -112,4 +132,95 @@ jobs:
             echo "Creating new comment"
             gh api -X POST "repos/${REPO}/issues/${PR_NUMBER}/comments" \
               --input /tmp/pr-comment-body.json > /dev/null
+          fi
+
+  # asserts the schema slicer-shiny-app depends on (datasets/287g.yml there)
+  # so a script-8 change can't silently break the live app
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Resolve PR ref
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          case "${{ github.event_name }}" in
+            workflow_dispatch)   num="${{ github.event.inputs.pr_number }}" ;;
+            repository_dispatch) num="${{ github.event.client_payload.pr_number }}" ;;
+            *)                   num="${{ github.event.pull_request.number }}" ;;
+          esac
+          ref=$(gh api "repos/${REPO}/pulls/${num}" --jq .head.sha)
+          echo "number=${num}" >> "$GITHUB_OUTPUT"
+          echo "ref=${ref}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.ref }}
+          lfs: false
+          sparse-checkout: |
+            code/check-contract.R
+            data/agreement-level-sf.parquet
+          sparse-checkout-cone-mode: false
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.5.3'
+          use-public-rspm: true
+
+      - name: Install minimal R deps
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            sf
+            sfarrow
+            arrow
+            dplyr
+          cache-version: 1
+
+      - name: Run contract check
+        id: contract
+        run: |
+          {
+            echo "<!-- contract-check-bot -->"
+            Rscript code/check-contract.R data/agreement-level-sf.parquet
+          } > /tmp/contract-comment.md
+
+      - name: Post or update contract comment on PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ ! -s /tmp/contract-comment.md ]; then
+            {
+              echo "<!-- contract-check-bot -->"
+              echo "### Contract check"
+              echo
+              echo "_Job failed before producing a report - see the workflow log._"
+            } > /tmp/contract-comment.md
+          fi
+
+          ids=$(gh api --paginate "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq '.[] | select(.body != null and (.body | contains("<!-- contract-check-bot -->"))) | .id')
+          primary=$(echo "$ids" | head -n 1)
+
+          echo "$ids" | tail -n +2 | while read -r id; do
+            [ -n "$id" ] || continue
+            gh api -X DELETE "repos/${REPO}/issues/comments/${id}" >/dev/null || true
+          done
+
+          jq -Rs '{body: .}' < /tmp/contract-comment.md > /tmp/contract-body.json
+
+          if [ -n "$primary" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${primary}" \
+              --input /tmp/contract-body.json > /dev/null
+          else
+            gh api -X POST "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+              --input /tmp/contract-body.json > /dev/null
           fi
