@@ -29,8 +29,6 @@ page <- read_html(content(results, as = "text", encoding = "UTF-8"))
 
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
-# --- Find participating agencies spreadsheet robustly ---
-
 all_links <- html_elements(page, "a[href]")
 
 links <- tibble(
@@ -68,9 +66,6 @@ cat(sprintf(
   paste(candidates$href, collapse = ", ")
 ))
 
-# Verify and download in one pass: each candidate is fetched once, kept only
-# if the response looks like an Excel file (by URL shape, content-type, or
-# content-disposition), and written out below from the same response.
 sheets_folder <- file.path("sheets", paste0("sheets_", timestamp))
 
 downloaded_sheets <- candidates |>

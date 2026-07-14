@@ -83,12 +83,7 @@ county_keys_close <- function(a, b) {
       stringdist::stringdist(a, b, method = "jw", p = 0.1) <= 0.12)
 }
 
-# state-level matcher for rows whose county is missing or misspelled: match
-# on a name key within the state and keep only rows that resolve
-# unambiguously. A contradicting county is overridden only when the full
-# (unstripped) name confirms the identity, so a statewide-unique "Oak Grove
-# Police Department" cannot swallow "Oak Grove Village Police Department"
-# from another county
+# state-level matcher for rows whose county is missing or misspelled
 match_state_level <- function(unmatched, lookup, key_col) {
   joined <- unmatched |>
     inner_join(
@@ -224,10 +219,6 @@ leaic_t2b <- agencies_keyed |>
   match_state_level(leaic_lookup, "agency_key") |>
   mutate(leaic_match_type = "exact_state_agency_name")
 
-# fuzzy rescue, state-blocked Jaro-Winkler like the polygon matchers; a
-# candidate is auto-accepted only when its precinct/ward numbers agree, the
-# best distance is unambiguous, and either the county corroborates (within
-# one typo) at a moderate distance or the name is a near-exact hit
 fuzzy_candidates <- agencies_keyed |>
   anti_join(leaic_t1, by = "row_id") |>
   anti_join(leaic_t2a, by = "row_id") |>
@@ -276,9 +267,6 @@ fuzzy_candidates <- agencies_keyed |>
   mutate(cand_rank = row_number()) |>
   ungroup() |>
   mutate(
-    # towns rename their police department to "Department of Public Safety"
-    # and back; with the county corroborating, keys that differ only by the
-    # publicsafety suffix are the same agency
     dps_equiv = str_remove(agency_key, "publicsafety$") ==
       str_remove(agency_key_leaic, "publicsafety$"),
     accepted = cand_rank == 1 &
@@ -339,11 +327,6 @@ crime_matches <- bind_rows(
   crime_t2 |> select(row_id, all_of(crime_cols), crime_match_type)
 )
 
-# manually adjudicated ORIs: agencies the automated tiers cannot resolve —
-# renames (Miami-Dade PD -> Sheriff's Office), umbrella departments matched
-# to their sworn division, and agencies whose LEAIC row carries no ORI.
-# Rows with an empty ORI9 document that no public ORI exists, so every ICE
-# sheet agency has been reviewed
 manual_ori <- read_csv(
   "inputs/manual-agency-ori.csv",
   show_col_types = FALSE
@@ -383,8 +366,6 @@ agencies_all <- agencies_keyed |>
 
 arrow::write_parquet(agencies_all, "data/agencies_all.parquet")
 
-# review sheet: fuzzy candidates for rows without an exact LEAIC match,
-# accepted or not, so low-confidence assignments and near-misses get eyes
 fuzzy_candidates |>
   left_join(crime_matches, by = "row_id") |>
   select(
