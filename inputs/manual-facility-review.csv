@@ -1,0 +1,20 @@
+review_type,state,county,agency,facility_name,decision,manual_note
+doc_facility,Alaska,,Alaska Department of Corrections,ALASKA DEPARTMENT OF CORRECTIONS - SPRING CREEK CORRECTIONAL CENTER,include_state_doc_facility,Confirmed state DOC facility.
+doc_facility,Arizona,,Arizona Department of Corrections,ARIZONA STATE PRISON COMPLEX - DOUGLAS,include_state_doc_facility,Confirmed state DOC facility.
+doc_facility,Commonwealth of the Northern Mariana Islands,,CNMI Department of Corrections,SAIPAN CORRECTIONAL FACILITY,include_state_doc_facility,Confirmed CNMI DOC facility.
+doc_facility,Georgia,,Georgia Department of Corrections,ATLANTA TRANSITIONAL CENTER,include_state_doc_facility,Confirmed Georgia DOC facility.
+doc_facility,Georgia,,Georgia Department of Corrections,NORTHWEST PROBATION DETENTION CENTER,include_state_doc_facility,Confirmed Georgia DOC facility.
+doc_facility,Indiana,,Indiana Department of Corrections,BRANCHVILLE CORRECTIONAL FACILITY,include_state_doc_facility,Confirmed Indiana DOC facility.
+doc_facility,Indiana,,Indiana Department of Corrections,HENRYVILLE CORRECTIONAL FACILITY,include_state_doc_facility,Confirmed Indiana DOC facility.
+doc_facility,Indiana,,Indiana Department of Corrections,PUTNAMVILLE CORRECTIONAL FACILITY,include_state_doc_facility,Confirmed Indiana DOC facility.
+doc_facility,Louisiana,,Louisiana Department of Public Safety & Corrections,WINN CORRECTIONAL CENTER,include_state_doc_facility,State-owned Louisiana DOC facility operated under contract.
+doc_facility,Mississippi,,Mississippi Department of Corrections,MISSISSIPPI STATE PENITENTIARY,include_state_doc_facility,Confirmed Mississippi DOC facility.
+doc_facility,Oklahoma,,Oklahoma Department of Corrections,JACKIE BRANNON CORRECTIONAL CENTER,include_state_doc_facility,Confirmed Oklahoma DOC facility.
+doc_facility,Oklahoma,,Oklahoma Department of Corrections,OKLAHOMA DEPARTMENT OF CORRECTIONS - JOSEPH HARP CORRECTIONAL CENTER,include_state_doc_facility,Confirmed Oklahoma DOC facility.
+doc_facility,Oklahoma,,Oklahoma Department of Corrections,WILLIAM SHAFFER KEY CORRECTIONAL CENTER,include_state_doc_facility,Confirmed Oklahoma DOC facility.
+doc_facility,Tennessee,,Tennessee Department of Corrections,TENNESSEE PRISON FOR WOMEN,include_state_doc_facility,Confirmed Tennessee DOC facility.
+facility_match,Florida,Volusia County,Volusia County Division of Corrections,VOLUSIA COUNTY SHERIFF - CIVIL DIVISION,exclude_facility_match,Exclude sheriff civil-division record from county corrections match.
+facility_match,Florida,Volusia County,Volusia County Division of Corrections,VOLUSIA COUNTY CORRECTIONAL FACILITY,include_facility_match,Use the county correctional facility as the reviewed facility match.
+facility_match,Tennessee,Louden County,Louden County Sheriff's Office,CITY OF LOUDON POLICE DEPARTMENT,exclude_facility_match,Exclude municipal police record from county sheriff match.
+facility_match,Tennessee,Louden County,Louden County Sheriff's Office,LOUDON COUNTY SHERIFFS DEPARTMENT / LOUDON COUNTY JUSTICE CENTER,include_facility_match,Use the county justice center as the reviewed facility match after correcting the agency spelling mismatch.
+facility_match,Tennessee,Morgan County,Morgan County Sheriff's Office,MORGAN COUNTY CORRECTIONAL COMPLEX,exclude_facility_match,Exclude Tennessee state correctional facility from county sheriff match.

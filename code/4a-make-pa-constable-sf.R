@@ -488,8 +488,3 @@ write_sf_parquet(
   pa_constable_agreements_sf,
   "data/pa_constable_agreements_sf.parquet"
 )
-
-readr::write_csv(
-  review_reasons,
-  "data/pa_constable_matches_needing_review.csv"
-)

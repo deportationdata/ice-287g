@@ -77,11 +77,6 @@ non_facility_unmatched <- non_facility_agreements_sf[
     ))
   )
 
-readr::write_csv(
-  non_facility_unmatched,
-  "data/non_facility_matches_needing_review.csv"
-)
-
 write_sf_parquet(
   non_facility_agreements_sf,
   "data/non_facility_agreements_sf.parquet"
