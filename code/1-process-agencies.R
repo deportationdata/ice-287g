@@ -36,7 +36,7 @@ agencies_all <- participating_agencies |>
     state = str_to_title(str_trim(STATE)),
     county = str_to_title(str_trim(COUNTY)),
     agency = str_squish(`LAW ENFORCEMENT AGENCY`),
-    signed = as.character(SIGNED),
+    signed = as.Date(SIGNED),
     support_type = str_squish(`SUPPORT TYPE`),
     type_clean = str_to_lower(str_trim(TYPE)),
     support_clean = str_to_lower(str_trim(`SUPPORT TYPE`)),
