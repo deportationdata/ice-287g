@@ -138,6 +138,7 @@ state_agreements_sf <-
     needs_review,
     has_addendum,
     moa_pending,
+    signed,
     state_match,
     statefp,
     state_fips,

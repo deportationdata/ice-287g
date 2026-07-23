@@ -439,6 +439,7 @@ pa_constable_agreements_sf <- st_sf(
     needs_review,
     has_addendum,
     moa_pending,
+    signed,
     municipality_guess,
     municipality_type_hint,
     pa_constable_jurisdiction,

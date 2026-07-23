@@ -120,6 +120,7 @@ university_agreements_sf <- agencies_all |>
     needs_review,
     has_addendum,
     moa_pending,
+    signed,
     university_name,
     university_guess,
     university_guess_final,

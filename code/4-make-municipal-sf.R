@@ -161,6 +161,7 @@ municipal_agreements_sf <- agencies_all |>
     needs_review,
     has_addendum,
     moa_pending,
+    signed,
     city_guess,
     city_match,
     statefp,

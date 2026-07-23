@@ -103,7 +103,8 @@ fac_287g <- agencies_all |>
     needs_review,
     support_clean,
     has_addendum,
-    moa_pending
+    moa_pending,
+    signed
   ) |>
   mutate(
     state_key = norm_state(state),
@@ -500,6 +501,7 @@ manual_matches <-
     support_clean,
     has_addendum,
     moa_pending,
+    signed,
     state_key,
     county_key,
     agency_key,
@@ -634,6 +636,7 @@ facility_agreements_sf <-
     needs_review,
     has_addendum,
     moa_pending,
+    signed,
     facility_guess,
     facility_name,
     source,

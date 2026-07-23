@@ -32,6 +32,8 @@ all_agreements_sf |>
   group_by(
     agency,
     state,
+    county,
+    signed,
     support_type,
     agency_level,
     geom_class,

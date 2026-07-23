@@ -105,6 +105,7 @@ county_agreements_sf <-
     needs_review,
     has_addendum,
     moa_pending,
+    signed,
     county_match,
     statefp,
     countyfp,
