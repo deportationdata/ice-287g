@@ -102,9 +102,9 @@ fac_287g <- agencies_all |>
     ori_source,
     needs_review,
     support_clean,
-    has_addendum,
-    moa_pending,
-    signed
+    signed,
+    moa,
+    addendum
   ) |>
   mutate(
     state_key = norm_state(state),
@@ -499,9 +499,9 @@ manual_matches <-
     ori_source,
     needs_review = TRUE,
     support_clean,
-    has_addendum,
-    moa_pending,
     signed,
+    moa,
+    addendum,
     state_key,
     county_key,
     agency_key,
@@ -613,8 +613,8 @@ facility_agreements_sf <-
     needs_review = needs_review |
       (source != "facilities" & !is_accepted_exact_match) |
       !is_accepted_exact_match |
-      has_addendum |
-      moa_pending
+      !is.na(addendum) |
+      moa == "pending"
   ) |>
   select(
     state,
@@ -634,9 +634,9 @@ facility_agreements_sf <-
     crime_match_type,
     ori_source,
     needs_review,
-    has_addendum,
-    moa_pending,
     signed,
+    moa,
+    addendum,
     facility_guess,
     facility_name,
     source,

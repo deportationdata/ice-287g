@@ -34,17 +34,34 @@ all_agreements_sf |>
     state,
     county,
     signed,
+    moa,
+    addendum,
+    ORI9,
     support_type,
     agency_level,
     geom_class,
-    has_addendum,
-    moa_pending,
     state_fips
   ) |>
   summarize(
     match_layer = sort(unique(match_layer)),
     geometry = st_union(geometry),
     .groups = "drop"
+  ) |>
+  select(
+    # Preserve the source spreadsheet order, followed by derived/spatial fields.
+    state,
+    agency,
+    agency_level,
+    county,
+    support_type,
+    signed,
+    moa,
+    addendum,
+    ORI9,
+    state_fips,
+    geom_class,
+    match_layer,
+    geometry
   ) |>
   write_sf_parquet(
     "data/agreement-level-sf.parquet"

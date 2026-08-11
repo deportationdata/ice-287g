@@ -1,5 +1,6 @@
 library(tidyverse)
 library(readxl)
+library(openxlsx)
 library(arrow)
 
 source("code/functions.R")
@@ -31,17 +32,64 @@ latest_agency_file <- agency_files[which.max(folder_time)]
 
 participating_agencies <- read_excel(latest_agency_file)
 
+# extract MOA and addenda URLs
+agency_workbook <- openxlsx::loadWorkbook(latest_agency_file)
+agency_worksheet <- agency_workbook$worksheets[[1]]
+hyperlink_lookup <- list()
+
+for (hyperlink in agency_worksheet$hyperlinks) {
+  if (
+    !is.null(hyperlink$ref) &&
+      !is.null(hyperlink$target) &&
+      !is.na(hyperlink$ref) &&
+      !is.na(hyperlink$target) &&
+      hyperlink$target != ""
+  ) {
+    hyperlink_lookup[[hyperlink$ref]] <- hyperlink$target
+  }
+}
+
+get_agreement_link <- function(column, row) {
+  cell <- paste0(column, row + 1L)
+  if (cell %in% names(hyperlink_lookup)) {
+    return(hyperlink_lookup[[cell]])
+  }
+  NA_character_
+}
+
+moa_links <- vapply(
+  seq_len(nrow(participating_agencies)),
+  get_agreement_link,
+  character(1),
+  column = "G"
+)
+
+addendum_links <- vapply(
+  seq_len(nrow(participating_agencies)),
+  get_agreement_link,
+  character(1),
+  column = "H"
+)
+
 agencies_all <- participating_agencies |>
   transmute(
     state = str_to_title(str_trim(STATE)),
     county = str_to_title(str_trim(COUNTY)),
     agency = str_squish(`LAW ENFORCEMENT AGENCY`),
     signed = as.Date(SIGNED),
+    moa = if_else(
+      !is.na(moa_links),
+      moa_links,
+      if_else(
+        str_to_lower(str_trim(MOA)) == "link pending",
+        "pending",
+        NA_character_
+      )
+    ),
+    addendum = addendum_links,
     support_type = str_squish(`SUPPORT TYPE`),
     type_clean = str_to_lower(str_trim(TYPE)),
-    support_clean = str_to_lower(str_trim(`SUPPORT TYPE`)),
-    has_addendum = !(is.na(ADDENDUM) | ADDENDUM %in% c("", "NA")),
-    moa_pending = str_detect(str_to_lower(str_trim(MOA)), "pending")
+    support_clean = str_to_lower(str_trim(`SUPPORT TYPE`))
   ) |>
   mutate(
     state = if_else(
@@ -75,12 +123,14 @@ agencies_all <- participating_agencies |>
         "county_polygon",
       support_clean == "task force model" & agency_level == "municipal" ~
         "municipal_polygon",
-      support_clean %in% c("jail enforcement model", "warrant service officer") ~
+      support_clean %in%
+        c("jail enforcement model", "warrant service officer") ~
         "facility_point",
       TRUE ~ "unknown"
     ),
     geom_class = if_else(
-      state == "Tennessee" & str_detect(str_to_lower(agency), "\\bconstables?\\b"),
+      state == "Tennessee" &
+        str_detect(str_to_lower(agency), "\\bconstables?\\b"),
       "county_polygon",
       geom_class
     )
@@ -89,8 +139,8 @@ agencies_all <- participating_agencies |>
   mutate(
     needs_review = case_when(
       geom_class == "unknown" ~ TRUE,
-      has_addendum ~ TRUE,
-      moa_pending ~ TRUE,
+      !is.na(addendum) ~ TRUE,
+      moa == "pending" ~ TRUE,
       agency_count > 1 ~ TRUE,
       TRUE ~ FALSE
     )
@@ -100,13 +150,13 @@ agencies_all <- participating_agencies |>
     county,
     agency,
     signed,
+    moa,
+    addendum,
     support_type,
     agency_level,
     geom_class,
     needs_review,
-    support_clean,
-    has_addendum,
-    moa_pending
+    support_clean
   )
 
 arrow::write_parquet(agencies_all, "data/agencies_all.parquet")
