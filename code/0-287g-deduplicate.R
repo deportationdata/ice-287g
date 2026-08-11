@@ -110,12 +110,35 @@ delete_empty_dirs <- function(base_path) {
   }
 }
 
+delete_path_log_only_dirs <- function(base_path) {
+  all_dirs <- list.dirs(base_path, recursive = TRUE, full.names = TRUE)
+  all_dirs <- rev(all_dirs)
+
+  for (dir_path in all_dirs) {
+    if (normalizePath(dir_path) == normalizePath(base_path)) {
+      next
+    }
+
+    contents <- list.files(dir_path, all.files = TRUE, no.. = TRUE)
+
+    if (identical(contents, "download_path_log.csv")) {
+      unlink(file.path(dir_path, "download_path_log.csv"))
+      unlink(dir_path, recursive = FALSE)
+      cat(sprintf("Deleted path-log-only folder: %s\n", dir_path))
+    }
+  }
+}
+
 # --- Run deduplication pipeline ---
 
 remove_duplicate_files_recursive("agreements")
 delete_empty_dirs("agreements")
+delete_path_log_only_dirs("agreements")
+delete_empty_dirs("agreements")
 
 remove_duplicate_files_one_level("sheets")
+delete_empty_dirs("sheets")
+delete_path_log_only_dirs("sheets")
 delete_empty_dirs("sheets")
 
 cat("Deduplication complete.\n")

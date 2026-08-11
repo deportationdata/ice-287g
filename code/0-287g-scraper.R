@@ -2,6 +2,73 @@ library(httr)
 library(rvest)
 library(openxlsx)
 library(stringr)
+library(fs)
+library(digest)
+
+get_file_hash <- function(filepath) {
+  digest(file = filepath, algo = "sha256")
+}
+
+sanitize_path_component <- function(x, fallback = "unnamed") {
+  x <- as.character(x)
+  x <- str_squish(x)
+
+  if (is.na(x) || x == "" || x == "NA") {
+    x <- fallback
+  }
+
+  x <- str_replace_all(x, "[[:space:]]+", "_")
+  x <- fs::path_sanitize(x, replacement = "_")
+  x <- str_replace_all(x, "_+", "_")
+  x <- str_remove_all(x, "^_+|_+$")
+
+  if (is.na(x) || x == "") {
+    x <- fallback
+  }
+
+  x
+}
+
+sanitize_download_filename <- function(file_name, fallback) {
+  file_name <- sanitize_path_component(file_name, fallback = fallback)
+
+  if (!str_detect(file_name, fixed("."))) {
+    file_name <- paste0(file_name, ".xlsx")
+  }
+
+  file_name
+}
+
+make_unique_file_path <- function(folder, file_name) {
+  candidate <- file.path(folder, file_name)
+
+  if (!file.exists(candidate)) {
+    return(candidate)
+  }
+
+  extension <- tools::file_ext(file_name)
+  stem <- if (extension == "") {
+    file_name
+  } else {
+    str_remove(file_name, paste0("\\.", extension, "$"))
+  }
+
+  i <- 2
+  repeat {
+    candidate_name <- if (extension == "") {
+      paste0(stem, "_", i)
+    } else {
+      paste0(stem, "_", i, ".", extension)
+    }
+    candidate <- file.path(folder, candidate_name)
+
+    if (!file.exists(candidate)) {
+      return(candidate)
+    }
+
+    i <- i + 1
+  }
+}
 
 # --- Download 287(g) spreadsheets ---
 
@@ -146,6 +213,14 @@ dir.create(base_results_folder, showWarnings = FALSE, recursive = TRUE)
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 results_folder <- file.path(base_results_folder, paste0("sheets_", timestamp))
 dir.create(results_folder, showWarnings = FALSE, recursive = TRUE)
+sheet_download_log <- data.frame(
+  url = character(),
+  original_filename = character(),
+  sanitized_filename = character(),
+  saved_path = character(),
+  file_hash = character(),
+  stringsAsFactors = FALSE
+)
 
 # function to download and save excel files
 download_excel_from_url <- function(url, folder, label = "file") {
@@ -175,10 +250,30 @@ download_excel_from_url <- function(url, folder, label = "file") {
         }
       }
 
+      original_file_name_only <- file_name_only
+      file_name_only <- sanitize_download_filename(
+        file_name_only,
+        fallback = label
+      )
+
       dir.create(folder, showWarnings = FALSE, recursive = TRUE)
 
-      file_path <- file.path(folder, file_name_only)
+      file_path <- make_unique_file_path(folder, file_name_only)
+      file_name_only <- basename(file_path)
       writeBin(content(results, as = "raw"), file_path)
+      file_hash <- get_file_hash(file_path)
+
+      sheet_download_log <<- rbind(
+        sheet_download_log,
+        data.frame(
+          url = url,
+          original_filename = original_file_name_only,
+          sanitized_filename = file_name_only,
+          saved_path = file_path,
+          file_hash = file_hash,
+          stringsAsFactors = FALSE
+        )
+      )
 
       cat(sprintf("Downloaded: %s\n", file_path))
 
@@ -213,6 +308,12 @@ for (url in pending) {
     label = "pending"
   )
 }
+
+write.csv(
+  sheet_download_log,
+  file.path(results_folder, "download_path_log.csv"),
+  row.names = FALSE
+)
 
 if (length(downloaded_participating) == 0) {
   stop("ERROR: Failed to download any participating agencies file.")
@@ -304,6 +405,20 @@ timestamp_folder <- file.path(
   paste0("agreements_", timestamp)
 )
 dir.create(timestamp_folder, showWarnings = FALSE, recursive = TRUE)
+agreement_download_log <- data.frame(
+  state = character(),
+  agency_name = character(),
+  hyperlink = character(),
+  original_state_folder = character(),
+  sanitized_state_folder = character(),
+  original_agency_folder = character(),
+  sanitized_agency_folder = character(),
+  original_filename = character(),
+  sanitized_filename = character(),
+  saved_path = character(),
+  file_hash = character(),
+  stringsAsFactors = FALSE
+)
 
 # track failed downloads
 failed <- c()
@@ -315,8 +430,11 @@ for (i in seq_along(hyperlinks_list)) {
   agency_name <- agencies_list[i]
 
   # clean state and agency names for use as folder names
-  safe_state_name <- gsub(" ", "_", state)
-  safe_agency_name <- gsub("[/\\\\ ]", "_", agency_name)
+  safe_state_name <- sanitize_path_component(state, fallback = "unknown_state")
+  safe_agency_name <- sanitize_path_component(
+    agency_name,
+    fallback = "unknown_agency"
+  )
 
   # create state and agency folders
   state_folder <- file.path(timestamp_folder, safe_state_name)
@@ -351,8 +469,34 @@ for (i in seq_along(hyperlinks_list)) {
           }
         }
 
-        file_name <- file.path(agency_folder, file_name_only)
+        original_file_name_only <- file_name_only
+        file_name_only <- sanitize_path_component(
+          file_name_only,
+          fallback = paste0(safe_agency_name, "_agreement")
+        )
+
+        file_name <- make_unique_file_path(agency_folder, file_name_only)
+        file_name_only <- basename(file_name)
         writeBin(content(results, as = "raw"), file_name)
+        file_hash <- get_file_hash(file_name)
+
+        agreement_download_log <<- rbind(
+          agreement_download_log,
+          data.frame(
+            state = state,
+            agency_name = agency_name,
+            hyperlink = hyperlink,
+            original_state_folder = state,
+            sanitized_state_folder = safe_state_name,
+            original_agency_folder = agency_name,
+            sanitized_agency_folder = safe_agency_name,
+            original_filename = original_file_name_only,
+            sanitized_filename = file_name_only,
+            saved_path = file_name,
+            file_hash = file_hash,
+            stringsAsFactors = FALSE
+          )
+        )
       } else {
         cat(sprintf("HTTP %d for %s\n", status_code(results), hyperlink))
         failed <- c(failed, hyperlink)
@@ -376,5 +520,11 @@ if (length(failed) > 0) {
     failed_log_path
   ))
 }
+
+write.csv(
+  agreement_download_log,
+  file.path(timestamp_folder, "download_path_log.csv"),
+  row.names = FALSE
+)
 
 cat("Done.\n")
