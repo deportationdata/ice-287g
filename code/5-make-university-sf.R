@@ -36,7 +36,8 @@ university_lookup <-
 university_name_overrides <-
   tribble(
     ~university_guess, ~university_guess_fixed,
-    "Florida A&M University", "Florida Agricultural And Mechanical University"
+    "Florida A&M University", "Florida Agricultural And Mechanical University",
+    "Tallahassee State College", "Tallahassee Community College"
   )
 
 # manual university overrides -------------------------------------------
