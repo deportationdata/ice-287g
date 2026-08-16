@@ -93,7 +93,6 @@ fac_287g <- agencies_all |>
     by = c("agency", "state", "county")
   ) |>
   transmute(
-    agreement_id,
     state,
     county,
     agency,
@@ -147,7 +146,7 @@ county_pattern_exact_matches <- fac_287g |>
     match_type = "exact_county_pattern_all_facilities",
     match_score = 1.0
   ) |>
-  group_by(agreement_id, facility_key) |>
+  group_by(state, county, agency, support_clean, facility_key) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup()
@@ -174,7 +173,7 @@ municipal_pattern_exact_matches <- fac_287g |>
     match_type = "exact_municipal_pattern_facility",
     match_score = 1.0
   ) |>
-  group_by(agreement_id, facility_key) |>
+  group_by(state, county, agency, support_clean, facility_key) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup()
@@ -186,7 +185,10 @@ pattern_exact_matches <- bind_rows(
 
 facility_name_exact_matches <- fac_287g |>
   filter(!is_doc_agency) |>
-  anti_join(pattern_exact_matches, by = "agreement_id") |>
+  anti_join(
+    pattern_exact_matches,
+    by = c("state", "county", "agency", "support_clean")
+  ) |>
   inner_join(
     facility_sources_exact,
     by = c("state_key", "county_key", "facility_guess_key" = "facility_key"),
@@ -204,7 +206,7 @@ facility_name_exact_matches <- fac_287g |>
     match_type = "exact_state_county_facility_name",
     match_score = 1.0
   ) |>
-  group_by(agreement_id) |>
+  group_by(state, county, agency, support_clean) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup()
@@ -216,7 +218,10 @@ facility_exact_matches <- bind_rows(
 
 facility_unmatched_after_exact <- fac_287g |>
   filter(!is_doc_agency) |>
-  anti_join(facility_exact_matches, by = "agreement_id")
+  anti_join(
+    facility_exact_matches,
+    by = c("state", "county", "agency", "support_clean")
+  )
 
 # use fuzzy string matching on facility names within same county ---------
 
@@ -240,7 +245,7 @@ facility_fuzzy_county <-
     manual_facility_exclusions,
     by = c("state_key", "agency_key", "facility_key")
   ) |>
-  group_by(agreement_id) |>
+  group_by(state, county, agency, support_clean) |>
   arrange(match_dist, source_rank) |>
   slice_head(n = 1) |>
   ungroup() |>
@@ -252,7 +257,10 @@ facility_fuzzy_county <-
 
 facility_unmatched_after_fuzzy_county <-
   facility_unmatched_after_exact |>
-  anti_join(facility_fuzzy_county, by = "agreement_id")
+  anti_join(
+    facility_fuzzy_county,
+    by = c("state", "county", "agency", "support_clean")
+  )
 
 # broader state-level fuzzy matching for remaining unmatched facilities ----
 
@@ -275,7 +283,7 @@ facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
     manual_facility_exclusions,
     by = c("state_key", "agency_key", "facility_key")
   ) |>
-  group_by(agreement_id) |>
+  group_by(state, county, agency, support_clean) |>
   arrange(match_dist, source_rank) |>
   slice_head(n = 1) |>
   ungroup() |>
@@ -435,8 +443,8 @@ doc_matches <- doc_candidates |>
       "doc_manual_state_facility"
     )
   ) |>
-  arrange(agreement_id, source_rank) |>
-  group_by(agreement_id, facility_key) |>
+  arrange(state, county, agency, source_rank) |>
+  group_by(state, county, agency, support_clean, facility_key) |>
   slice_head(n = 1) |>
   ungroup() |>
   mutate(
@@ -489,9 +497,8 @@ manual_matches <-
     manual_matches_specific,
     manual_matches_general
   ) |>
-  distinct(agreement_id, .keep_all = TRUE) |>
+  distinct(state, county, agency, support_clean, .keep_all = TRUE) |>
   transmute(
-    agreement_id,
     state,
     county,
     agency,
@@ -570,7 +577,7 @@ non_doc_matches <-
     facility_fuzzy_county,
     facility_fuzzy_state
   ) |>
-  group_by(agreement_id, facility_key) |>
+  group_by(state, county, agency, support_clean, facility_key) |>
   arrange(source_rank, desc(match_score)) |>
   slice_head(n = 1) |>
   ungroup()
@@ -591,7 +598,7 @@ facility_all_matches <-
           manual_matches,
           manual_facility_matches
         ),
-        by = "agreement_id"
+        by = c("state", "county", "agency", "support_clean")
       )
   )
 
@@ -611,7 +618,7 @@ facility_matched_sf <-
 facility_unmatched <- fac_287g |>
   anti_join(
     facility_matched_sf |> st_drop_geometry(),
-    by = "agreement_id"
+    by = c("state", "county", "agency", "support_clean")
   ) |>
   mutate(
     source = NA_character_,
