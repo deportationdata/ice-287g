@@ -52,7 +52,8 @@ cousubs_sf <-
     geometry
   )
 
-# normalized places lookup (places preferred over cousubs)
+# normalized places lookup: keep every same-named candidate and let the
+# sheet's county pick between them below
 places_lookup <-
   bind_rows(
     places_sf |> mutate(src = "place"),
@@ -62,10 +63,28 @@ places_lookup <-
     state_key = norm_state(state),
     place_key = norm_place(place_guess),
     src_rank = if_else(src == "place", 1L, 2L)
-  ) |>
-  group_by(state_key, place_key) |>
-  slice_min(src_rank, n = 1, with_ties = FALSE) |>
-  ungroup()
+  )
+
+# counties each candidate touches: cousubs carry their county FIPS; places
+# can span several counties, so take every county they intersect
+counties_ref <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
+  transmute(
+    state_key = norm_state(STATE_NAME),
+    sheet_county_key = norm_county(NAMELSAD),
+    sheet_county_fips = GEOID,
+    geometry
+  )
+
+candidate_counties <- bind_rows(
+  places_sf |>
+    select(geoid) |>
+    st_join(counties_ref |> select(cand_county_fips = sheet_county_fips)) |>
+    st_drop_geometry(),
+  cousubs_sf |>
+    st_drop_geometry() |>
+    transmute(geoid, cand_county_fips = paste0(statefp, countyfp))
+) |>
+  distinct(geoid, cand_county_fips)
 
 # manual municipal overrides --------------------------------------------
 
@@ -83,7 +102,7 @@ municipal_overrides <-
 
 # municipal agreements ---------------------------------------------------
 
-municipal_agreements_sf <- agencies_all |>
+municipal_base <- agencies_all |>
   left_join(
     municipal_overrides,
     by = c("agency", "state", "county")
@@ -110,10 +129,21 @@ municipal_agreements_sf <- agencies_all |>
     city_guess = extract_city_guess(agency),
     city_match = coalesce(manual_city_match, city_guess),
     state_key = norm_state(state),
-    place_key = norm_place(city_match)
+    place_key = norm_place(city_match),
+    sheet_county_key = norm_county(county),
+    municipal_row_id = row_number()
   ) |>
   left_join(
+    counties_ref |>
+      st_drop_geometry() |>
+      distinct(state_key, sheet_county_key, sheet_county_fips),
+    by = c("state_key", "sheet_county_key")
+  )
+
+municipal_matches <- municipal_base |>
+  left_join(
     places_lookup |>
+      as_tibble() |>
       select(
         state_key,
         place_key,
@@ -121,11 +151,45 @@ municipal_agreements_sf <- agencies_all |>
         countyfp,
         placefp,
         geoid,
-        geometry,
-        src
+        src,
+        src_rank,
+        geometry
       ),
-    by = c("state_key", "place_key")
+    by = c("state_key", "place_key"),
+    relationship = "many-to-many"
   ) |>
+  left_join(
+    candidate_counties,
+    by = "geoid",
+    relationship = "many-to-many"
+  ) |>
+  mutate(
+    county_confirmed = if_else(
+      !is.na(sheet_county_fips) & !is.na(cand_county_fips),
+      sheet_county_fips == cand_county_fips,
+      NA
+    )
+  ) |>
+  group_by(municipal_row_id) |>
+  mutate(n_candidates = n_distinct(geoid, na.rm = TRUE)) |>
+  arrange(
+    desc(coalesce(county_confirmed, FALSE)),
+    src_rank,
+    geoid,
+    .by_group = TRUE
+  ) |>
+  # candidate_counties carries one row per county a candidate touches; keep
+  # the best-ranked row per candidate polygon before picking one
+  distinct(geoid, .keep_all = TRUE) |>
+  slice_head(n = 1) |>
+  ungroup() |>
+  mutate(
+    match_ambiguous = !is.na(geoid) &
+      ((n_candidates > 1 & !coalesce(county_confirmed, FALSE)) |
+        (!is.na(sheet_county_fips) & !coalesce(county_confirmed, TRUE)))
+  )
+
+municipal_agreements_sf <- municipal_matches |>
   mutate(
     src = if_else(
       is.na(manual_city_match),
@@ -139,7 +203,17 @@ municipal_agreements_sf <- agencies_all |>
       NA_character_
     ),
     place_fips = placefp,
-    needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
+    geometry = st_sfc(
+      map(geometry, \(g) if (inherits(g, "sfg")) g else st_geometrycollection()),
+      crs = st_crs(places_sf)
+    )
+  ) |>
+  st_as_sf() |>
+  mutate(
+    needs_review = needs_review |
+      match_ambiguous |
+      is.na(geometry) |
+      st_is_empty(geometry)
   ) |>
   select(
     state,
@@ -176,8 +250,7 @@ municipal_agreements_sf <- agencies_all |>
     manual_reason,
     manual_note,
     geometry
-  ) |>
-  st_as_sf()
+  )
 
 
 # save municipal geometries ----------------------------------------------

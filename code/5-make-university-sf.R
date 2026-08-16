@@ -36,7 +36,9 @@ university_lookup <-
 university_name_overrides <-
   tribble(
     ~university_guess, ~university_guess_fixed,
-    "Florida A&M University", "Florida Agricultural And Mechanical University"
+    "Florida A&M University", "Florida Agricultural And Mechanical University",
+    # renamed 2024; the HIFLD campus layer still carries the old name
+    "Tallahassee State College", "Tallahassee Community College"
   )
 
 # manual university overrides -------------------------------------------

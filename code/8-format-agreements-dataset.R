@@ -12,6 +12,7 @@ facility_agreements_sf <- read_sf_parquet(
   "data/facility_agreements_sf.parquet"
 )
 
+# unmatched agreements ride along with empty geometries; nothing is dropped
 all_agreements_sf <-
   bind_rows(
     non_facility_agreements_sf,
@@ -19,7 +20,6 @@ all_agreements_sf <-
       st_transform(4326) |>
       mutate(match_layer = "facility")
   ) |>
-  filter(!is.na(geometry)) |>
   st_make_valid() |>
   st_transform(4326)
 
@@ -28,7 +28,7 @@ write_sf_parquet(
   "data/all_agreements_sf.parquet"
 )
 
-all_agreements_sf |>
+agreement_level_sf <- all_agreements_sf |>
   group_by(
     agency,
     state,
@@ -43,7 +43,7 @@ all_agreements_sf |>
     state_fips
   ) |>
   summarize(
-    match_layer = sort(unique(match_layer)),
+    match_layer = paste(sort(unique(match_layer)), collapse = "+"),
     geometry = st_union(geometry),
     .groups = "drop"
   ) |>
@@ -59,10 +59,16 @@ all_agreements_sf |>
     addendum,
     ORI9,
     state_fips,
-    geom_class,
+    geometry_type = geom_class,
     match_layer,
     geometry
-  ) |>
-  write_sf_parquet(
-    "data/agreement-level-sf.parquet"
   )
+
+# one row per agreement in the source spreadsheet
+agencies_all <- arrow::read_parquet("data/agencies_all.parquet")
+stopifnot(nrow(agreement_level_sf) == nrow(agencies_all))
+
+write_sf_parquet(
+  agreement_level_sf,
+  "data/agreement-level-sf.parquet"
+)

@@ -322,7 +322,7 @@ counties_lookup <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(
     src_county_spatial = str_to_title(NAME),
     src_county_fips_spatial = paste0(STATEFP, COUNTYFP),
-    county_key_spatial = norm_place(NAME),
+    county_key_spatial = norm_ori_county(NAME),
     geometry
   )
 
@@ -496,7 +496,7 @@ hifld_tbl <- hifld_raw |>
   mutate(
     src_county = coalesce(src_county, src_county_spatial),
     src_county_fips = coalesce(src_county_fips, src_county_fips_spatial),
-    county_key = coalesce(norm_place(src_county), county_key_spatial),
+    county_key = coalesce(norm_ori_county(src_county), county_key_spatial),
     src_state_fips = coalesce(src_state_fips, str_sub(src_county_fips, 1, 2))
   ) |>
   select(
@@ -522,7 +522,7 @@ hifld_facility_tbl <- hifld_tbl |>
     facility_city = src_city,
     facility_county = src_county,
     facility_county_fips = src_county_fips,
-    facility_state = src_state,
+    facility_state = src_state_full,
     facility_state_fips = str_sub(src_county_fips, 1, 2),
     facility_zip = src_zip,
     facility_address_full = NA_character_,

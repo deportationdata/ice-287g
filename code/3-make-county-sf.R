@@ -80,7 +80,11 @@ county_agreements_sf <-
       "manual_county_override"
     ),
     state_fips = statefp,
-    county_fips = paste0(statefp, countyfp),
+    county_fips = if_else(
+      !is.na(statefp) & !is.na(countyfp),
+      paste0(statefp, countyfp),
+      NA_character_
+    ),
     place_fips = NA_character_,
     geoid = county_fips,
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)

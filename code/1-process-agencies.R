@@ -1,9 +1,11 @@
 library(tidyverse)
 library(readxl)
-library(openxlsx)
 library(arrow)
 
 source("code/functions.R")
+
+state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
+county_name_fixes <- read_csv("inputs/county-name-fixes.csv", col_types = "ccc")
 
 agency_files <- list.files(
   "sheets",
@@ -32,71 +34,61 @@ latest_agency_file <- agency_files[which.max(folder_time)]
 
 participating_agencies <- read_excel(latest_agency_file)
 
-# extract MOA and addenda URLs
-agency_workbook <- openxlsx::loadWorkbook(latest_agency_file)
-agency_worksheet <- agency_workbook$worksheets[[1]]
-hyperlink_lookup <- list()
+# the MOA / ADDENDUM urls live in embedded hyperlinks, not cell text
+moa_col <- LETTERS[match("MOA", names(participating_agencies))]
+addendum_col <- LETTERS[match("ADDENDUM", names(participating_agencies))]
 
-for (hyperlink in agency_worksheet$hyperlinks) {
-  if (
-    !is.null(hyperlink$ref) &&
-      !is.null(hyperlink$target) &&
-      !is.na(hyperlink$ref) &&
-      !is.na(hyperlink$target) &&
-      hyperlink$target != ""
-  ) {
-    hyperlink_lookup[[hyperlink$ref]] <- hyperlink$target
-  }
+if (is.na(moa_col) || is.na(addendum_col)) {
+  stop(
+    "Participating agencies sheet has no MOA/ADDENDUM column; layout changed?"
+  )
 }
 
-get_agreement_link <- function(column, row) {
-  cell <- paste0(column, row + 1L)
-  if (cell %in% names(hyperlink_lookup)) {
-    return(hyperlink_lookup[[cell]])
-  }
-  NA_character_
-}
+sheet_links <- xlsx_hyperlinks(latest_agency_file)
 
-moa_links <- vapply(
-  seq_len(nrow(participating_agencies)),
-  get_agreement_link,
-  character(1),
-  column = "G"
-)
-
-addendum_links <- vapply(
-  seq_len(nrow(participating_agencies)),
-  get_agreement_link,
-  character(1),
-  column = "H"
-)
+participating_agencies <- participating_agencies |>
+  # sheet rows sit one below the header row: data row i is sheet row i + 1
+  mutate(excel_row = row_number() + 1L) |>
+  left_join(
+    sheet_links |>
+      filter(col == moa_col) |>
+      transmute(excel_row = row, moa_link = clean_moa_urls(url)),
+    by = "excel_row"
+  ) |>
+  left_join(
+    sheet_links |>
+      filter(col == addendum_col) |>
+      transmute(excel_row = row, addendum_link = clean_moa_urls(url)),
+    by = "excel_row"
+  ) |>
+  select(-excel_row)
 
 agencies_all <- participating_agencies |>
   transmute(
     state = str_to_title(str_trim(STATE)),
     county = str_to_title(str_trim(COUNTY)),
+    county = if_else(
+      str_to_lower(county) %in% c("#na", "#n/a", "na", "n/a"),
+      NA_character_,
+      county
+    ),
     agency = str_squish(`LAW ENFORCEMENT AGENCY`),
     signed = as.Date(SIGNED),
-    moa = if_else(
-      !is.na(moa_links),
-      moa_links,
-      if_else(
-        str_to_lower(str_trim(MOA)) == "link pending",
-        "pending",
-        NA_character_
-      )
+    moa = case_when(
+      !is.na(moa_link) ~ moa_link,
+      str_to_lower(str_trim(MOA)) == "link pending" ~ "pending",
+      TRUE ~ NA_character_
     ),
-    addendum = addendum_links,
+    addendum = addendum_link,
     support_type = str_squish(`SUPPORT TYPE`),
     type_clean = str_to_lower(str_trim(TYPE)),
     support_clean = str_to_lower(str_trim(`SUPPORT TYPE`))
   ) |>
+  left_join(county_name_fixes, by = c("state", "county")) |>
+  mutate(county = coalesce(county_fixed, county)) |>
+  select(-county_fixed) |>
   mutate(
-    state = if_else(
-      agency == "Pittsburgh Police Department" & state == "New Hampshire",
-      "Pennsylvania",
-      state
-    ),
+    state = snap_state_name(state, state_xwalk$state_full),
     state = if_else(
       state == "Northern Mariana Islands",
       "Commonwealth of the Northern Mariana Islands",
@@ -145,7 +137,9 @@ agencies_all <- participating_agencies |>
       TRUE ~ FALSE
     )
   ) |>
+  mutate(agreement_id = row_number()) |>
   select(
+    agreement_id,
     state,
     county,
     agency,
