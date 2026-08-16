@@ -18,11 +18,22 @@ YEAR <- 2024
 
 # place and county-subdivision boundaries --------------------------------
 
+# Census LSAD codes carry the legal entity type
+lsad_type <- c(
+  "21" = "borough",
+  "25" = "city",
+  "35" = "township",
+  "43" = "town",
+  "44" = "township",
+  "47" = "village",
+  "49" = "township"
+)
+
 places_sf <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(
     state = str_to_title(STATE_NAME),
     place_guess = str_to_title(NAME),
-    cand_type = str_to_lower(word(NAMELSAD, -1)),
+    cand_type = unname(lsad_type[LSAD]),
     statefp = STATEFP,
     countyfp = NA_character_,
     placefp = PLACEFP,
@@ -46,7 +57,7 @@ cousubs_sf <-
   transmute(
     state = str_to_title(STATE_NAME),
     place_guess = str_to_title(NAME),
-    cand_type = str_to_lower(word(NAMELSAD, -1)),
+    cand_type = unname(lsad_type[LSAD]),
     statefp = STATEFP,
     countyfp = COUNTYFP,
     placefp = COUSUBFP,
@@ -125,13 +136,11 @@ municipal_base <- agencies_all |>
     by = c("agency", "state", "county")
   ) |>
   filter(
-    !(
-      state == "Pennsylvania" &
-        str_detect(
-          str_to_lower(agency),
-          "\\bconstables?\\b"
-        )
-    )
+    !(state == "Pennsylvania" &
+      str_detect(
+        str_to_lower(agency),
+        "\\bconstables?\\b"
+      ))
   ) |>
   filter(
     manual_match_layer == "municipal" |
@@ -250,7 +259,9 @@ municipal_agreements_sf <- municipal_matches |>
       FALSE
     ),
     geometry = st_sfc(
-      map(geometry, \(g) if (inherits(g, "sfg")) g else st_geometrycollection()),
+      map(geometry, \(g) {
+        if (inherits(g, "sfg")) g else st_geometrycollection()
+      }),
       crs = st_crs(places_sf)
     )
   ) |>
