@@ -15,6 +15,6 @@ doc_facility,Oklahoma,,Oklahoma Department of Corrections,WILLIAM SHAFFER KEY CO
 doc_facility,Tennessee,,Tennessee Department of Corrections,TENNESSEE PRISON FOR WOMEN,include_state_doc_facility,Confirmed Tennessee DOC facility.
 facility_match,Florida,Volusia County,Volusia County Division of Corrections,VOLUSIA COUNTY SHERIFF - CIVIL DIVISION,exclude_facility_match,Exclude sheriff civil-division record from county corrections match.
 facility_match,Florida,Volusia County,Volusia County Division of Corrections,VOLUSIA COUNTY CORRECTIONAL FACILITY,include_facility_match,Use the county correctional facility as the reviewed facility match.
-facility_match,Tennessee,Louden County,Louden County Sheriff's Office,CITY OF LOUDON POLICE DEPARTMENT,exclude_facility_match,Exclude municipal police record from county sheriff match.
-facility_match,Tennessee,Louden County,Louden County Sheriff's Office,LOUDON COUNTY SHERIFFS DEPARTMENT / LOUDON COUNTY JUSTICE CENTER,include_facility_match,Use the county justice center as the reviewed facility match after correcting the agency spelling mismatch.
+facility_match,Tennessee,Loudon County,Louden County Sheriff's Office,CITY OF LOUDON POLICE DEPARTMENT,exclude_facility_match,Exclude municipal police record from county sheriff match.
+facility_match,Tennessee,Loudon County,Louden County Sheriff's Office,LOUDON COUNTY SHERIFFS DEPARTMENT / LOUDON COUNTY JUSTICE CENTER,include_facility_match,Use the county justice center as the reviewed facility match after correcting the agency spelling mismatch.
 facility_match,Tennessee,Morgan County,Morgan County Sheriff's Office,MORGAN COUNTY CORRECTIONAL COMPLEX,exclude_facility_match,Exclude Tennessee state correctional facility from county sheriff match.

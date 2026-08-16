@@ -27,9 +27,10 @@ leaic_lookup <- LEAIC |>
     leaic_county = str_to_title(str_squish(COUNTYNAME)),
     leaic_name = str_squish(NAME),
     ORI9 = str_squish(ORI9),
-    FSTATE,
-    FCOUNTY,
-    FPLACE,
+    # labelled values ("(01) Alabama") become zero-padded FIPS codes
+    FSTATE = str_pad(str_extract(as.character(FSTATE), "[0-9]+"), 2, pad = "0"),
+    FCOUNTY = str_pad(str_extract(as.character(FCOUNTY), "[0-9]+"), 3, pad = "0"),
+    FPLACE = str_pad(str_extract(as.character(FPLACE), "[0-9]+"), 5, pad = "0"),
     leaic_agency_type = AGCYTYPE,
     leaic_subtype1 = SUBTYPE1,
     leaic_subtype2 = SUBTYPE2,

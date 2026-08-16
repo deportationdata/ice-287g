@@ -28,6 +28,13 @@ write_sf_parquet(
   "data/all_agreements_sf.parquet"
 )
 
+# an agreement can span several matched features (a DOC's facilities sit in
+# many counties), so codes are kept only when they identify a single area
+single_or_na <- function(x) {
+  ux <- unique(x[!is.na(x)])
+  if (length(ux) == 1) ux else NA_character_
+}
+
 agreement_level_sf <- all_agreements_sf |>
   group_by(
     agency,
@@ -44,6 +51,10 @@ agreement_level_sf <- all_agreements_sf |>
   ) |>
   summarize(
     match_layer = paste(sort(unique(match_layer)), collapse = "+"),
+    county_fips = single_or_na(county_fips),
+    place_fips = single_or_na(place_fips),
+    geoid = single_or_na(geoid),
+    vtd_code = single_or_na(vtd_code),
     geometry = st_union(geometry),
     .groups = "drop"
   ) |>
@@ -59,6 +70,10 @@ agreement_level_sf <- all_agreements_sf |>
     addendum,
     ORI9,
     state_fips,
+    county_fips,
+    place_fips,
+    geoid,
+    vtd_code,
     geometry_type = geom_class,
     match_layer,
     geometry

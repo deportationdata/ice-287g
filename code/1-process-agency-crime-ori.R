@@ -6,15 +6,6 @@ source("code/functions.R")
 agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
   normalize_agencies_all()
 
-crime_cols <- c(
-  "crime_ori",
-  "crime_agency_name",
-  "crime_agency_type",
-  "crime_latitude",
-  "crime_longitude",
-  "crime_nibrs_start"
-)
-
 crime_lookup <- arrow::read_parquet("inputs/crime-data-all-states.parquet") |>
   transmute(
     state_key = norm_state(state_name),
@@ -41,7 +32,18 @@ manual_agency_ori <- read_csv(
   distinct(state, county, agency, .keep_all = TRUE)
 
 agencies_all <- agencies_all |>
-  select(-any_of(c(crime_cols, "crime_match_type", "ori_source"))) |>
+  select(
+    -any_of(c(
+      "crime_ori",
+      "crime_agency_name",
+      "crime_agency_type",
+      "crime_latitude",
+      "crime_longitude",
+      "crime_nibrs_start",
+      "crime_match_type",
+      "ori_source"
+    ))
+  ) |>
   mutate(
     state_key = norm_state(state),
     county_key = norm_ori_county(county),

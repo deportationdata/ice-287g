@@ -87,7 +87,19 @@ county_agreements_sf <-
     ),
     place_fips = NA_character_,
     geoid = county_fips,
-    needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
+    # LEAIC codes the agency's governmental unit independently of our match,
+    # so disagreement flags a suspect geometry
+    leaic_fips_mismatch = coalesce(
+      !is.na(FSTATE) &
+        !is.na(FCOUNTY) &
+        !is.na(county_fips) &
+        paste0(FSTATE, FCOUNTY) != county_fips,
+      FALSE
+    ),
+    needs_review = needs_review |
+      leaic_fips_mismatch |
+      is.na(geometry) |
+      st_is_empty(geometry)
   ) |>
   select(
     state,
@@ -106,6 +118,7 @@ county_agreements_sf <-
     crime_agency_name,
     crime_match_type,
     ori_source,
+    leaic_fips_mismatch,
     needs_review,
     signed,
     moa,

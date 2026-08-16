@@ -162,7 +162,7 @@ ward_lookup <- lrc_wards |>
     lookup_id = row_number(),
     src = "lrc_wards_2021",
     state_fips = "42",
-    county_fips = FIPS,
+    county_fips = paste0("42", FIPS),
     place_fips = as.character(FIPS_MCD),
     geoid = as.character(cou_cbt_wa),
     municipality_match = str_to_title(MUNICIPALI),

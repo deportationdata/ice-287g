@@ -22,6 +22,7 @@ places_sf <- tigris::places(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(
     state = str_to_title(STATE_NAME),
     place_guess = str_to_title(NAME),
+    cand_type = str_to_lower(word(NAMELSAD, -1)),
     statefp = STATEFP,
     countyfp = NA_character_,
     placefp = PLACEFP,
@@ -45,6 +46,7 @@ cousubs_sf <-
   transmute(
     state = str_to_title(STATE_NAME),
     place_guess = str_to_title(NAME),
+    cand_type = str_to_lower(word(NAMELSAD, -1)),
     statefp = STATEFP,
     countyfp = COUNTYFP,
     placefp = COUSUBFP,
@@ -53,7 +55,17 @@ cousubs_sf <-
   )
 
 # normalized places lookup: keep every same-named candidate and let the
-# sheet's county pick between them below
+# sheet's county pick between them below; in New England the town (county
+# subdivision) is the municipal government, so it outranks the same-named CDP
+new_england <- c(
+  "connecticut",
+  "maine",
+  "massachusetts",
+  "newhampshire",
+  "rhodeisland",
+  "vermont"
+)
+
 places_lookup <-
   bind_rows(
     places_sf |> mutate(src = "place"),
@@ -62,7 +74,12 @@ places_lookup <-
   mutate(
     state_key = norm_state(state),
     place_key = norm_place(place_guess),
-    src_rank = if_else(src == "place", 1L, 2L)
+    src_rank = case_when(
+      state_key %in% new_england & src == "cousub" ~ 1L,
+      state_key %in% new_england ~ 2L,
+      src == "place" ~ 1L,
+      TRUE ~ 2L
+    )
   )
 
 # counties each candidate touches: cousubs carry their county FIPS; places
@@ -131,6 +148,14 @@ municipal_base <- agencies_all |>
     state_key = norm_state(state),
     place_key = norm_place(city_match),
     sheet_county_key = norm_county(county),
+    municipal_type_hint = case_when(
+      str_detect(str_to_lower(agency), "\\btownship\\b|\\btwp\\b") ~ "township",
+      str_detect(str_to_lower(agency), "\\bborough\\b|\\bboro\\b") ~ "borough",
+      str_detect(str_to_lower(agency), "\\bvillage\\b") ~ "village",
+      str_detect(str_to_lower(agency), "\\btown\\b") ~ "town",
+      str_detect(str_to_lower(agency), "\\bcity\\b") ~ "city",
+      TRUE ~ NA_character_
+    ),
     municipal_row_id = row_number()
   ) |>
   left_join(
@@ -147,6 +172,7 @@ municipal_matches <- municipal_base |>
       select(
         state_key,
         place_key,
+        cand_type,
         statefp,
         countyfp,
         placefp,
@@ -168,12 +194,17 @@ municipal_matches <- municipal_base |>
       !is.na(sheet_county_fips) & !is.na(cand_county_fips),
       sheet_county_fips == cand_county_fips,
       NA
-    )
+    ),
+    # "Briar Creek Township PD" must take the township, not the same-named
+    # borough
+    type_match = !is.na(municipal_type_hint) &
+      coalesce(cand_type == municipal_type_hint, FALSE)
   ) |>
   group_by(municipal_row_id) |>
   mutate(n_candidates = n_distinct(geoid, na.rm = TRUE)) |>
   arrange(
     desc(coalesce(county_confirmed, FALSE)),
+    desc(type_match),
     src_rank,
     geoid,
     .by_group = TRUE
@@ -197,12 +228,27 @@ municipal_agreements_sf <- municipal_matches |>
       paste("manual_municipal_override", src, sep = ":")
     ),
     state_fips = statefp,
-    county_fips = if_else(
-      !is.na(statefp) & !is.na(countyfp),
-      paste0(statefp, countyfp),
-      NA_character_
+    # places carry no county attribute; when the sheet's county was verified
+    # against the matched polygon, use it
+    county_fips = case_when(
+      !is.na(statefp) & !is.na(countyfp) ~ paste0(statefp, countyfp),
+      coalesce(county_confirmed, FALSE) ~ sheet_county_fips,
+      TRUE ~ NA_character_
     ),
     place_fips = placefp,
+    # LEAIC codes the agency's governmental unit independently of our match,
+    # so disagreement flags a suspect geometry
+    leaic_fips_mismatch = coalesce(
+      (!is.na(FSTATE) &
+        !is.na(FCOUNTY) &
+        !is.na(county_fips) &
+        paste0(FSTATE, FCOUNTY) != county_fips) |
+        (!is.na(FPLACE) &
+          FPLACE != "00000" &
+          !is.na(place_fips) &
+          FPLACE != place_fips),
+      FALSE
+    ),
     geometry = st_sfc(
       map(geometry, \(g) if (inherits(g, "sfg")) g else st_geometrycollection()),
       crs = st_crs(places_sf)
@@ -212,6 +258,7 @@ municipal_agreements_sf <- municipal_matches |>
   mutate(
     needs_review = needs_review |
       match_ambiguous |
+      leaic_fips_mismatch |
       is.na(geometry) |
       st_is_empty(geometry)
   ) |>
@@ -232,6 +279,7 @@ municipal_agreements_sf <- municipal_matches |>
     crime_agency_name,
     crime_match_type,
     ori_source,
+    leaic_fips_mismatch,
     needs_review,
     signed,
     moa,
