@@ -181,6 +181,7 @@ municipal_matches <- municipal_base |>
       select(
         state_key,
         place_key,
+        place_guess,
         cand_type,
         statefp,
         countyfp,
@@ -205,8 +206,17 @@ municipal_matches <- municipal_base |>
       NA
     ),
     # "Briar Creek Township PD" must take the township, not the same-named
-    # borough
-    type_match = !is.na(municipal_type_hint) &
+    # borough; but the token is only a type claim when it is not part of the
+    # candidate name itself ("Cross City" is a town named Cross City)
+    hint_is_type_claim = !is.na(municipal_type_hint) &
+      !coalesce(
+        str_detect(
+          str_to_lower(place_guess),
+          paste0("\\b", municipal_type_hint, "\\b")
+        ),
+        FALSE
+      ),
+    type_match = hint_is_type_claim &
       coalesce(cand_type == municipal_type_hint, FALSE)
   ) |>
   group_by(municipal_row_id) |>
@@ -226,7 +236,11 @@ municipal_matches <- municipal_base |>
   mutate(
     match_ambiguous = !is.na(geoid) &
       ((n_candidates > 1 & !coalesce(county_confirmed, FALSE)) |
-        (!is.na(sheet_county_fips) & !coalesce(county_confirmed, TRUE)))
+        (!is.na(sheet_county_fips) & !coalesce(county_confirmed, TRUE))),
+    # the agency name claims an entity type the winning candidate lacks
+    type_mismatch = !is.na(geoid) &
+      hint_is_type_claim &
+      !coalesce(cand_type == municipal_type_hint, FALSE)
   )
 
 municipal_agreements_sf <- municipal_matches |>
@@ -245,19 +259,6 @@ municipal_agreements_sf <- municipal_matches |>
       TRUE ~ NA_character_
     ),
     place_fips = placefp,
-    # LEAIC codes the agency's governmental unit independently of our match,
-    # so disagreement flags a suspect geometry
-    leaic_fips_mismatch = coalesce(
-      (!is.na(FSTATE) &
-        !is.na(FCOUNTY) &
-        !is.na(county_fips) &
-        paste0(FSTATE, FCOUNTY) != county_fips) |
-        (!is.na(FPLACE) &
-          FPLACE != "00000" &
-          !is.na(place_fips) &
-          FPLACE != place_fips),
-      FALSE
-    ),
     geometry = st_sfc(
       map(geometry, \(g) {
         if (inherits(g, "sfg")) g else st_geometrycollection()
@@ -267,9 +268,11 @@ municipal_agreements_sf <- municipal_matches |>
   ) |>
   st_as_sf() |>
   mutate(
+    # match_ambiguous and type_mismatch ride along as columns instead of
+    # folding into needs_review here: 5-format-agreements-dataset.R clears
+    # them when LEAIC's independently coded FPLACE confirms the matched
+    # place, and flags them otherwise
     needs_review = needs_review |
-      match_ambiguous |
-      leaic_fips_mismatch |
       is.na(geometry) |
       st_is_empty(geometry)
   ) |>
@@ -280,18 +283,10 @@ municipal_agreements_sf <- municipal_matches |>
     support_type,
     agency_level,
     geom_class,
-    ORI9,
-    FSTATE,
-    FCOUNTY,
-    FPLACE,
-    leaic_name,
-    leaic_match_type,
-    crime_ori,
-    crime_agency_name,
-    crime_match_type,
-    ori_source,
-    leaic_fips_mismatch,
+    agreement_id,
     needs_review,
+    match_ambiguous,
+    type_mismatch,
     signed,
     moa,
     addendum,
@@ -311,6 +306,31 @@ municipal_agreements_sf <- municipal_matches |>
     geometry
   )
 
+# a place polygon carries no county attribute, so a matched municipality whose
+# sheet county is missing or unverified still lacks a county: assign the county
+# with the largest overlap with the matched polygon (planar areas, fine for
+# ranking overlaps of the same polygon)
+county_overlap <- municipal_agreements_sf |>
+  filter(!is.na(geoid), is.na(county_fips)) |>
+  select(agreement_id) |>
+  st_transform(3857) |>
+  st_intersection(
+    counties_ref |>
+      select(overlap_county_fips = sheet_county_fips) |>
+      st_transform(3857)
+  ) |>
+  mutate(overlap_area = st_area(geometry)) |>
+  st_drop_geometry() |>
+  group_by(agreement_id) |>
+  arrange(desc(overlap_area), overlap_county_fips, .by_group = TRUE) |>
+  slice_head(n = 1) |>
+  ungroup() |>
+  select(agreement_id, overlap_county_fips)
+
+municipal_agreements_sf <- municipal_agreements_sf |>
+  left_join(county_overlap, by = "agreement_id") |>
+  mutate(county_fips = coalesce(county_fips, overlap_county_fips)) |>
+  select(-overlap_county_fips)
 
 # save municipal geometries ----------------------------------------------
 

@@ -71,6 +71,113 @@ snap_state_name <- function(state, valid_states, max_dist = 2) {
   )
 }
 
+first_scalar <- function(value) {
+  if (is.null(value) || length(value) == 0) {
+    return(NA_character_)
+  }
+
+  if (is.data.frame(value)) {
+    if (nrow(value) == 0 || ncol(value) == 0) {
+      return(NA_character_)
+    }
+
+    for (item in as.list(value[1, , drop = FALSE])) {
+      scalar <- first_scalar(item)
+
+      if (!is.na(scalar)) {
+        return(scalar)
+      }
+    }
+
+    return(NA_character_)
+  }
+
+  if (is.list(value)) {
+    for (item in value) {
+      scalar <- first_scalar(item)
+
+      if (!is.na(scalar)) {
+        return(scalar)
+      }
+    }
+
+    return(NA_character_)
+  }
+
+  if (all(is.na(value))) {
+    return(NA_character_)
+  }
+
+  as.character(value[[1]])
+}
+
+as_numeric_scalar <- function(x) {
+  if (is.data.frame(x)) {
+    x <- purrr::map_chr(seq_len(nrow(x)), function(i) {
+      first_scalar(x[i, , drop = FALSE])
+    })
+  } else if (is.list(x)) {
+    x <- purrr::map_chr(x, first_scalar)
+  }
+
+  suppressWarnings(as.numeric(x))
+}
+
+ensure_columns <- function(x, defaults) {
+  for (col in names(defaults)) {
+    if (!col %in% names(x)) {
+      x[[col]] <- defaults[[col]]
+    }
+  }
+
+  x
+}
+
+read_parquet_retry <- function(path, times = 4, timeout_seconds = 300) {
+  old_timeout <- getOption("timeout")
+  options(timeout = max(old_timeout, timeout_seconds))
+  on.exit(options(timeout = old_timeout), add = TRUE)
+
+  last_error <- NULL
+
+  for (attempt in seq_len(times)) {
+    result <- tryCatch(
+      arrow::read_parquet(path),
+      error = function(e) {
+        last_error <<- e
+        NULL
+      }
+    )
+
+    if (!is.null(result)) {
+      return(result)
+    }
+
+    if (attempt < times) {
+      pause <- min(10 * attempt, 60)
+      message(
+        "Failed to read parquet on attempt ",
+        attempt,
+        " of ",
+        times,
+        "; retrying in ",
+        pause,
+        " seconds: ",
+        conditionMessage(last_error)
+      )
+      Sys.sleep(pause)
+    }
+  }
+
+  stop(
+    "Failed to read parquet after ",
+    times,
+    " attempts: ",
+    conditionMessage(last_error),
+    call. = FALSE
+  )
+}
+
 norm_key <- function(x) {
   x |>
     # deal with ~ and accents and curly apostrophes correctly
@@ -130,23 +237,6 @@ normalize_agencies_all <- function(x) {
   if (!"support_type" %in% names(x) && "SUPPORT TYPE" %in% names(x)) {
     x <- x |>
       mutate(support_type = `SUPPORT TYPE`)
-  }
-
-  for (col in c(
-    "ORI9",
-    "FSTATE",
-    "FCOUNTY",
-    "FPLACE",
-    "leaic_name",
-    "leaic_match_type",
-    "crime_ori",
-    "crime_agency_name",
-    "crime_match_type",
-    "ori_source"
-  )) {
-    if (!col %in% names(x)) {
-      x[[col]] <- NA
-    }
   }
 
   x
