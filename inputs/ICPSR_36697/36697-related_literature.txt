@@ -1,0 +1,100 @@
+Bibliography
+Law Enforcement Agency Roster (LEAR), 2016
+
+This bibliography includes published and unpublished works that are related 
+to ICPSR study 36697. It includes works that are based on primary
+or secondary analysis of the data, or which describe or critique those
+data or the collection methodology. 
+
+If you publish a work or know of other works that are based on these data,
+please send the complete citation and name of the ICPSR study used to:
+icpsrbibliography@umich.edu
+
+
+1. Ba, Bocar; Ge, Haosen; Kaplan, Jacob; Knox, Dean; Komisarchik, Mayya;
+Lanzalotto, Gregory; Mariman, Rei; Mummolo, Jonathan; Rivera, Roman;
+Torres, Michelle, "Political diversity in U.S. police agencies." American
+Journal of Political Science. in press 2025,. DOI: 10.1111/ajps.12945
+
+2. Ba, Bocar; Kaplan, Jacob; Knox, Dean; Komisarchik, Mayya; Lanzalotto,
+Gregory; Mariman, Rachel; Mummolo, Jonathan; Rivera, Roman; Torres,
+Michelle, "Political Diversity in U.S. Police Agencies." Jun 7, 2023..
+Full text PDF: https://policingresearch.org/wp-content/uploads/2022/03/ba_et_al_2023.pdf
+
+3. Ba, Bocar; Kaplan, Jacob; Knox, Dean; Komisarchik, Mayya; Mariman,
+Rachel; Mummolo, Jonathan; Rivera, Roman; Torres, Michelle, "Who Are the
+Police? Descriptive Representation in the Coercive Arm of Government." Mar
+21, 2022..
+Full text PDF: https://scholar.princeton.edu/sites/default/files/policing_rep.pdf
+
+4. Bollman, Kathryn, "Essays in Applied Microeconomics." Dissertation,
+Michigan State University, 2022.
+Full text PDF: https://scholar.princeton.edu/sites/default/files/policing_rep.pdf
+
+5. Bonner, Heidi S.; Crowe, Allison, "Mental health programming for law
+enforcement: A first look at trends and perceptions of effectiveness."
+Journal of Crime and Justice. 2022, 45, (5), 552 - 566. DOI:
+10.1080/0735648X.2022.2045209
+Full text PDF: https://scholar.princeton.edu/sites/default/files/policing_rep.pdf
+
+6. Goerger, Samantha; Mummolo, Jonathan; Westwood Sean, "Which Police
+Departments Want Reform? Barriers to Evidence-Based Policymaking." SSRN,
+Apr 3, 2020.. DOI: 10.2139/ssrn.3497106
+Abstract: https://ssrn.com/abstract=3497106
+
+7. Goerger, Samantha; Mummolo, Jonathan; Westwood, Sean, "Which Police
+Departments Want Reform? Barriers to Evidence-Based Policymaking." Mar 13,
+2020..
+Full text PDF: https://scholar.princeton.edu/sites/default/files/jmummolo/files/gmw_3_2020_with_si.pdf
+
+8. Hipple, Natalie; Allison, Kayla; Campbell, Kaitlyn; Farrell, Mitchell
+A., "Police responses to people experiencing homelessness." Police
+Quarterly. in press 2024,. DOI: 10.1177/10986111241289390 NCJ 309766
+Abstract: https://www.ojp.gov/ncjrs/virtual-library/abstracts/police-responses-people-experiencing-homelessness-0
+
+9. Hou, Yuchen, "Fatal and Non-Fatal Police Shootings in the United States,
+2015: An Examination of Open-Source Data." Dissertation, City University of
+New York, 2022.
+Full text PDF: https://academicworks.cuny.edu/cgi/viewcontent.cgi?article=5791&context=gc_etds
+
+10. Kaplan, Jacob; Naddeo, J.J.; Scott, Tom, "De-prosecution and death: A
+comment on Hogan (2022)." Economic Inquiry. Jan 2026, 64, (1), 177 - 198.
+DOI: 10.1111/ecin.70022
+Full text PDF: https://academicworks.cuny.edu/cgi/viewcontent.cgi?article=5791&context=gc_etds
+
+11. O'Guinn, Bradley J., "Police training and accountability: A remedy or
+an impediment for reducing unarmed police shootings?." Crime and
+Delinquency. Feb 2024, 70, (2), 313 - 338. DOI: 10.1177/00111287221074959
+Full text PDF: https://academicworks.cuny.edu/cgi/viewcontent.cgi?article=5791&context=gc_etds
+
+12. Rodgers, Kourtnie R., "Public Information Officers and Social Media:
+New Media, New Methods?." Dissertation, Michigan State University, 2024.
+Full text PDF: https://academicworks.cuny.edu/cgi/viewcontent.cgi?article=5791&context=gc_etds
+
+13. Stoddard, Greg; Fitzpatrick, Dylan J.; Ludwig, Jens, "Predicting Police
+Misconduct." NBER Working Paper 32432. Cambridge, MA: National Bureau of
+Economic Research, May 2024.
+Abstract: https://www.nber.org/papers/w32432
+Full text PDF: https://www.nber.org/system/files/working_papers/w32432/w32432.pdf
+
+14. Stoddard, Greg; Fitzpatrick, Dylan J.; Ludwig, Jens, "Predicting Police
+Misconduct." Working Paper No. 2024-62. Chicago, IL: University of Chicago
+Becker Friedman Institute for Economics, May 2024. DOI:
+10.2139/ssrn.4829604
+Abstract: https://ssrn.com/abstract=4829604
+
+15. Stoner, Hope, "The Influence of Body-Worn Cameras on Select Police
+Outcomes: A Review of 59 Police Agencies in Ohio." Thesis, Youngstown State
+University, 2025.
+Full text PDF: https://etd.ohiolink.edu/acprod/odb_etd/ws/send_file/send?accession=ysu1764870498687308&disposition=inline
+
+16. Uding, Clair V.; Moon, Haley R.; Lum, Cynthia, "The status of co-
+responders in law enforcement: Findings from a national survey of law
+enforcement agencies." Policing. 2025, 48, (1), 69 - 97. DOI:
+10.1108/PIJPSM-04-2024-0062
+Full text PDF: https://etd.ohiolink.edu/acprod/odb_etd/ws/send_file/send?accession=ysu1764870498687308&disposition=inline
+
+17. Whitford, Andrew B.; Whitford, Anna M., "Modalities of monitoring:
+Evidence from cameras and recorders in policing." Government Information
+Quarterly. Oct 2023, 40, (4),. DOI: 10.1016/j.giq.2023.101882
+Full text PDF: https://etd.ohiolink.edu/acprod/odb_etd/ws/send_file/send?accession=ysu1764870498687308&disposition=inline
