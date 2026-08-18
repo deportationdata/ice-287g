@@ -5,9 +5,8 @@ library(httr2)
 source("code/functions.R")
 
 # FBI Crime Data Explorer agency roster, one request per state. The raw
-# download is committed, so the API is hit only when the cache is missing —
-# delete it to force a refresh. Needs a free api.data.gov key:
-# https://api.data.gov/signup/
+# download is committed, so the API is hit only when the cache is missing:
+# delete it to refresh. Needs a free key from https://api.data.gov/signup/
 crime_cache_path <- "data/crime-data-all-states.parquet"
 
 if (!file.exists(crime_cache_path)) {
@@ -53,8 +52,10 @@ if (!file.exists(crime_cache_path)) {
     bind_rows(.id = "state")
 
   stopifnot(
-    all(c("ori", "agency_name", "state_name") %in% names(crime_data)),
-    all(states %in% crime_data$state)
+    "CDE payload must include ori, agency_name, and state_name" =
+      all(c("ori", "agency_name", "state_name") %in% names(crime_data)),
+    "all 50 states plus DC must return agencies (territories are best-effort)" =
+      all(states %in% crime_data$state)
   )
 
   message(
@@ -67,27 +68,22 @@ if (!file.exists(crime_cache_path)) {
 
 crime <- arrow::read_parquet(crime_cache_path) |>
   transmute(
-    crime_state = str_squish(state_name),
-    crime_county = str_squish(county),
-    crime_ori = str_squish(ori),
-    crime_agency_name = str_squish(agency_name),
-    crime_agency_type = agency_type_name,
-    crime_nibrs_start = nibrs_start_date,
-    crime_latitude = latitude,
-    crime_longitude = longitude
+    state = str_squish(state_name),
+    county = str_squish(county),
+    ori = str_squish(ori),
+    name = str_squish(agency_name)
   ) |>
-  filter(!is.na(crime_ori), crime_ori != "") |>
+  filter(!is.na(ori), ori != "") |>
   mutate(
-    state_key = norm_state(crime_state),
-    county_key = norm_ori_county(crime_county),
-    agency_key = norm_ori_agency(crime_agency_name),
-    crime_fullname_key = norm_ori_fullname(crime_agency_name)
+    state_key = norm_state(state),
+    county_key = norm_ori_county(county),
+    agency_key = norm_ori_agency(name),
+    fullname_key = norm_ori_fullname(name)
   )
 
 # CDE names an agency's county, sometimes several ("LEE, MACON"); convert each
-# to a FIPS code so downstream checks can test membership. Spacing differs
-# between sources ("DE KALB" vs "DeKalb"), so keys are compared without it,
-# and the handful of keys that becomes ambiguous is dropped
+# to FIPS so 5-format can test membership. Spacing differs between sources
+# ("DE KALB" vs "DeKalb"), so keys drop it and the few that turn ambiguous go
 county_fips_xwalk <- tigris::fips_codes |>
   transmute(
     state_key = norm_state(state_name),
@@ -98,19 +94,19 @@ county_fips_xwalk <- tigris::fips_codes |>
   filter(n() == 1) |>
   ungroup()
 
-crime_county_fips_tbl <- crime |>
-  distinct(state_key, crime_county) |>
-  mutate(county_component = crime_county) |>
+county_fips_tbl <- crime |>
+  distinct(state_key, county) |>
+  mutate(county_component = county) |>
   separate_longer_delim(county_component, ",") |>
   mutate(
     county_join_key = str_remove_all(norm_ori_county(county_component), "\\s")
   ) |>
   left_join(county_fips_xwalk, by = c("state_key", "county_join_key")) |>
-  group_by(state_key, crime_county) |>
+  group_by(state_key, county) |>
   summarize(
-    # any unconvertible component voids the set, else a partial list could
-    # miss the county that would have agreed
-    crime_county_fips = if_else(
+    # any unconvertible component voids the set: a partial list could miss the
+    # county that would have agreed
+    county_fips = if_else(
       any(is.na(county_fips)),
       NA_character_,
       paste(sort(unique(county_fips)), collapse = ";")
@@ -118,7 +114,9 @@ crime_county_fips_tbl <- crime |>
     .groups = "drop"
   )
 
+# this join keys on the raw county string, so county must stay untouched above
 crime <- crime |>
-  left_join(crime_county_fips_tbl, by = c("state_key", "crime_county"))
+  left_join(county_fips_tbl, by = c("state_key", "county")) |>
+  select(state_key, county_key, agency_key, fullname_key, ori, name, county_fips)
 
 arrow::write_parquet(crime, "data/crime.parquet")

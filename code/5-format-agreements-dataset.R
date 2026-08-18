@@ -1,73 +1,94 @@
 library(tidyverse)
 library(sf)
-library(arrow)
 
 source("code/functions.R")
 
-non_facility_agreements_sf <- read_sf_parquet(
-  "data/non_facility_agreements_sf.parquet"
-)
+non_facility_sf <- read_sf_parquet("data/non-facility-sf.parquet")
+facility_sf <- read_sf_parquet("data/facility-sf.parquet")
 
-facility_agreements_sf <- read_sf_parquet(
-  "data/facility_agreements_sf.parquet"
-)
+agreements <- arrow::read_parquet("data/agreements.parquet")
 
-# ORIs and each source's county codes are annotations rather than match
-# inputs, so they are merged in 4-merge-agency-oris.R and joined on here by
-# agreement_id
-agency_identifiers <- arrow::read_parquet("data/agencies_all.parquet") |>
+# ORIs and roster county codes are annotations rather than match inputs, so
+# they join on by agreement_id here; the per-source match_type provenance stays
+# in 4-match-rosters.R's own table
+agreement_identifiers <-
+  arrow::read_parquet("data/agreement-identifiers.parquet") |>
   select(
     agreement_id,
     ORI9,
-    FSTATE,
-    FCOUNTY,
-    FPLACE,
-    leaic_name,
-    leaic_match_type,
-    crime_ori,
-    crime_agency_name,
-    crime_match_type,
     ori_source,
     ori_conflict,
+    roster_key_unique,
+    leaic_ori,
+    leaic_name,
+    leaic_county_fips,
+    leaic_place_fips,
+    lear_ori,
+    lear_name,
     lear_county_fips,
+    crime_ori,
+    crime_name,
     crime_county_fips,
-    hifld_county_fips,
-    roster_key_unique
+    hifld_county_fips
   )
+
+stopifnot(
+  "non-facility layer file must arrive in EPSG:4326" =
+    st_crs(non_facility_sf) == st_crs(4326),
+  "facility layer file must arrive in EPSG:4326" =
+    st_crs(facility_sf) == st_crs(4326)
+)
 
 # unmatched agreements ride along with empty geometries; nothing is dropped
 all_agreements_sf <-
   bind_rows(
-    non_facility_agreements_sf,
-    facility_agreements_sf |>
-      st_transform(4326) |>
+    non_facility_sf,
+    facility_sf |>
       mutate(match_layer = "facility")
   ) |>
   st_make_valid() |>
-  st_transform(4326) |>
-  left_join(agency_identifiers, by = "agreement_id") |>
+  # layer files carry only match results; the sheet's descriptive columns come
+  # back from agreements.parquet
+  left_join(
+    agreements |>
+      select(
+        agreement_id,
+        state,
+        county,
+        agency,
+        agency_level,
+        support_type,
+        signed,
+        moa,
+        addendum,
+        geom_class
+      ),
+    by = "agreement_id"
+  ) |>
+  left_join(agreement_identifiers, by = "agreement_id") |>
   mutate(
-    # each roster codes the agency's county independently of our match, so
-    # disagreement flags a suspect geometry. Only the layers matched against a
-    # county or place boundary can be checked this way.
+    # facility rows have no census polygon; the published contract that
+    # slicer-shiny-app reads carries the facility's county fips as its geoid
+    geoid = if_else(match_layer == "facility", county_fips, geoid),
+    # each roster codes the agency's county independently of the match, so
+    # disagreement flags a suspect geometry; only layers matched against a
+    # county or place boundary can be checked this way
     checkable_layer = match_layer %in% c("county", "municipal"),
     leaic_fips_mismatch = case_when(
       match_layer == "county" ~ coalesce(
-        !is.na(FSTATE) &
-          !is.na(FCOUNTY) &
+        !is.na(leaic_county_fips) &
           !is.na(county_fips) &
-          paste0(FSTATE, FCOUNTY) != county_fips,
+          leaic_county_fips != county_fips,
         FALSE
       ),
       match_layer == "municipal" ~ coalesce(
-        (!is.na(FSTATE) &
-          !is.na(FCOUNTY) &
+        (!is.na(leaic_county_fips) &
           !is.na(county_fips) &
-          paste0(FSTATE, FCOUNTY) != county_fips) |
-          (!is.na(FPLACE) &
-            FPLACE != "00000" &
+          leaic_county_fips != county_fips) |
+          (!is.na(leaic_place_fips) &
+            leaic_place_fips != "00000" &
             !is.na(place_fips) &
-            FPLACE != place_fips),
+            leaic_place_fips != place_fips),
         FALSE
       ),
       TRUE ~ NA
@@ -104,17 +125,17 @@ all_agreements_sf <-
       ),
       NA
     ),
-    # an ambiguous municipal match is cleared when LEAIC's independently coded
-    # FPLACE lands on the same census place AND no roster shows a second
-    # agency with the same cleaned name statewide (a shared name cannot be
-    # trusted to identify a record); 99xxx are balance-of-county pseudo-codes
+    # an ambiguous municipal match clears when LEAIC's independently coded place
+    # lands on the same census place and no roster shows a second agency with
+    # that cleaned name statewide, since a shared name cannot identify a
+    # record; 99xxx are balance-of-county pseudo-codes
     leaic_place_confirmed = coalesce(
       match_layer == "municipal" &
-        !is.na(FPLACE) &
-        FPLACE != "00000" &
-        !str_starts(FPLACE, "99") &
+        !is.na(leaic_place_fips) &
+        leaic_place_fips != "00000" &
+        !str_starts(leaic_place_fips, "99") &
         !is.na(place_fips) &
-        FPLACE == place_fips &
+        leaic_place_fips == place_fips &
         roster_key_unique,
       FALSE
     ),
@@ -127,12 +148,66 @@ all_agreements_sf <-
       coalesce(hifld_fips_mismatch, FALSE) |
       coalesce(ori_conflict, FALSE)
   ) |>
-  select(-checkable_layer)
+  select(
+    agreement_id,
+    state,
+    county,
+    agency,
+    agency_level,
+    support_type,
+    signed,
+    moa,
+    addendum,
+    geom_class,
+    match_layer,
+    match_name,
+    match_type,
+    match_score,
+    detention_facility_code,
+    source,
+    source_id,
+    facility_address,
+    facility_city,
+    facility_state,
+    facility_zip,
+    facility_operator_name,
+    latitude,
+    longitude,
+    state_fips,
+    county_fips,
+    place_fips,
+    geoid,
+    vtd_code,
+    ORI9,
+    ori_source,
+    ori_conflict,
+    leaic_ori,
+    leaic_name,
+    leaic_county_fips,
+    leaic_place_fips,
+    lear_ori,
+    lear_name,
+    lear_county_fips,
+    crime_ori,
+    crime_name,
+    crime_county_fips,
+    hifld_county_fips,
+    roster_key_unique,
+    leaic_fips_mismatch,
+    lear_fips_mismatch,
+    crime_fips_mismatch,
+    hifld_fips_mismatch,
+    leaic_place_confirmed,
+    match_ambiguous,
+    type_mismatch,
+    university_address_mismatch,
+    manual_reason,
+    manual_note,
+    needs_review,
+    geometry
+  )
 
-write_sf_parquet(
-  all_agreements_sf,
-  "data/all_agreements_sf.parquet"
-)
+write_sf_parquet(all_agreements_sf, "data/all_agreements_sf.parquet")
 
 # an agreement can span several matched features (a DOC's facilities sit in
 # many counties), so codes are kept only when they identify a single area
@@ -166,7 +241,7 @@ agreement_level_sf <- all_agreements_sf |>
     .groups = "drop"
   ) |>
   select(
-    # Preserve the source spreadsheet order, followed by derived/spatial fields.
+    # preserve the source spreadsheet order, followed by derived/spatial fields
     state,
     agency,
     agency_level,
@@ -186,11 +261,9 @@ agreement_level_sf <- all_agreements_sf |>
     geometry
   )
 
-# one row per agreement in the source spreadsheet
-agencies_all <- arrow::read_parquet("data/agencies_all.parquet")
-stopifnot(nrow(agreement_level_sf) == nrow(agencies_all))
-
-write_sf_parquet(
-  agreement_level_sf,
-  "data/agreement-level-sf.parquet"
+stopifnot(
+  "agreement-level dataset must have one row per agreement in the source sheet" =
+    nrow(agreement_level_sf) == nrow(agreements)
 )
+
+write_sf_parquet(agreement_level_sf, "data/agreement-level-sf.parquet")

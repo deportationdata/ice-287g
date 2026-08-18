@@ -1,14 +1,10 @@
 library(digest)
 
-# --- Helper function to get file hash ---
-
 get_file_hash <- function(filepath) {
   file_hash <- digest(file = filepath, algo = "sha256")
 
   return(file_hash)
 }
-
-# --- Remove duplicate files recursively ---
 
 remove_duplicate_files_recursive <- function(base_path) {
   seen_files <- list()
@@ -39,8 +35,6 @@ remove_duplicate_files_recursive <- function(base_path) {
     }
   }
 }
-
-# --- Remove duplicate files one level deep ---
 
 remove_duplicate_files_one_level <- function(base_path) {
   seen_files <- list()
@@ -80,8 +74,6 @@ remove_duplicate_files_one_level <- function(base_path) {
     }
   }
 }
-
-# --- Delete empty directories ---
 
 delete_empty_dirs <- function(base_path) {
   # list.dirs returns parents before children; reverse for bottom-up
@@ -128,8 +120,6 @@ delete_path_log_only_dirs <- function(base_path) {
     }
   }
 }
-
-# --- Run deduplication pipeline ---
 
 remove_duplicate_files_recursive("agreements")
 delete_empty_dirs("agreements")

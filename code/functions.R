@@ -33,9 +33,8 @@ xlsx_hyperlinks <- function(path, sheet = 1) {
     )
 }
 
-# MOA links are hand-pasted into the sheet, so unwrap Outlook safelinks
-# wrappers and fix the pasted-URL typos seen so far (chrome-extension
-# prefixes, https:/ with one slash, http) to recover the real ice.gov url
+# MOA links are hand-pasted into the sheet: unwrap Outlook safelinks and repair
+# the paste typos seen so far to recover the real ice.gov url
 clean_moa_urls <- function(url) {
   url |>
     map_chr(\(u) {
@@ -69,68 +68,6 @@ snap_state_name <- function(state, valid_states, max_dist = 2) {
     },
     character(1)
   )
-}
-
-first_scalar <- function(value) {
-  if (is.null(value) || length(value) == 0) {
-    return(NA_character_)
-  }
-
-  if (is.data.frame(value)) {
-    if (nrow(value) == 0 || ncol(value) == 0) {
-      return(NA_character_)
-    }
-
-    for (item in as.list(value[1, , drop = FALSE])) {
-      scalar <- first_scalar(item)
-
-      if (!is.na(scalar)) {
-        return(scalar)
-      }
-    }
-
-    return(NA_character_)
-  }
-
-  if (is.list(value)) {
-    for (item in value) {
-      scalar <- first_scalar(item)
-
-      if (!is.na(scalar)) {
-        return(scalar)
-      }
-    }
-
-    return(NA_character_)
-  }
-
-  if (all(is.na(value))) {
-    return(NA_character_)
-  }
-
-  as.character(value[[1]])
-}
-
-as_numeric_scalar <- function(x) {
-  if (is.data.frame(x)) {
-    x <- purrr::map_chr(seq_len(nrow(x)), function(i) {
-      first_scalar(x[i, , drop = FALSE])
-    })
-  } else if (is.list(x)) {
-    x <- purrr::map_chr(x, first_scalar)
-  }
-
-  suppressWarnings(as.numeric(x))
-}
-
-ensure_columns <- function(x, defaults) {
-  for (col in names(defaults)) {
-    if (!col %in% names(x)) {
-      x[[col]] <- defaults[[col]]
-    }
-  }
-
-  x
 }
 
 read_parquet_retry <- function(path, times = 4, timeout_seconds = 300) {
@@ -180,7 +117,7 @@ read_parquet_retry <- function(path, times = 4, timeout_seconds = 300) {
 
 norm_key <- function(x) {
   x |>
-    # deal with ~ and accents and curly apostrophes correctly
+    # accents, tildes and curly apostrophes fold to ASCII
     stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
     str_replace_all("&", " and ") |>
@@ -228,20 +165,6 @@ write_sf_parquet <- function(x, path) {
   arrow::write_parquet(out, path)
 }
 
-normalize_agencies_all <- function(x) {
-  if (!"agency" %in% names(x) && "LAW ENFORCEMENT AGENCY" %in% names(x)) {
-    x <- x |>
-      rename(agency = `LAW ENFORCEMENT AGENCY`)
-  }
-
-  if (!"support_type" %in% names(x) && "SUPPORT TYPE" %in% names(x)) {
-    x <- x |>
-      mutate(support_type = `SUPPORT TYPE`)
-  }
-
-  x
-}
-
 norm_state <- function(x) {
   x |>
     str_to_lower() |>
@@ -249,10 +172,8 @@ norm_state <- function(x) {
     str_squish()
 }
 
-# apostrophes are deleted (not spaced) so "Jackson's Gap" keys as
-# "jacksons gap"; St./Ste. are spelled out before the period is stripped so
-# "St. Ann" and "Saint Ann" share a key (ste must run first: \bst\b does not
-# match inside "ste")
+# apostrophes are deleted, not spaced, so "Jackson's Gap" keys as "jacksons
+# gap"; ste must expand before st, since \bst\b does not match inside "ste"
 norm_place <- function(x) {
   x |>
     stringi::stri_trans_general("Latin-ASCII") |>
@@ -269,11 +190,9 @@ norm_place <- function(x) {
     str_squish()
 }
 
-# county key for the ORI crosswalk and facility joins: LEAIC/HIFLD county
-# names drop the "Parish" suffix that the ICE sheets carry ("BEAUREGARD" vs
-# "Beauregard Parish"), so parish is stripped alongside norm_place's
-# county/city/... list; "#N/A"-style sentinels in the ICE sheets become NA
-# so they never key-match anything
+# the rosters drop the "Parish" suffix the ICE sheets carry ("BEAUREGARD" vs
+# "Beauregard Parish"), so strip it too; "#N/A" sentinels become NA so they
+# never key-match anything
 norm_ori_county <- function(x) {
   x <- if_else(
     str_to_lower(str_squish(x)) %in% c("#na", "#n/a", "na", "n/a", ""),
@@ -286,10 +205,10 @@ norm_ori_county <- function(x) {
     str_squish()
 }
 
-# LEAIC/NCIC names abbreviate heavily ("CONSTABLE PCT. 3", "NORTHERN YORK
-# CO. REGIONAL", "BESSEMER BORO"), so expand before keying; transliteration
-# runs first so curly-apostrophe possessives ("Sheriff’s") hit the
-# singularization, which makes sheriff's/sheriffs/sheriff share a key
+# LEAIC/NCIC names abbreviate heavily ("CONSTABLE PCT. 3", "BESSEMER BORO"),
+# so expand before keying; transliteration runs first so curly-apostrophe
+# possessives reach the singularization and sheriff's/sheriffs/sheriff share
+# a key
 expand_leaic_abbrev <- function(x) {
   x |>
     stringi::stri_trans_general("Latin-ASCII") |>
@@ -301,40 +220,36 @@ expand_leaic_abbrev <- function(x) {
     str_replace_all("\\bboro\\.?\\b", " borough ") |>
     str_replace_all("\\bhwy\\.?\\b", " highway ") |>
     str_replace_all("\\bdept\\.?\\b", " department ") |>
-    # "departement" is an ICE-sheet typo; "departmen" is what survives
-    # LEAIC's 50-character name truncation
+    # "departement" is an ICE-sheet typo; "departmen" is what survives LEAIC's
+    # 50-character name truncation
     str_replace_all("\\bdepartement\\b", " department ") |>
     str_replace_all("\\bdepartmen\\b", " department ") |>
     str_replace_all("\\bpd\\b", " police department ") |>
     str_replace_all("\\buniv\\.?\\b", " university ") |>
     str_replace_all("\\b(sheriff|constable|marshal)'?s?\\b", "\\1 ") |>
-    # fuse so norm_key does not strip the words separately: "Department of
-    # Public Safety" must not collapse to the bare place/state name, which
-    # is how "Arkansas Department of Public Safety" would otherwise key
-    # identically to "Arkansas City Police Department"
+    # fused so norm_key cannot strip the words separately and collapse
+    # "Arkansas Department of Public Safety" onto "Arkansas City PD"
     str_replace_all("\\bpublic safety\\b", " publicsafety ")
 }
 
-# agency key for the ORI crosswalk join: aggressive — drops the
-# jurisdiction-type and police/department filler words via norm_key
+# aggressive key: drops jurisdiction-type and police/department filler words
 norm_ori_agency <- function(x) {
   x |>
     expand_leaic_abbrev() |>
     norm_key()
 }
 
-# full-name key: same abbreviation expansion but keeps every word, so
-# "Melbourne Police Department" and "Melbourne Village Police Department"
-# stay distinct where norm_ori_agency collapses both to "melbourne"
+# keeps every word, so "Melbourne PD" and "Melbourne Village PD" stay distinct
+# where norm_ori_agency collapses both to "melbourne"
 norm_ori_fullname <- function(x) {
   x |>
     expand_leaic_abbrev() |>
     str_replace_all("[^a-z0-9]", "")
 }
 
-# parish -> county makes ICE's "Richland County" match Louisiana's "Richland
-# Parish"; "city" is deliberately untouched so Virginia independent cities
-# (Fairfax city) stay distinct from their namesake counties
+# parish -> county matches ICE's "Richland County" to Louisiana's "Richland
+# Parish"; "city" stays so Virginia independent cities remain distinct from
+# their namesake counties
 norm_county <- function(x) {
   x |>
     stringi::stri_trans_general("Latin-ASCII") |>

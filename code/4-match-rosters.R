@@ -1,21 +1,18 @@
 library(tidyverse)
-library(arrow)
 
 source("code/functions.R")
 
-# ORIs and LEAIC's FIPS codes are annotations on an agreement, not inputs to any
-# geometry match, so they are merged here at the end from the parquets written
-# by the 1-read-* scripts, then joined onto the shaped dataset by agreement_id
-# in 5-format-agreements-dataset.R.
+# ORIs and roster FIPS codes are annotations on an agreement, not inputs to any
+# geometry match, so they are resolved here at the end and written to their own
+# table for 5-format-agreements-dataset.R to join by agreement_id
 
-# every source matches the same way: exact state + county + agency name,
+# every roster matches the same way: exact state + county + agency name,
 # preferring an identical full name when the aggressive agency_key collides
-# (Mahanoy City PD vs Mahanoy Township PD both key as "mahanoy"), then falling
-# back to a state-wide name match when the sheet's county is missing, a typo, or
-# disagrees with the source — accepted only when the name identifies exactly one
-# ORI in the state
+# (Mahanoy City PD and Mahanoy Township PD both key as "mahanoy"), then falling
+# back to a statewide name match when the sheet's county is missing, a typo or
+# in disagreement — accepted only when the name identifies one ORI in the state
 match_agency_source <- function(
-  agencies,
+  agreements,
   lookup,
   ori_col,
   match_type_col,
@@ -26,8 +23,7 @@ match_agency_source <- function(
     c("state_key", "county_key", "agency_key", "source_fullname_key")
   )
 
-  exact <- agencies |>
-    select(-any_of(c(value_cols, match_type_col))) |>
+  exact <- agreements |>
     left_join(
       lookup,
       by = c("state_key", "county_key", "agency_key"),
@@ -80,8 +76,7 @@ match_agency_source <- function(
     arrange(agreement_id)
 }
 
-# one candidate row per key, so a join can only ever multiply on the keys we
-# deliberately match on
+# one candidate row per key, so a join can only multiply on the match keys
 dedupe_lookup <- function(x) {
   x |>
     group_by(state_key, county_key, agency_key, source_fullname_key) |>
@@ -89,52 +84,51 @@ dedupe_lookup <- function(x) {
     ungroup()
 }
 
-leaic_lookup <- arrow::read_parquet("data/leaic.parquet") |>
+leaic <- arrow::read_parquet("data/leaic.parquet")
+lear <- arrow::read_parquet("data/lear.parquet")
+crime <- arrow::read_parquet("data/crime.parquet")
+hifld <- arrow::read_parquet("data/hifld-law-enforcement.parquet")
+
+leaic_lookup <- leaic |>
   select(
     state_key,
     county_key,
     agency_key,
-    source_fullname_key = leaic_fullname_key,
-    ORI9,
-    FSTATE,
-    FCOUNTY,
-    FPLACE,
-    leaic_name,
-    leaic_agency_type,
-    leaic_subtype1,
-    leaic_subtype2,
-    leaic_comment
+    source_fullname_key = fullname_key,
+    leaic_ori = ori,
+    leaic_name = name,
+    leaic_county_fips = county_fips,
+    leaic_place_fips = place_fips
   ) |>
   dedupe_lookup()
 
-lear_lookup <- arrow::read_parquet("data/lear.parquet") |>
-  filter(!is.na(ORI9)) |>
+lear_lookup <- lear |>
   select(
     state_key,
     county_key,
     agency_key,
-    source_fullname_key = lear_fullname_key,
-    lear_ori = ORI9,
-    lear_name,
-    lear_county_fips
+    source_fullname_key = fullname_key,
+    lear_ori = ori,
+    lear_name = name,
+    lear_county_fips = county_fips
   ) |>
   dedupe_lookup()
 
-crime_lookup <- arrow::read_parquet("data/crime.parquet") |>
+crime_lookup <- crime |>
   select(
     state_key,
     county_key,
     agency_key,
-    source_fullname_key = crime_fullname_key,
-    crime_ori,
-    crime_agency_name,
-    crime_county_fips
+    source_fullname_key = fullname_key,
+    crime_ori = ori,
+    crime_name = name,
+    crime_county_fips = county_fips
   ) |>
   dedupe_lookup()
 
 # HIFLD contributes no ORI, but its station addresses give an independent
-# county per agency for the same cross-check the other sources feed
-hifld_lookup <- arrow::read_parquet("data/hifld_law_enforcement.parquet") |>
+# county per agency for the same cross-check the other rosters feed
+hifld_lookup <- hifld |>
   filter(!is.na(county_fips)) |>
   select(
     state_key,
@@ -145,21 +139,16 @@ hifld_lookup <- arrow::read_parquet("data/hifld_law_enforcement.parquet") |>
   ) |>
   dedupe_lookup()
 
-# a cleaned agency name that several real agencies share cannot be trusted to
-# identify a record, so the FPLACE confirmation in 5-format only applies when
-# every roster agrees the name identifies at most one agency statewide. Counted
-# from the raw rosters: the deduped lookups would collapse duplicate-ORI
-# records (Miami PD carries two ORIs in LEAIC) that must count as collisions
+# a cleaned name several real agencies share cannot identify a record, so
+# 5-format's place confirmation applies only where every roster agrees the name
+# names at most one agency statewide. Counted from the raw rosters because the
+# deduped lookups would collapse duplicate-ORI records (Miami PD carries two
+# ORIs in LEAIC) that must count as collisions
 roster_key_unique_tbl <- bind_rows(
-  arrow::read_parquet("data/leaic.parquet") |>
-    distinct(state_key, agency_key, id = ORI9),
-  arrow::read_parquet("data/lear.parquet") |>
-    filter(!is.na(ORI9)) |>
-    distinct(state_key, agency_key, id = ORI9),
-  arrow::read_parquet("data/crime.parquet") |>
-    distinct(state_key, agency_key, id = crime_ori),
-  arrow::read_parquet("data/hifld_law_enforcement.parquet") |>
-    distinct(state_key, agency_key, id = fullname_key),
+  leaic |> distinct(state_key, agency_key, id = ori),
+  lear |> distinct(state_key, agency_key, id = ori),
+  crime |> distinct(state_key, agency_key, id = ori),
+  hifld |> distinct(state_key, agency_key, id = fullname_key),
   .id = "roster"
 ) |>
   count(roster, state_key, agency_key) |>
@@ -173,16 +162,15 @@ manual_agency_ori <- read_csv(
   filter(!is.na(ORI9), ORI9 != "") |>
   distinct(state, county, agency, .keep_all = TRUE)
 
-agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
-  normalize_agencies_all() |>
-  select(-any_of("ori_source")) |>
+agreement_identifiers <- arrow::read_parquet("data/agreements.parquet") |>
+  select(agreement_id, state, county, agency) |>
   mutate(
     state_key = norm_state(state),
     county_key = norm_ori_county(county),
     agency_key = norm_ori_agency(agency),
     fullname_key = norm_ori_fullname(agency)
   ) |>
-  match_agency_source(leaic_lookup, "ORI9", "leaic_match_type") |>
+  match_agency_source(leaic_lookup, "leaic_ori", "leaic_match_type") |>
   match_agency_source(lear_lookup, "lear_ori", "lear_match_type") |>
   match_agency_source(
     crime_lookup,
@@ -190,40 +178,35 @@ agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
     "crime_match_type",
     fallback = FALSE
   ) |>
-  match_agency_source(
-    hifld_lookup,
-    "hifld_county_fips",
-    "hifld_match_type"
-  ) |>
-  select(-any_of("roster_key_unique")) |>
+  match_agency_source(hifld_lookup, "hifld_county_fips", "hifld_match_type") |>
   left_join(roster_key_unique_tbl, by = c("state_key", "agency_key")) |>
   mutate(
-    # a key absent from every roster has no collision evidence either way;
-    # treat it as not-unique so it can never certify a confirmation
+    # a key absent from every roster has no collision evidence either way, so
+    # treat it as not-unique and it can never certify a confirmation
     roster_key_unique = coalesce(roster_key_unique, FALSE)
   ) |>
   mutate(
-    # sources naming the same agency with different ORIs means at least one
-    # match is wrong. This runs after the geometry scripts have already written
-    # their own needs_review, so the flag is kept as its own column and OR'd
-    # back in by 5-format-agreements-dataset.R.
+    # rosters naming the same agency with different ORIs means at least one
+    # match is wrong; the flag rides as its own column because the geometry
+    # scripts have already written their needs_review, and 5-format ORs it in
     ori_conflict = coalesce(
-      (!is.na(ORI9) & !is.na(lear_ori) & ORI9 != lear_ori) |
-        (!is.na(ORI9) & !is.na(crime_ori) & ORI9 != crime_ori) |
+      (!is.na(leaic_ori) & !is.na(lear_ori) & leaic_ori != lear_ori) |
+        (!is.na(leaic_ori) & !is.na(crime_ori) & leaic_ori != crime_ori) |
         (!is.na(lear_ori) & !is.na(crime_ori) & lear_ori != crime_ori),
       FALSE
     ),
-    needs_review = needs_review | ori_conflict,
-    # the shipped value comes from the most recently maintained source:
-    # CDE roster (2025) over LEAR (2016) over LEAIC (2012)
+    # the shipped value comes from the most recently maintained roster:
+    # CDE (2025) over LEAR (2016) over LEAIC (2012)
     ori_source = case_when(
       !is.na(crime_ori) ~ "crime_lookup",
       !is.na(lear_ori) ~ "lear",
-      !is.na(ORI9) ~ "leaic",
+      !is.na(leaic_ori) ~ "leaic",
       TRUE ~ NA_character_
     ),
-    ORI9 = coalesce(crime_ori, lear_ori, ORI9)
+    ORI9 = coalesce(crime_ori, lear_ori, leaic_ori)
   ) |>
+  # a manual row with a county applies only to agreements naming it, while a
+  # county-less row applies to that agency statewide, so the specific one wins
   left_join(
     manual_agency_ori |>
       filter(!is.na(county), county != "") |>
@@ -246,13 +229,36 @@ agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
     ORI9 = coalesce(ORI9, manual_ori)
   ) |>
   select(
-    -state_key,
-    -county_key,
-    -agency_key,
-    -fullname_key,
-    -manual_ori_specific,
-    -manual_ori_general,
-    -manual_ori
+    agreement_id,
+    ORI9,
+    ori_source,
+    ori_conflict,
+    roster_key_unique,
+    leaic_ori,
+    leaic_name,
+    leaic_county_fips,
+    leaic_place_fips,
+    leaic_match_type,
+    lear_ori,
+    lear_name,
+    lear_county_fips,
+    lear_match_type,
+    crime_ori,
+    crime_name,
+    crime_county_fips,
+    crime_match_type,
+    hifld_county_fips,
+    hifld_match_type
   )
 
-arrow::write_parquet(agencies_all, "data/agencies_all.parquet")
+# downstream joins on agreement_id would silently fan out on a duplicate
+stopifnot(
+  "agreement-identifiers must carry exactly one row per agreement_id" = !anyDuplicated(
+    agreement_identifiers$agreement_id
+  )
+)
+
+arrow::write_parquet(
+  agreement_identifiers,
+  "data/agreement-identifiers.parquet"
+)

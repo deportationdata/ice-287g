@@ -1,10 +1,8 @@
 library(tidyverse)
-library(readxl)
-library(arrow)
 
 source("code/functions.R")
 
-state_xwalk <- arrow::read_parquet("data/state_xwalk.parquet")
+state_xwalk <- arrow::read_parquet("data/state-xwalk.parquet")
 county_name_fixes <- read_csv("inputs/county-name-fixes.csv", col_types = "ccc")
 
 agency_files <- list.files(
@@ -32,7 +30,7 @@ folder_time <- as.POSIXct(
 
 latest_agency_file <- agency_files[which.max(folder_time)]
 
-participating_agencies <- read_excel(latest_agency_file)
+participating_agencies <- readxl::read_excel(latest_agency_file)
 
 # the MOA / ADDENDUM urls live in embedded hyperlinks, not cell text
 moa_col <- LETTERS[match("MOA", names(participating_agencies))]
@@ -63,9 +61,10 @@ participating_agencies <- participating_agencies |>
   ) |>
   select(-excel_row)
 
-agencies_all <- participating_agencies |>
+agreements <- participating_agencies |>
   transmute(
     state = str_to_title(str_trim(STATE)),
+    # the sheet marks missing counties with #N/A-style text, not blanks
     county = str_to_title(str_trim(COUNTY)),
     county = if_else(
       str_to_lower(county) %in% c("#na", "#n/a", "na", "n/a"),
@@ -74,6 +73,8 @@ agencies_all <- participating_agencies |>
     ),
     agency = str_squish(`LAW ENFORCEMENT AGENCY`),
     signed = as.Date(SIGNED),
+    # "link pending" cells become the sentinel string "pending" (not NA);
+    # needs_review keys off this exact string
     moa = case_when(
       !is.na(moa_link) ~ moa_link,
       str_to_lower(str_trim(MOA)) == "link pending" ~ "pending",
@@ -84,11 +85,14 @@ agencies_all <- participating_agencies |>
     type_clean = str_to_lower(str_trim(TYPE)),
     support_clean = str_to_lower(str_trim(`SUPPORT TYPE`))
   ) |>
+  # the fixes file keys on cleaned values, so it must follow the title-casing
+  # and NA-sentinel pass above
   left_join(county_name_fixes, by = c("state", "county")) |>
   mutate(county = coalesce(county_fixed, county)) |>
   select(-county_fixed) |>
   mutate(
     state = snap_state_name(state, state_xwalk$state_full),
+    # too far from the xwalk's full name for the fuzzy snap to reach
     state = if_else(
       state == "Northern Mariana Islands",
       "Commonwealth of the Northern Mariana Islands",
@@ -106,6 +110,8 @@ agencies_all <- participating_agencies |>
       str_to_lower(agency),
       "university|college|campus|board of trustees"
     ),
+    # university outranks agency_level so a campus agency never falls through
+    # to the state/county/municipal classes
     geom_class = case_when(
       support_clean == "task force model" & is_university_agency ~
         "university_polygon",
@@ -120,6 +126,8 @@ agencies_all <- participating_agencies |>
         "facility_point",
       TRUE ~ "unknown"
     ),
+    # Tennessee constables hold county-wide jurisdiction; running after the
+    # case_when overrides whatever class it assigned
     geom_class = if_else(
       state == "Tennessee" &
         str_detect(str_to_lower(agency), "\\bconstables?\\b"),
@@ -137,20 +145,21 @@ agencies_all <- participating_agencies |>
       TRUE ~ FALSE
     )
   ) |>
+  # agreement_id is positional over the sheet's native row order and is the
+  # key every downstream artifact joins on
   mutate(agreement_id = row_number()) |>
   select(
     agreement_id,
     state,
     county,
     agency,
+    agency_level,
+    support_type,
     signed,
     moa,
     addendum,
-    support_type,
-    agency_level,
     geom_class,
-    needs_review,
-    support_clean
+    needs_review
   )
 
-arrow::write_parquet(agencies_all, "data/agencies_all.parquet")
+arrow::write_parquet(agreements, "data/agreements.parquet")

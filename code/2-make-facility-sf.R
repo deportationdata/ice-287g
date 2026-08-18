@@ -1,34 +1,19 @@
 library(tidyverse)
 library(sf)
+library(tigris)
 library(stringdist)
-library(arrow)
 
 source("code/functions.R")
 
 options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)
+YEAR <- 2024
 
-agencies_all <- arrow::read_parquet("data/agencies_all.parquet") |>
-  normalize_agencies_all()
-facilities_tbl <- read_sf_parquet("data/facilities_tbl.parquet") |>
-  st_drop_geometry()
-jails_prisons_tbl <- arrow::read_parquet(
-  "data/jails_prisons_tbl.parquet"
-)
-manual_points <- arrow::read_parquet("data/manual_points.parquet") |>
-  mutate(
-    across(
-      c(
-        county,
-        manual_address,
-        manual_city,
-        manual_county,
-        manual_zip,
-        manual_note
-      ),
-      as.character
-    )
-  )
+agreements <- arrow::read_parquet("data/agreements.parquet")
+facilities <- arrow::read_parquet("data/facilities.parquet")
+jails_prisons <- arrow::read_parquet("data/jails-prisons.parquet")
+manual_points <- arrow::read_parquet("data/manual-points.parquet")
+manual_polygons <- arrow::read_parquet("data/manual-polygons.parquet")
 
 manual_facility_review <- readr::read_csv(
   "inputs/manual-facility-review.csv",
@@ -69,10 +54,7 @@ manual_facility_exclusions <- manual_facility_review |>
   ) |>
   distinct(state_key, agency_key, facility_key)
 
-facility_sources_exact <- bind_rows(
-  facilities_tbl,
-  jails_prisons_tbl
-)
+facility_sources_exact <- bind_rows(facilities, jails_prisons)
 
 # 287(g) facility-model agencies -----------------------------------------
 
@@ -85,26 +67,18 @@ doc_pattern <- paste(
   sep = "|"
 )
 
-manual_non_facility_polygons <- arrow::read_parquet(
-  "data/manual_non_facility_polygons.parquet"
-)
-
-fac_287g <- agencies_all |>
+# agreements manually re-routed to a polygon layer leave the facility
+# matcher entirely
+fac_287g <- agreements |>
   filter(geom_class == "facility_point") |>
-  anti_join(
-    manual_non_facility_polygons,
-    by = c("agency", "state", "county")
-  ) |>
+  anti_join(manual_polygons, by = c("agency", "state", "county")) |>
   transmute(
+    agreement_id,
     state,
     county,
     agency,
-    support_type,
     agency_level,
-    agreement_id,
     needs_review,
-    support_clean,
-    signed,
     moa,
     addendum
   ) |>
@@ -124,6 +98,9 @@ fac_287g <- agencies_all |>
 
 # match detention facilities to facility datasets ------------------------
 
+# the dedup grain is (agreement, facility): a county agreement deliberately
+# fans out to every facility fitting the county pattern, and slice_head only
+# collapses duplicate source rows for the same facility
 county_pattern_exact_matches <- fac_287g |>
   filter(!is_doc_agency, is_county_exact_agency) |>
   inner_join(
@@ -140,7 +117,7 @@ county_pattern_exact_matches <- fac_287g |>
     match_type = "exact_county_pattern_all_facilities",
     match_score = 1.0
   ) |>
-  group_by(state, county, agency, support_clean, facility_key) |>
+  group_by(agreement_id, facility_key) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup()
@@ -167,7 +144,7 @@ municipal_pattern_exact_matches <- fac_287g |>
     match_type = "exact_municipal_pattern_facility",
     match_score = 1.0
   ) |>
-  group_by(state, county, agency, support_clean, facility_key) |>
+  group_by(agreement_id, facility_key) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup()
@@ -177,9 +154,9 @@ pattern_exact_matches <- bind_rows(
   municipal_pattern_exact_matches
 )
 
-# the jails census names each jail's operating agency, which recovers jails
-# whose facility name carries no county tie ("Sheriff Al Cannon Detention
-# Center" operated by the Charleston County Sheriff's Office)
+# the jails census names each jail's operating agency, recovering jails whose
+# own name carries no county tie ("Sheriff Al Cannon Detention Center" is
+# operated by the Charleston County Sheriff's Office)
 operator_exact_matches <- fac_287g |>
   filter(!is_doc_agency) |>
   mutate(agency_operator_key = norm_ori_agency(agency)) |>
@@ -193,8 +170,8 @@ operator_exact_matches <- fac_287g |>
   ) |>
   filter(
     operator_key == agency_operator_key,
-    # regional jails list several counties ("Berkeley County, Charleston
-    # County, Dorchester County"), so test membership rather than equality
+    # regional jails list several counties in one field, so test membership
+    # rather than equality
     is.na(county_key) |
       county_key == "" |
       is.na(facility_source_county_key) |
@@ -211,17 +188,20 @@ operator_exact_matches <- fac_287g |>
     match_type = "exact_operator_facility",
     match_score = 1.0
   ) |>
-  group_by(state, county, agency, support_clean, facility_key) |>
+  group_by(agreement_id, facility_key) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup() |>
   select(-agency_operator_key, -operator_key)
 
+# only agreements with no pattern or operator match enter this tier. The join
+# consumes the source's facility_key via facility_guess_key, so these rows
+# carry facility_key = NA and collapse into one group per agreement below
 facility_name_exact_matches <- fac_287g |>
   filter(!is_doc_agency) |>
   anti_join(
     bind_rows(pattern_exact_matches, operator_exact_matches),
-    by = c("state", "county", "agency", "support_clean")
+    by = "agreement_id"
   ) |>
   inner_join(
     facility_sources_exact,
@@ -240,7 +220,7 @@ facility_name_exact_matches <- fac_287g |>
     match_type = "exact_state_county_facility_name",
     match_score = 1.0
   ) |>
-  group_by(state, county, agency, support_clean) |>
+  group_by(agreement_id) |>
   arrange(source_rank) |>
   slice_head(n = 1) |>
   ungroup()
@@ -253,15 +233,11 @@ facility_exact_matches <- bind_rows(
 
 facility_unmatched_after_exact <- fac_287g |>
   filter(!is_doc_agency) |>
-  anti_join(
-    facility_exact_matches,
-    by = c("state", "county", "agency", "support_clean")
-  )
+  anti_join(facility_exact_matches, by = "agreement_id")
 
 # use fuzzy string matching on facility names within same county ---------
 
-facility_fuzzy_county <-
-  facility_unmatched_after_exact |>
+facility_fuzzy_county <- facility_unmatched_after_exact |>
   inner_join(
     facility_sources_exact,
     by = c("state_key", "county_key"),
@@ -280,7 +256,7 @@ facility_fuzzy_county <-
     manual_facility_exclusions,
     by = c("state_key", "agency_key", "facility_key")
   ) |>
-  group_by(state, county, agency, support_clean) |>
+  group_by(agreement_id) |>
   arrange(match_dist, source_rank) |>
   slice_head(n = 1) |>
   ungroup() |>
@@ -290,15 +266,13 @@ facility_fuzzy_county <-
     needs_review = TRUE
   )
 
-facility_unmatched_after_fuzzy_county <-
-  facility_unmatched_after_exact |>
-  anti_join(
-    facility_fuzzy_county,
-    by = c("state", "county", "agency", "support_clean")
-  )
+facility_unmatched_after_fuzzy_county <- facility_unmatched_after_exact |>
+  anti_join(facility_fuzzy_county, by = "agreement_id")
 
 # broader state-level fuzzy matching for remaining unmatched facilities ----
 
+# the statewide search compensates for its breadth with a stricter cutoff than
+# the within-county tier (0.15 vs 0.22)
 facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
   inner_join(
     facility_sources_exact,
@@ -318,7 +292,7 @@ facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
     manual_facility_exclusions,
     by = c("state_key", "agency_key", "facility_key")
   ) |>
-  group_by(state, county, agency, support_clean) |>
+  group_by(agreement_id) |>
   arrange(match_dist, source_rank) |>
   slice_head(n = 1) |>
   ungroup() |>
@@ -329,38 +303,6 @@ facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
   )
 
 # DOC: match to state-run prison facilities ------------------------------
-
-doc_prison_like_pattern <- paste(
-  "state prison",
-  "prison",
-  "penitentiary",
-  "correctional institution",
-  "correctional institute",
-  "correctional facility",
-  "correctional center",
-  "correctional complex",
-  "work camp",
-  "re-?entry",
-  "work release",
-  "work program",
-  "transition(al)? center",
-  "classification",
-  "diagnostic",
-  "treatment facility",
-  sep = "|"
-)
-
-doc_ambiguous_pattern <- paste(
-  "detention",
-  "juvenile",
-  "rehab",
-  "rehabilitation",
-  "treatment",
-  "public safety complex",
-  "justice center",
-  "law enforcement center",
-  sep = "|"
-)
 
 doc_local_jail_pattern <- paste(
   "county jail",
@@ -400,42 +342,27 @@ doc_candidates <- fac_287g |>
   ) |>
   mutate(
     facility_name_clean = str_to_lower(facility_name),
-    facility_source_type_clean = str_to_upper(str_squish(facility_source_type)),
-    facility_operator_clean = str_to_lower(str_squish(facility_operator_name)),
+    type_clean = str_to_upper(str_squish(type)),
+    operator_clean = str_to_lower(str_squish(facility_operator_name)),
     doc_manual_include = coalesce(doc_manual_include, FALSE),
     doc_is_state_prison_source = source == "hifld_prisons" &
-      facility_source_type_clean == "STATE",
+      type_clean == "STATE",
     doc_is_local_prison_source = source == "hifld_prisons" &
-      facility_source_type_clean %in% c("COUNTY", "LOCAL"),
+      type_clean %in% c("COUNTY", "LOCAL"),
     doc_is_federal_prison_source = source == "hifld_prisons" &
-      facility_source_type_clean == "FEDERAL",
+      type_clean == "FEDERAL",
     doc_is_uncertain_prison_source = source == "hifld_prisons" &
-      facility_source_type_clean %in% c("MULTI", "NOT AVAILABLE"),
+      type_clean %in% c("MULTI", "NOT AVAILABLE"),
     doc_is_jails_source = source == "jails_prisons",
-    doc_has_doc_operator = str_detect(
-      facility_operator_clean,
-      doc_pattern
-    ),
-    doc_has_prison_like_name = str_detect(
-      facility_name_clean,
-      doc_prison_like_pattern
-    ),
-    doc_has_ambiguous_name = str_detect(
-      facility_name_clean,
-      doc_ambiguous_pattern
-    ),
+    doc_has_doc_operator = str_detect(operator_clean, doc_pattern),
     doc_has_local_jail_name = str_detect(
       facility_name_clean,
       doc_local_jail_pattern
     ) |
       is_exact_county_pattern(facility_name, facility_county),
-    doc_is_correctional_candidate = source %in% c(
-      "hifld_prisons",
-      "jails_prisons"
-    ) |
-      doc_has_prison_like_name |
-      doc_has_ambiguous_name |
-      doc_has_local_jail_name,
+    # first match wins: a manual inclusion beats source typing, and the
+    # DOC-operator clause claims its jails-source subset before the local-jail
+    # exclusion sweeps the rest
     doc_match_tier = case_when(
       doc_manual_include ~
         "doc_manual_state_facility",
@@ -449,21 +376,6 @@ doc_candidates <- fac_287g |>
         doc_is_jails_source | doc_has_local_jail_name ~
         "doc_excluded_local_jail",
       TRUE ~ "doc_not_correctional_candidate"
-    ),
-    doc_research_reason = case_when(
-      doc_match_tier == "doc_manual_state_facility" ~
-        "manual review confirmed state DOC facility",
-      doc_match_tier == "doc_exact_state_prison_source" ~
-        "hifld_prisons type is STATE",
-      doc_match_tier == "doc_excluded_local_jail" ~
-        "source type indicates local/federal jail or non-DOC facility",
-      doc_match_tier == "doc_needs_research" & doc_is_uncertain_prison_source ~
-        "hifld_prisons type is MULTI or NOT AVAILABLE",
-      doc_match_tier == "doc_needs_research" & doc_is_jails_source ~
-        "ICPSR jails source has DOC-like operator name",
-      doc_match_tier == "doc_not_correctional_candidate" ~
-        "source type/name do not support DOC prison match",
-      TRUE ~ NA_character_
     )
   )
 
@@ -475,7 +387,7 @@ doc_matches <- doc_candidates |>
     )
   ) |>
   arrange(state, county, agency, source_rank) |>
-  group_by(state, county, agency, support_clean, facility_key) |>
+  group_by(agreement_id, facility_key) |>
   slice_head(n = 1) |>
   ungroup() |>
   mutate(
@@ -485,60 +397,40 @@ doc_matches <- doc_candidates |>
     needs_review = FALSE
   )
 
-doc_research <- doc_candidates |>
-  filter(doc_match_tier == "doc_needs_research") |>
-  arrange(state, agency, facility_name, source_rank) |>
-  group_by(state, agency, facility_key) |>
-  slice_head(n = 1) |>
-  ungroup()
-
-doc_excluded_local <- doc_candidates |>
-  filter(doc_match_tier == "doc_excluded_local_jail") |>
-  arrange(state, agency, facility_name, source_rank) |>
-  group_by(state, agency, facility_key) |>
-  slice_head(n = 1) |>
-  ungroup()
-
 # manual matches ---------------------------------------------------------
 
-manual_points_specific <-
-  manual_points |>
+manual_points_specific <- manual_points |>
   filter(!is.na(county), county != "")
 
-manual_points_general <-
-  manual_points |>
+manual_points_general <- manual_points |>
   filter(is.na(county) | county == "")
 
-manual_matches_specific <-
-  fac_287g |>
+manual_matches_specific <- fac_287g |>
   inner_join(
     manual_points_specific,
     by = c("agency", "state", "county")
   )
 
-manual_matches_general <-
-  fac_287g |>
+manual_matches_general <- fac_287g |>
   inner_join(
     manual_points_general |> select(-county),
     by = c("agency", "state")
   )
 
-manual_matches <-
-  bind_rows(
-    manual_matches_specific,
-    manual_matches_general
-  ) |>
-  distinct(state, county, agency, support_clean, .keep_all = TRUE) |>
+# county-specific rows are bound first, so distinct() keeps the specific
+# placement when an agreement matches both
+manual_matches <- bind_rows(
+  manual_matches_specific,
+  manual_matches_general
+) |>
+  distinct(agreement_id, .keep_all = TRUE) |>
   transmute(
+    agreement_id,
     state,
     county,
     agency,
-    support_type,
     agency_level,
-    agreement_id,
     needs_review = TRUE,
-    support_clean,
-    signed,
     moa,
     addendum,
     state_key,
@@ -549,28 +441,18 @@ manual_matches <-
     is_doc_agency,
     source = "manual",
     source_rank = 0L,
-    detention_facility_code = NA_character_,
-    facility_name = manual_facility_name,
-    facility_address = manual_address,
-    facility_city = manual_city,
-    facility_county = coalesce(manual_county, county),
-    facility_county_fips = NA_character_,
-    facility_state = coalesce(manual_state, state),
-    facility_state_fips = NA_character_,
-    facility_zip = manual_zip,
-    facility_address_full = str_squish(
-      paste(manual_address, manual_city, manual_state, manual_zip, sep = ", ")
-    ),
-    facility_latitude = latitude,
-    facility_longitude = longitude,
-    facility_field_office = NA_character_,
-    facility_key = norm_key(manual_facility_name),
+    facility_name,
+    facility_state = state,
+    latitude,
+    longitude,
+    facility_key = norm_key(facility_name),
     match_type = "manual",
-    match_score = 1,
-    manual_reason,
-    manual_note
+    match_score = 1
   )
 
+# no per-facility dedup here, unlike the automated tiers: every source row
+# carrying the confirmed facility key survives, and overrides can hit DOC
+# agencies too
 manual_facility_matches <- fac_287g |>
   inner_join(
     manual_facility_match_overrides,
@@ -593,46 +475,37 @@ manual_facility_matches <- fac_287g |>
 
 # combine all matches ----------------------------------------------------
 
-non_doc_matches <-
-  bind_rows(
-    facility_exact_matches,
-    facility_fuzzy_county,
-    facility_fuzzy_state
-  ) |>
-  group_by(state, county, agency, support_clean, facility_key) |>
+non_doc_matches <- bind_rows(
+  facility_exact_matches,
+  facility_fuzzy_county,
+  facility_fuzzy_state
+) |>
+  group_by(agreement_id, facility_key) |>
   arrange(source_rank, desc(match_score)) |>
   slice_head(n = 1) |>
   ungroup()
 
-auto_matches <-
-  bind_rows(
-    non_doc_matches,
-    doc_matches
-  )
+auto_matches <- bind_rows(non_doc_matches, doc_matches)
 
-facility_all_matches <-
-  bind_rows(
-    manual_matches,
-    manual_facility_matches,
-    auto_matches |>
-      anti_join(
-        bind_rows(
-          manual_matches,
-          manual_facility_matches
-        ),
-        by = c("state", "county", "agency", "support_clean")
-      )
-  )
+# manual placements fully preempt automated matches for an agreement
+facility_all_matches <- bind_rows(
+  manual_matches,
+  manual_facility_matches,
+  auto_matches |>
+    anti_join(
+      bind_rows(manual_matches, manual_facility_matches),
+      by = "agreement_id"
+    )
+)
 
 # HIFLD law-enforcement fallback -----------------------------------------
 
-# HIFLD law-enforcement locations are police stations rather than a jail
-# census (every row is NAICS "police protection", so no jail subset exists),
-# but a city jail or rural county jail usually operates out of the agency
-# building. They are a last resort for agreements every source above leaves
-# unmatched and never compete with the jail-census sources.
-hifld_law_enforcement_tbl <- arrow::read_parquet(
-  "data/hifld_law_enforcement.parquet"
+# these are police stations, not a jail census (every row is NAICS "police
+# protection"), but a city or rural county jail usually operates out of the
+# agency building. A last resort for agreements every source above leaves
+# unmatched, never competing with the jail-census sources.
+hifld_law_enforcement <- arrow::read_parquet(
+  "data/hifld-law-enforcement.parquet"
 ) |>
   transmute(
     source = "hifld_law_enforcement",
@@ -641,13 +514,12 @@ hifld_law_enforcement_tbl <- arrow::read_parquet(
     facility_address = address,
     facility_city = str_to_title(city),
     facility_county = county,
-    facility_county_fips = county_fips,
-    facility_state = state_full,
-    facility_state_fips = str_sub(county_fips, 1, 2),
+    county_fips,
+    facility_state = state,
+    state_fips = str_sub(county_fips, 1, 2),
     facility_zip = zip,
-    facility_latitude = latitude,
-    facility_longitude = longitude,
-    facility_source_type = type,
+    latitude,
+    longitude,
     state_key,
     facility_source_county_key = county_key,
     facility_key = norm_key(facility_name)
@@ -655,12 +527,9 @@ hifld_law_enforcement_tbl <- arrow::read_parquet(
 
 hifld_fallback_matches <- fac_287g |>
   filter(!is_doc_agency) |>
-  anti_join(
-    facility_all_matches,
-    by = c("state", "county", "agency", "support_clean")
-  ) |>
+  anti_join(facility_all_matches, by = "agreement_id") |>
   inner_join(
-    hifld_law_enforcement_tbl,
+    hifld_law_enforcement,
     by = "state_key",
     relationship = "many-to-many"
   ) |>
@@ -671,8 +540,8 @@ hifld_fallback_matches <- fac_287g |>
       is.na(facility_source_county_key) |
       county_key == facility_source_county_key,
     # a county-level agreement names its county on the sheet, so the station
-    # only has to fit the county pattern even when the signing agency does
-    # not (Pasco's jail is run by the Board of County Commissioners)
+    # need only fit the county pattern even when the signing agency does not
+    # (Pasco's jail is run by the Board of County Commissioners)
     ((is_county_exact_agency | agency_level == "county") &
       is_exact_county_pattern(facility_name, county)) |
       (is_municipal_exact_agency &
@@ -683,10 +552,9 @@ hifld_fallback_matches <- fac_287g |>
     manual_facility_exclusions,
     by = c("state_key", "agency_key", "facility_key")
   ) |>
-  # prefer a station named for the jail itself ("... / PASCO COUNTY JAIL"),
-  # then the shortest name, which is the main office rather than a
-  # substation ("... - DISTRICT 1")
-  group_by(state, county, agency, support_clean) |>
+  # prefer a station named for the jail itself, then the shortest name, which
+  # is the main office rather than a substation ("... - DISTRICT 1")
+  group_by(agreement_id) |>
   arrange(
     desc(str_detect(
       str_to_lower(facility_name),
@@ -713,21 +581,21 @@ facility_all_matches <- bind_rows(
 
 # facility point sf layer ------------------------------------------------
 
-facility_matched_sf <-
-  facility_all_matches |>
-  filter(!is.na(facility_latitude), !is.na(facility_longitude)) |>
+# a match without coordinates cannot be placed on the map, so it re-enters
+# below as unmatched
+facility_matched_sf <- facility_all_matches |>
+  filter(!is.na(latitude), !is.na(longitude)) |>
   st_as_sf(
-    coords = c("facility_longitude", "facility_latitude"),
+    coords = c("longitude", "latitude"),
     crs = 4326,
     remove = FALSE
   )
 
-# every agreement keeps a row: unmatched ones carry an empty geometry until
-# they can be resolved
+# every agreement keeps a row; unmatched ones carry an empty geometry
 facility_unmatched <- fac_287g |>
   anti_join(
     facility_matched_sf |> st_drop_geometry(),
-    by = c("state", "county", "agency", "support_clean")
+    by = "agreement_id"
   ) |>
   mutate(
     source = NA_character_,
@@ -744,19 +612,18 @@ facility_unmatched_sf <- st_sf(
   )
 )
 
-facility_agreements_sf <-
-  bind_rows(facility_matched_sf, facility_unmatched_sf)
+facility_sf <- bind_rows(facility_matched_sf, facility_unmatched_sf)
 
 # a geocoded facility whose source table carries no FIPS still sits in exactly
-# one county: fill state and county from the containing polygon
-county_containing <- facility_agreements_sf |>
+# one county, so fill from the containing polygon
+county_containing <- facility_sf |>
   filter(
     !st_is_empty(geometry),
-    is.na(facility_state_fips) | is.na(facility_county_fips)
+    is.na(state_fips) | is.na(county_fips)
   ) |>
   select(agreement_id, facility_name) |>
   st_join(
-    tigris::counties(cb = TRUE, year = 2024, class = "sf") |>
+    counties(cb = TRUE, year = YEAR, class = "sf") |>
       st_transform(4326) |>
       transmute(
         containing_state_fips = STATEFP,
@@ -765,25 +632,19 @@ county_containing <- facility_agreements_sf |>
       )
   ) |>
   st_drop_geometry() |>
+  # a point on a county boundary can hit two polygons under planar containment
   distinct(agreement_id, facility_name, .keep_all = TRUE)
 
-facility_agreements_sf <- facility_agreements_sf |>
+facility_sf <- facility_sf |>
   left_join(county_containing, by = c("agreement_id", "facility_name")) |>
   mutate(
-    facility_state_fips = coalesce(facility_state_fips, containing_state_fips),
-    facility_county_fips = coalesce(
-      facility_county_fips,
-      containing_county_fips
-    )
+    state_fips = coalesce(state_fips, containing_state_fips),
+    county_fips = coalesce(county_fips, containing_county_fips)
   ) |>
   select(-containing_state_fips, -containing_county_fips) |>
   mutate(
-    geom_class = "facility_point",
-    src = source,
-    state_fips = facility_state_fips,
-    county_fips = facility_county_fips,
-    place_fips = NA_character_,
-    geoid = county_fips,
+    # plain "manual" point placements are absent from this list so they always
+    # stay under review; manual_facility_match confirmations are accepted
     is_accepted_exact_match = match_type %in% c(
       "exact_state_county_facility_name",
       "exact_county_pattern_all_facilities",
@@ -793,76 +654,32 @@ facility_agreements_sf <- facility_agreements_sf |>
       "doc_exact_state_prison_source",
       "doc_manual_state_facility"
     ),
+    # "pending" is the sheet's placeholder for an unposted MOA link; those
+    # agreements and any carrying an addendum stay under review
     needs_review = needs_review |
-      (source != "facilities" & !is_accepted_exact_match) |
       !is_accepted_exact_match |
       !is.na(addendum) |
       moa == "pending"
   ) |>
   select(
-    state,
-    county,
-    agency,
-    support_type,
-    agency_level,
-    geom_class,
     agreement_id,
-    needs_review,
-    signed,
-    moa,
-    addendum,
-    facility_guess,
-    facility_name,
+    match_name = facility_name,
     detention_facility_code,
     source,
-    src,
+    source_id,
     match_type,
     match_score,
     facility_address,
     facility_city,
-    facility_county,
-    facility_county_fips,
     facility_state,
-    facility_state_fips,
     facility_zip,
-    facility_source_type,
-    facility_status,
     facility_operator_name,
-    facility_source_state_fips,
-    facility_source_county_fips,
-    facility_source_county,
-    facility_population,
-    facility_hold_72,
-    facility_is_regional,
-    facility_is_private,
-    facility_hold_lt_1yr,
-    facility_hold_1yr_plus,
-    facility_hold_lt_72,
-    facility_function_adult,
-    facility_function_work_release,
-    facility_function_reception,
-    facility_function_juvenile,
-    facility_function_medical,
-    facility_function_mental,
-    facility_function_alcohol,
-    facility_function_drug,
-    facility_secure_level,
-    facility_capacity,
-    facility_naics_code,
-    facility_naics_desc,
-    facility_source_url,
-    facility_source_date,
-    facility_website,
+    latitude,
+    longitude,
     state_fips,
     county_fips,
-    place_fips,
-    geoid,
-    facility_latitude,
-    facility_longitude,
+    needs_review,
     geometry
   )
 
-write_sf_parquet(
-  facility_agreements_sf,
-  "data/facility_agreements_sf.parquet"
-)
+write_sf_parquet(facility_sf, "data/facility-sf.parquet")

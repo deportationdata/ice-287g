@@ -1,83 +1,28 @@
 library(tidyverse)
 library(sf)
-library(arrow)
 
 source("code/functions.R")
 
-state_agreements_sf <- read_sf_parquet(
-  "data/state_agreements_sf.parquet"
+# list names become match_layer via .id; the exact literals drive the
+# required_fips() dispatch in 6-make-missing-identifiers.R, and the bind order
+# fixes row order in the combined file
+non_facility_layers <- list(
+  state = read_sf_parquet("data/state-sf.parquet"),
+  county = read_sf_parquet("data/county-sf.parquet"),
+  university = read_sf_parquet("data/university-sf.parquet"),
+  municipal = read_sf_parquet("data/municipal-sf.parquet"),
+  pa_constable = read_sf_parquet("data/pa-constable-sf.parquet")
 )
 
-county_agreements_sf <- read_sf_parquet(
-  "data/county_agreements_sf.parquet"
+# layer scripts write EPSG:4326; a mislabeled layer would silently shift every
+# geometry, so fail fast instead of re-transforming here
+stopifnot(
+  "every non-facility layer must arrive in EPSG:4326" = all(
+    map_lgl(non_facility_layers, \(layer) st_crs(layer) == st_crs(4326))
+  )
 )
 
-municipal_agreements_sf <- read_sf_parquet(
-  "data/municipal_agreements_sf.parquet"
-)
-
-pa_constable_agreements_sf <- read_sf_parquet(
-  "data/pa_constable_agreements_sf.parquet"
-)
-
-university_agreements_sf <- read_sf_parquet(
-  "data/university_agreements_sf.parquet"
-)
-
-# bind non-facility layers -----------------------------------------------
-
-non_facility_agreements_sf <- bind_rows(
-  state_agreements_sf |> st_transform(4326) |> mutate(match_layer = "state"),
-  county_agreements_sf |> st_transform(4326) |> mutate(match_layer = "county"),
-  university_agreements_sf |>
-    st_transform(4326) |>
-    mutate(match_layer = "university"),
-  municipal_agreements_sf |>
-    st_transform(4326) |>
-    mutate(match_layer = "municipal"),
-  pa_constable_agreements_sf |>
-    st_transform(4326) |>
-    mutate(match_layer = "pa_constable")
-) |>
+non_facility_sf <- bind_rows(non_facility_layers, .id = "match_layer") |>
   st_as_sf()
 
-non_facility_unmatched <- non_facility_agreements_sf[
-  is.na(st_geometry(non_facility_agreements_sf)) |
-    st_is_empty(st_geometry(non_facility_agreements_sf)),
-] |>
-  st_drop_geometry() |>
-  select(
-    match_layer,
-    state,
-    county,
-    agency,
-    geom_class,
-    needs_review,
-    any_of(c(
-      "state_match",
-      "county_match",
-      "city_guess",
-      "city_match",
-      "manual_match_layer",
-      "src",
-      "manual_reason",
-      "manual_note",
-      "university_name",
-      "university_guess",
-      "university_guess_final",
-      "municipality_guess",
-      "municipality_type_hint",
-      "pa_constable_jurisdiction",
-      "resolved_county",
-      "county_match_status",
-      "review_reason",
-      "vtd_name",
-      "ward_name",
-      "ward_vtd_qa_status"
-    ))
-  )
-
-write_sf_parquet(
-  non_facility_agreements_sf,
-  "data/non_facility_agreements_sf.parquet"
-)
+write_sf_parquet(non_facility_sf, "data/non-facility-sf.parquet")

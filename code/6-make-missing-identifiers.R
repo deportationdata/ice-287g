@@ -1,11 +1,9 @@
 library(tidyverse)
-library(arrow)
 
-# an agreement's geographic identifier comes from its matched geometry, so
-# what counts as "missing FIPS" depends on the layer: a state agreement needs
-# a state code, a county or facility agreement a county, a municipal or
-# constable agreement a municipality, a university a county. An agreement
-# whose features all lack the layer's code has no usable identifier.
+# a geographic identifier comes from the matched geometry, so what counts as
+# missing depends on the layer: a state agreement needs a state code, a county,
+# facility or university agreement a county, a municipal or constable agreement
+# a municipality
 required_fips <- function(match_layer, state_fips, county_fips, place_fips) {
   case_when(
     match_layer == "state" ~ state_fips,
@@ -15,6 +13,7 @@ required_fips <- function(match_layer, state_fips, county_fips, place_fips) {
   )
 }
 
+# plain arrow read: the geometry blob is dead weight for this audit
 agreement_fips <- arrow::read_parquet("data/all_agreements_sf.parquet") |>
   as.data.frame() |>
   mutate(
@@ -22,14 +21,28 @@ agreement_fips <- arrow::read_parquet("data/all_agreements_sf.parquet") |>
       required_fips(match_layer, state_fips, county_fips, place_fips)
     )
   ) |>
+  # an agreement may match in several layers, and counts as having FIPS if any
+  # one feature row carries the code its layer requires
   summarize(has_fips = any(has_fips), .by = agreement_id)
 
-agencies_missing_identifiers <-
-  arrow::read_parquet("data/agencies_all.parquet") |>
+agreements <- arrow::read_parquet("data/agreements.parquet")
+
+agreement_identifiers <- arrow::read_parquet(
+  "data/agreement-identifiers.parquet"
+)
+
+missing_identifiers <- agreements |>
+  left_join(
+    agreement_identifiers |> select(agreement_id, ORI9, ori_source),
+    by = "agreement_id"
+  ) |>
   left_join(agreement_fips, by = "agreement_id") |>
   mutate(
+    # whitespace-only ORIs count as missing
     has_ori = !is.na(ORI9) & str_squish(ORI9) != "",
+    # agreements with no feature rows count as missing, not dropped
     has_fips = coalesce(has_fips, FALSE),
+    # missing_both is tested first so the branches are mutually exclusive
     missing_identifier_type = case_when(
       !has_ori & !has_fips ~ "missing_both",
       !has_ori ~ "missing_ori",
@@ -37,10 +50,19 @@ agencies_missing_identifiers <-
       TRUE ~ "complete"
     )
   ) |>
+  # exceptions only: complete agreements are filtered out, not annotated
   filter(missing_identifier_type != "complete") |>
-  select(-has_ori, -has_fips)
+  select(
+    agreement_id,
+    state,
+    county,
+    agency,
+    agency_level,
+    support_type,
+    geom_class,
+    ORI9,
+    ori_source,
+    missing_identifier_type
+  )
 
-arrow::write_parquet(
-  agencies_missing_identifiers,
-  "data/agencies_missing_ori_or_fips.parquet"
-)
+arrow::write_parquet(missing_identifiers, "data/missing-identifiers.parquet")
