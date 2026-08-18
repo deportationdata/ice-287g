@@ -11,6 +11,7 @@ YEAR <- 2024
 
 agreements <- arrow::read_parquet("data/agreements.parquet")
 manual_polygons <- arrow::read_parquet("data/manual-polygons.parquet")
+manual_regional <- arrow::read_parquet("data/manual-regional.parquet")
 
 stopifnot(
   "agreements.parquet must carry the columns the municipal matcher uses" =
@@ -134,9 +135,93 @@ municipal_overrides <- manual_polygons |>
     manual_note = note
   )
 
+# regional departments ---------------------------------------------------
+
+# a regional department polices a set of municipalities, so it gets one row per
+# member and the agreement-level union covers the whole force. Members are
+# matched as county subdivisions, which is what a Pennsylvania borough or
+# township is, and the county disambiguates repeated names
+regional_members <- manual_regional |>
+  mutate(
+    state_key = norm_state(state),
+    place_key = norm_place(municipality),
+    member_county_key = norm_county(municipality_county),
+    # norm_place drops the type word, so Dover borough and Dover township share
+    # a key; the type written in the input file tells them apart
+    member_type = case_when(
+      str_detect(str_to_lower(municipality), "\\btownship\\b") ~ "township",
+      str_detect(str_to_lower(municipality), "\\bborough\\b") ~ "borough",
+      str_detect(str_to_lower(municipality), "\\bvillage\\b") ~ "village",
+      str_detect(str_to_lower(municipality), "\\btown\\b") ~ "town",
+      str_detect(str_to_lower(municipality), "\\bcity\\b") ~ "city",
+      TRUE ~ NA_character_
+    )
+  ) |>
+  left_join(
+    counties_ref |>
+      st_drop_geometry() |>
+      distinct(
+        state_key,
+        member_county_key = sheet_county_key,
+        member_county_fips = sheet_county_fips
+      ),
+    by = c("state_key", "member_county_key")
+  ) |>
+  left_join(
+    cousubs_sf |>
+      mutate(
+        state_key = norm_state(state),
+        place_key = norm_place(place_guess),
+        member_county_fips = paste0(statefp, countyfp),
+        member_type = cand_type
+      ) |>
+      select(
+        state_key,
+        place_key,
+        member_county_fips,
+        member_type,
+        match_name = place_guess,
+        statefp,
+        placefp,
+        geoid,
+        geometry
+      ),
+    by = c("state_key", "place_key", "member_county_fips", "member_type")
+  )
+
+# a member that fails to resolve would silently shrink a department's
+# jurisdiction, and one that matches twice would double-count it, so either
+# must stop the run rather than ship a wrong boundary
+stopifnot(
+  "every regional member municipality must match one county subdivision" =
+    all(!is.na(regional_members$geoid)) &&
+      nrow(regional_members) == nrow(manual_regional)
+)
+
+regional_sf <- agreements |>
+  inner_join(regional_members, by = c("agency", "state", "county")) |>
+  st_as_sf() |>
+  transmute(
+    agreement_id,
+    match_name,
+    match_type = "regional_member_municipality",
+    state_fips = statefp,
+    county_fips = member_county_fips,
+    place_fips = placefp,
+    geoid,
+    needs_review,
+    match_ambiguous = FALSE,
+    type_mismatch = FALSE,
+    manual_reason = "regional_department",
+    manual_note = note,
+    geometry
+  )
+
 # municipal agreements ---------------------------------------------------
 
 municipal_base <- agreements |>
+  # regional departments are matched above, one row per member municipality
+  anti_join(regional_members, by = c("agency", "state", "county")) |>
   left_join(
     municipal_overrides,
     by = c("agency", "state", "county")
@@ -334,6 +419,6 @@ municipal_sf <- municipal_sf |>
 
 # save municipal geometries ----------------------------------------------
 
-municipal_sf |>
+bind_rows(municipal_sf, st_transform(regional_sf, st_crs(municipal_sf))) |>
   st_transform(4326) |>
   write_sf_parquet("data/municipal-sf.parquet")

@@ -46,9 +46,15 @@ match_agency_source <- function(
     ) |>
     select(-source_fullname_key)
 
-  if (!fallback) {
-    return(arrange(exact, agreement_id))
-  }
+  # the full name discriminates where the aggressive key cannot: "Melbourne
+  # Police Department" is one agency statewide even though agency_key
+  # "melbourne" also covers Melbourne Village PD. Every roster gets this tier;
+  # only the looser agency_key tier below is opt-in
+  fullname_unique <- lookup |>
+    group_by(state_key, source_fullname_key) |>
+    filter(n_distinct(.data[[ori_col]]) == 1) |>
+    slice_head(n = 1) |>
+    ungroup()
 
   state_unique <- lookup |>
     group_by(state_key, agency_key) |>
@@ -56,9 +62,36 @@ match_agency_source <- function(
     slice_head(n = 1) |>
     ungroup()
 
+  by_fullname <- exact |>
+    filter(is.na(.data[[match_type_col]])) |>
+    select(-all_of(value_cols)) |>
+    left_join(
+      fullname_unique |>
+        select(state_key, source_fullname_key, all_of(value_cols)),
+      by = c("state_key", "fullname_key" = "source_fullname_key")
+    ) |>
+    mutate(
+      "{match_type_col}" := if_else(
+        is.na(.data[[ori_col]]),
+        NA_character_,
+        "unique_state_full_name"
+      )
+    )
+
+  if (!fallback) {
+    return(arrange(
+      bind_rows(
+        exact |> filter(!is.na(.data[[match_type_col]])),
+        by_fullname
+      ),
+      agreement_id
+    ))
+  }
+
   bind_rows(
     exact |> filter(!is.na(.data[[match_type_col]])),
-    exact |>
+    by_fullname |> filter(!is.na(.data[[match_type_col]])),
+    by_fullname |>
       filter(is.na(.data[[match_type_col]])) |>
       select(-all_of(value_cols)) |>
       left_join(
@@ -195,16 +228,30 @@ agreement_identifiers <- arrow::read_parquet("data/agreements.parquet") |>
         (!is.na(lear_ori) & !is.na(crime_ori) & lear_ori != crime_ori),
       FALSE
     ),
-    # the shipped value comes from the most recently maintained roster:
-    # CDE (2025) over LEAR (2016) over LEAIC (2012)
+    # how an ORI was found outranks which roster found it: an agency named in
+    # its own county identifies a record more surely than a statewide name
+    # search does, whatever the roster's vintage. Two Manor Township PDs sit in
+    # Pennsylvania, and only one is in the newest roster, so a statewide hit
+    # there must not displace another roster's exact county match. Rosters tie
+    # by recency: CDE (2025) over LEAR (2016) over LEAIC (2012)
+    crime_rank = match_tier_rank(crime_match_type),
+    lear_rank = match_tier_rank(lear_match_type),
+    leaic_rank = match_tier_rank(leaic_match_type),
+    best_rank = pmin(crime_rank, lear_rank, leaic_rank),
     ori_source = case_when(
-      !is.na(crime_ori) ~ "crime_lookup",
-      !is.na(lear_ori) ~ "lear",
-      !is.na(leaic_ori) ~ "leaic",
+      !is.na(crime_ori) & crime_rank == best_rank ~ "crime_lookup",
+      !is.na(lear_ori) & lear_rank == best_rank ~ "lear",
+      !is.na(leaic_ori) & leaic_rank == best_rank ~ "leaic",
       TRUE ~ NA_character_
     ),
-    ORI9 = coalesce(crime_ori, lear_ori, leaic_ori)
+    ORI9 = case_when(
+      ori_source == "crime_lookup" ~ crime_ori,
+      ori_source == "lear" ~ lear_ori,
+      ori_source == "leaic" ~ leaic_ori,
+      TRUE ~ NA_character_
+    )
   ) |>
+  select(-crime_rank, -lear_rank, -leaic_rank, -best_rank) |>
   # a manual row with a county applies only to agreements naming it, while a
   # county-less row applies to that agency statewide, so the specific one wins
   left_join(

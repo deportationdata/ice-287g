@@ -136,6 +136,18 @@ norm_key <- function(x) {
     str_squish()
 }
 
+# how surely a roster match identifies its record: an agency named in its own
+# county beats an exact full name found anywhere in the state, which in turn
+# beats the aggressive key that drops the jurisdiction words
+match_tier_rank <- function(match_type) {
+  case_when(
+    match_type == "exact_state_county_agency_name" ~ 1L,
+    match_type == "unique_state_full_name" ~ 2L,
+    match_type == "unique_state_agency_name" ~ 3L,
+    TRUE ~ 4L
+  )
+}
+
 read_sf_parquet <- function(path, crs = 4326) {
   if (requireNamespace("sfarrow", quietly = TRUE)) {
     return(sfarrow::st_read_parquet(path))
@@ -186,7 +198,13 @@ norm_place <- function(x) {
       "\\b(county|city|town|village|borough|township|municipality)\\b",
       " "
     ) |>
+    # any -borough left is part of the name itself, which the census spells out
+    # where agencies abbreviate it ("Middlesborough" vs "Middlesboro")
+    str_replace_all("borough\\b", "boro") |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
+    # a bare "n" stands in for "and" once the quoting is stripped
+    # (Cut "N" Shoot is the census place Cut and Shoot)
+    str_replace_all("\\bn\\b", "and") |>
     str_squish()
 }
 
@@ -248,8 +266,9 @@ norm_ori_fullname <- function(x) {
 }
 
 # parish -> county matches ICE's "Richland County" to Louisiana's "Richland
-# Parish"; "city" stays so Virginia independent cities remain distinct from
-# their namesake counties
+# Parish"; the type word is then dropped from both sides so a sheet county
+# written without it still matches ("Lampasas" vs "Lampasas County"). "city"
+# stays so Virginia independent cities remain distinct from namesake counties
 norm_county <- function(x) {
   x |>
     stringi::stri_trans_general("Latin-ASCII") |>
@@ -258,6 +277,7 @@ norm_county <- function(x) {
     str_replace_all("\\bste\\.?\\b", "sainte") |>
     str_replace_all("\\bst\\.?\\b", "saint") |>
     str_replace_all("\\bparish\\b", "county") |>
+    str_replace_all("\\bcounty\\b", " ") |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
     str_squish()
 }

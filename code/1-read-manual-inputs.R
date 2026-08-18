@@ -36,5 +36,25 @@ manual_polygons <- read_csv(
     note = manual_note
   )
 
+# a regional department polices several municipalities at once, which no single
+# boundary name can express, so its members are listed one per row with the
+# source that documents the membership
+manual_regional <- read_csv(
+  "inputs/manual-regional-municipalities.csv",
+  col_types = cols(.default = col_character())
+) |>
+  transmute(
+    agency,
+    state,
+    county,
+    municipality,
+    # members can sit in different counties, and the same township name recurs
+    # across them (Morris Township is in both Greene and Washington)
+    municipality_county,
+    source,
+    note
+  )
+
 arrow::write_parquet(manual_points, "data/manual-points.parquet")
 arrow::write_parquet(manual_polygons, "data/manual-polygons.parquet")
+arrow::write_parquet(manual_regional, "data/manual-regional.parquet")

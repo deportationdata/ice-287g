@@ -76,7 +76,8 @@ university_sf <- agreements |>
     university_key = norm_key(
       coalesce(manual_university_match, university_guess_fixed, university_guess)
     ),
-    state_key = norm_state(state)
+    state_key = norm_state(state),
+    sheet_county_key = norm_county(county)
   ) |>
   # single exact tier: normalized-key equality within state, no fuzzy fallback
   left_join(university_lookup, by = c("state_key", "university_key")) |>
@@ -181,6 +182,16 @@ university_sf <- university_sf |>
     by = "agreement_id"
   ) |>
   left_join(county_overlap, by = "agreement_id") |>
+  left_join(
+    counties(cb = TRUE, year = YEAR, class = "sf") |>
+      st_drop_geometry() |>
+      transmute(
+        state_key = norm_state(STATE_NAME),
+        sheet_county_key = norm_county(NAMELSAD),
+        sheet_county_fips = GEOID
+      ),
+    by = c("state_key", "sheet_county_key")
+  ) |>
   mutate(
     place_fips = overlap_place_fips,
     # the polygon-derived county wins; the address county is the fallback
@@ -192,7 +203,16 @@ university_sf <- university_sf |>
       university_county_fips != overlap_county_fips,
       FALSE
     ),
-    needs_review = needs_review | university_address_mismatch
+    # a system's police department covers every campus but the layer holds one
+    # polygon per campus, so a campus in a different county than the sheet
+    # names is only part of the jurisdiction
+    university_county_mismatch = coalesce(
+      sheet_county_fips != county_fips,
+      FALSE
+    ),
+    needs_review = needs_review |
+      university_address_mismatch |
+      university_county_mismatch
   ) |>
   select(
     agreement_id,
@@ -205,6 +225,7 @@ university_sf <- university_sf |>
     manual_reason,
     manual_note,
     university_address_mismatch,
+    university_county_mismatch,
     geometry
   )
 

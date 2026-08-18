@@ -126,11 +126,23 @@ agreements <- participating_agencies |>
         "facility_point",
       TRUE ~ "unknown"
     ),
-    # Tennessee constables hold county-wide jurisdiction; running after the
-    # case_when overrides whatever class it assigned
+    # Tennessee constable records identify county-level agencies, so they take
+    # the county polygon. Constables elsewhere are left to their own scope:
+    # Pennsylvania's wards and precincts come from PASDA and LRC boundaries in
+    # 2-make-pa-constable-sf.R, and Texas justice precincts are drawn by each
+    # commissioners court with no published boundary layer, so those agreements
+    # stay unmatched rather than being widened to a whole county
     geom_class = if_else(
       state == "Tennessee" &
         str_detect(str_to_lower(agency), "\\bconstables?\\b"),
+      "county_polygon",
+      geom_class
+    ),
+    # an agency that names its own county and is a sheriff or jail office is a
+    # county agency whatever the sheet's type column says
+    geom_class = if_else(
+      geom_class == "municipal_polygon" &
+        is_exact_county_pattern(agency, county),
       "county_polygon",
       geom_class
     )

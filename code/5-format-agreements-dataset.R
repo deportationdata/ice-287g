@@ -201,6 +201,7 @@ all_agreements_sf <-
     match_ambiguous,
     type_mismatch,
     university_address_mismatch,
+    university_county_mismatch,
     manual_reason,
     manual_note,
     needs_review,
