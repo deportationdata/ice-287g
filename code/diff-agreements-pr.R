@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
-# Diff two all_agreements_sf.parquet files (main vs PR) and emit a markdown
-# summary suitable for a PR comment. Geometry is dropped so location changes
-# surface through the non-geometry columns that feed the output.
+# Diff two all_agreements_sf.parquet files (main vs PR) into a markdown PR
+# comment. Geometry is dropped, so location changes surface only through the
+# non-geometry columns derived from it.
 
 suppressMessages({
   library(arrow)
@@ -47,9 +47,12 @@ make_key <- function(df) {
       "agency_level",
       "geom_class",
       "match_layer",
-      "facility_name",
+      "match_name",
       "facility_city",
       "facility_state",
+      # the two sides come from different branches, so key columns from either
+      # schema are accepted and intersect() drops whichever are absent
+      "facility_name",
       "county_match",
       "municipality_match",
       "university_name"

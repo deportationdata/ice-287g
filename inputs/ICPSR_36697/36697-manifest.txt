@@ -1,0 +1,51 @@
+File Manifest for ICPSR 36697
+
+United States Department of Justice. Office of Justice Programs. Bureau of
+Justice Statistics. Law Enforcement Agency Roster (LEAR), 2016. ICPSR36697-
+v1. Ann Arbor, MI: Inter-university Consortium for Political and Social
+Research [distributor], 2017-03-31. http://doi.org/10.3886/ICPSR36697.v1
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    36697-descriptioncitation.pdf       -       -         -       2017-06-27  -
+
+    36697-related_literature.txt        -       -         -       daily       -
+
+    36697-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 Law Enforcement Agency Roster (LEAR), 2016
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    36697-0001-Codebook.pdf             -       -         -       2017-04-05  c87ad9a6370b51fe913fb0b4d1298665
+
+    36697-0001-Data.dta                 -       15,810    34      2017-03-31  f24bae8eb91898ff04f9079af82da4e9
+
+    36697-0001-Data.rda                 -       15,810    34      2017-03-31  e2644d878e076414b0e0b2ec86dc0a8c
+
+    36697-0001-Data.sav                 -       15,810    34      2017-03-31  c95c29e923067288cb0f7f0e9b15d038
+
+    36697-0001-Data.stc                 -       15,810    34      2017-03-31  5c6f57fb8b6aed678bdb1d7c74b44bf6
+
+    36697-0001-Data.tsv                 -       15,810    34      2017-03-31  4f30c77cf708ee8a51ad462e28398427
+
+    36697-0001-Data.txt                 316     15,810    34      2017-03-31  495cc99a3aebaea05eddc8b81f65bff5
+
+    36697-0001-Setup.dct                -       -         -       2017-03-31  13ccf70d52ce454ff6b51682aa5f77ef
+
+    36697-0001-Setup.do                 -       -         -       2017-03-31  cbce458956e8d1f79aa71de687f7ece9
+
+    36697-0001-Setup.sas                -       -         -       2017-03-31  5388aae1b67c4908c8222d05839ddaf7
+
+    36697-0001-Setup.sps                -       -         -       2017-03-31  be76d40e40c6de4e5b6db346b9f71129
+
+    36697-0001-Supplemental_syntax.do   -       -         -       2017-03-31  cf9c838c1dfb23fba7f1008baf59c94e
+
+    36697-0001-Supplemental_syntax.sas  -       -         -       2017-03-31  1141392421b615d06234e34f6e70a36a
+

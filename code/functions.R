@@ -1,5 +1,124 @@
+xlsx_hyperlinks <- function(path, sheet = 1) {
+  files <- sprintf(
+    c("xl/worksheets/sheet%d.xml", "xl/worksheets/_rels/sheet%d.xml.rels"),
+    sheet
+  )
+  tmp <- tempfile()
+  unzip(path, files = files, exdir = tmp)
+
+  cells <- xml2::xml_find_all(
+    xml2::read_xml(file.path(tmp, files[1])),
+    ".//d1:hyperlink"
+  )
+  rels <- xml2::xml_find_all(
+    xml2::read_xml(file.path(tmp, files[2])),
+    ".//d1:Relationship"
+  )
+
+  tibble(
+    ref = xml2::xml_attr(cells, "ref"),
+    id = xml2::xml_attr(cells, "id")
+  ) |>
+    left_join(
+      tibble(
+        id = xml2::xml_attr(rels, "Id"),
+        url = xml2::xml_attr(rels, "Target")
+      ),
+      by = "id"
+    ) |>
+    transmute(
+      col = str_extract(ref, "^[A-Z]+"),
+      row = as.integer(str_extract(ref, "\\d+$")),
+      url
+    )
+}
+
+# MOA links are hand-pasted into the sheet: unwrap Outlook safelinks and repair
+# the paste typos seen so far to recover the real ice.gov url
+clean_moa_urls <- function(url) {
+  url |>
+    map_chr(\(u) {
+      if (str_detect(u, "safelinks\\.protection\\.outlook\\.com")) {
+        URLdecode(str_extract(u, "(?<=[?&]url=)[^&]+"))
+      } else {
+        u
+      }
+    }) |>
+    str_remove("^chrome-extension://[a-z]+/") |>
+    str_replace("^https?:/(?=[^/])", "https://") |>
+    str_replace("^http://", "https://")
+}
+
+snap_state_name <- function(state, valid_states, max_dist = 2) {
+  key <- norm_state(state)
+  valid_key <- norm_state(valid_states)
+  vapply(
+    seq_along(key),
+    function(i) {
+      if (is.na(key[i]) || key[i] %in% valid_key) {
+        return(state[i])
+      }
+      d <- stringdist::stringdist(key[i], valid_key, method = "osa")
+      hits <- which(d == min(d))
+      if (min(d) <= max_dist && length(hits) == 1) {
+        valid_states[hits]
+      } else {
+        state[i]
+      }
+    },
+    character(1)
+  )
+}
+
+read_parquet_retry <- function(path, times = 4, timeout_seconds = 300) {
+  old_timeout <- getOption("timeout")
+  options(timeout = max(old_timeout, timeout_seconds))
+  on.exit(options(timeout = old_timeout), add = TRUE)
+
+  last_error <- NULL
+
+  for (attempt in seq_len(times)) {
+    result <- tryCatch(
+      arrow::read_parquet(path),
+      error = function(e) {
+        last_error <<- e
+        NULL
+      }
+    )
+
+    if (!is.null(result)) {
+      return(result)
+    }
+
+    if (attempt < times) {
+      pause <- min(10 * attempt, 60)
+      message(
+        "Failed to read parquet on attempt ",
+        attempt,
+        " of ",
+        times,
+        "; retrying in ",
+        pause,
+        " seconds: ",
+        conditionMessage(last_error)
+      )
+      Sys.sleep(pause)
+    }
+  }
+
+  stop(
+    "Failed to read parquet after ",
+    times,
+    " attempts: ",
+    conditionMessage(last_error),
+    call. = FALSE
+  )
+}
+
 norm_key <- function(x) {
   x |>
+    # accents, tildes and curly apostrophes fold to ASCII
+    stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
     str_replace_all("&", " and ") |>
     str_replace_all("\\bst\\.?\\b", "saint") |>
@@ -15,6 +134,18 @@ norm_key <- function(x) {
     str_replace_all("\\b(of|the|and|for)\\b", " ") |>
     str_replace_all("[^a-z0-9]", "") |>
     str_squish()
+}
+
+# how surely a roster match identifies its record: an agency named in its own
+# county beats an exact full name found anywhere in the state, which in turn
+# beats the aggressive key that drops the jurisdiction words
+match_tier_rank <- function(match_type) {
+  case_when(
+    match_type == "exact_state_county_agency_name" ~ 1L,
+    match_type == "unique_state_full_name" ~ 2L,
+    match_type == "unique_state_agency_name" ~ 3L,
+    TRUE ~ 4L
+  )
 }
 
 read_sf_parquet <- function(path, crs = 4326) {
@@ -46,37 +177,6 @@ write_sf_parquet <- function(x, path) {
   arrow::write_parquet(out, path)
 }
 
-normalize_agencies_all <- function(x) {
-  if (!"agency" %in% names(x) && "LAW ENFORCEMENT AGENCY" %in% names(x)) {
-    x <- x |>
-      rename(agency = `LAW ENFORCEMENT AGENCY`)
-  }
-
-  if (!"support_type" %in% names(x) && "SUPPORT TYPE" %in% names(x)) {
-    x <- x |>
-      mutate(support_type = `SUPPORT TYPE`)
-  }
-
-  for (col in c(
-    "ORI9",
-    "FSTATE",
-    "FCOUNTY",
-    "FPLACE",
-    "leaic_name",
-    "leaic_match_type",
-    "crime_ori",
-    "crime_agency_name",
-    "crime_match_type",
-    "ori_source"
-  )) {
-    if (!col %in% names(x)) {
-      x[[col]] <- NA
-    }
-  }
-
-  x
-}
-
 norm_state <- function(x) {
   x |>
     str_to_lower() |>
@@ -84,33 +184,111 @@ norm_state <- function(x) {
     str_squish()
 }
 
+# apostrophes are deleted, not spaced, so "Jackson's Gap" keys as "jacksons
+# gap"; ste must expand before st, since \bst\b does not match inside "ste"
 norm_place <- function(x) {
   x |>
+    stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
+    str_replace_all("'", "") |>
+    str_replace_all("\\bste\\.?\\b", "sainte") |>
+    str_replace_all("\\bst\\.?\\b", "saint") |>
+    str_replace_all("\\btwp\\.?\\b", "township") |>
     str_replace_all(
       "\\b(county|city|town|village|borough|township|municipality)\\b",
       " "
     ) |>
+    # any -borough left is part of the name itself, which the census spells out
+    # where agencies abbreviate it ("Middlesborough" vs "Middlesboro")
+    str_replace_all("borough\\b", "boro") |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
-    str_squish() |>
-    str_replace_all("\\s+", " ")
+    # a bare "n" stands in for "and" once the quoting is stripped
+    # (Cut "N" Shoot is the census place Cut and Shoot)
+    str_replace_all("\\bn\\b", "and") |>
+    str_squish()
 }
 
+# the rosters drop the "Parish" suffix the ICE sheets carry ("BEAUREGARD" vs
+# "Beauregard Parish"), so strip it too; "#N/A" sentinels become NA so they
+# never key-match anything
+norm_ori_county <- function(x) {
+  x <- if_else(
+    str_to_lower(str_squish(x)) %in% c("#na", "#n/a", "na", "n/a", ""),
+    NA_character_,
+    x
+  )
+  x |>
+    norm_place() |>
+    str_replace_all("\\bparish\\b", " ") |>
+    str_squish()
+}
+
+# LEAIC/NCIC names abbreviate heavily ("CONSTABLE PCT. 3", "BESSEMER BORO"),
+# so expand before keying; transliteration runs first so curly-apostrophe
+# possessives reach the singularization and sheriff's/sheriffs/sheriff share
+# a key
+expand_leaic_abbrev <- function(x) {
+  x |>
+    stringi::stri_trans_general("Latin-ASCII") |>
+    str_to_lower() |>
+    str_replace_all("\\bpct\\.?\\s*", " precinct ") |>
+    str_replace_all("\\bco\\.?\\b", " county ") |>
+    str_replace_all("\\bregl\\.?\\b", " regional ") |>
+    str_replace_all("\\btwp\\.?\\b", " township ") |>
+    str_replace_all("\\bboro\\.?\\b", " borough ") |>
+    str_replace_all("\\bhwy\\.?\\b", " highway ") |>
+    str_replace_all("\\bdept\\.?\\b", " department ") |>
+    # "departement" is an ICE-sheet typo; "departmen" is what survives LEAIC's
+    # 50-character name truncation
+    str_replace_all("\\bdepartement\\b", " department ") |>
+    str_replace_all("\\bdepartmen\\b", " department ") |>
+    str_replace_all("\\bpd\\b", " police department ") |>
+    str_replace_all("\\buniv\\.?\\b", " university ") |>
+    str_replace_all("\\b(sheriff|constable|marshal)'?s?\\b", "\\1 ") |>
+    # fused so norm_key cannot strip the words separately and collapse
+    # "Arkansas Department of Public Safety" onto "Arkansas City PD"
+    str_replace_all("\\bpublic safety\\b", " publicsafety ")
+}
+
+# aggressive key: drops jurisdiction-type and police/department filler words
+norm_ori_agency <- function(x) {
+  x |>
+    expand_leaic_abbrev() |>
+    norm_key()
+}
+
+# keeps every word, so "Melbourne PD" and "Melbourne Village PD" stay distinct
+# where norm_ori_agency collapses both to "melbourne"
+norm_ori_fullname <- function(x) {
+  x |>
+    expand_leaic_abbrev() |>
+    str_replace_all("[^a-z0-9]", "")
+}
+
+# parish -> county matches ICE's "Richland County" to Louisiana's "Richland
+# Parish"; the type word is then dropped from both sides so a sheet county
+# written without it still matches ("Lampasas" vs "Lampasas County"). "city"
+# stays so Virginia independent cities remain distinct from namesake counties
 norm_county <- function(x) {
   x |>
+    stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
+    str_replace_all("'", "") |>
+    str_replace_all("\\bste\\.?\\b", "sainte") |>
+    str_replace_all("\\bst\\.?\\b", "saint") |>
+    str_replace_all("\\bparish\\b", "county") |>
+    str_replace_all("\\bcounty\\b", " ") |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
-    str_squish() |>
-    str_replace_all("\\s+", " ")
+    str_squish()
 }
 
 extract_city_guess <- function(x) {
   s <- str_squish(x)
-  s <- str_remove(s, regex("(?i)^\\s*city\\s+of\\s+"))
+  s <- str_remove(s, regex("(?i)^\\s*(city|town|village)\\s+of\\s+"))
   s <- str_remove(
     s,
     regex(
-      "(?i)\\b(police|pd|police dept\\.?|police department|department|dept|public safety|office)\\b.*$"
+      "(?i)\\b(police|pd|police dept\\.?|police department|department|dept|public safety|office|marshal['’]?s?)\\b.*$"
     )
   )
   s <- str_squish(s)

@@ -1,20 +1,29 @@
 #!/bin/bash
 set -e
 
-Rscript code/1-process-state-xwalk.R
-Rscript code/1-process-agencies.R
-Rscript code/1-process-agency-leaic-ori.R
-Rscript code/1-process-agency-crime-ori.R
-Rscript code/1-process-agencies-missing-identifiers.R
-Rscript code/1-process-hifld-tables.R
-Rscript code/1-process-manual-inputs.R
-Rscript code/1-process-facility-tables.R
-Rscript code/1-process-university-boundaries.R
+# read sources into normalized parquets under data/
+Rscript code/1-read-state-xwalk.R
+Rscript code/1-read-leaic.R
+Rscript code/1-read-lear.R
+Rscript code/1-read-crime.R
+Rscript code/1-read-agreements.R
+Rscript code/1-read-hifld-law-enforcement.R
+Rscript code/1-read-jails-prisons.R
+Rscript code/1-read-manual-inputs.R
+Rscript code/1-read-facilities.R
+Rscript code/1-read-university-boundaries.R
+
+# match agreements to geometry, one script per geometry class. these read only
+# the 1-read outputs and never each other, so they can run in any order
 Rscript code/2-make-state-sf.R
-Rscript code/3-make-county-sf.R
-Rscript code/4-make-municipal-sf.R
-Rscript code/4a-make-pa-constable-sf.R
-Rscript code/5-make-university-sf.R
-Rscript code/6-make-facility-sf.R
-Rscript code/7-make-non-facility-sf.R
-Rscript code/8-format-agreements-dataset.R
+Rscript code/2-make-county-sf.R
+Rscript code/2-make-municipal-sf.R
+Rscript code/2-make-pa-constable-sf.R
+Rscript code/2-make-university-sf.R
+Rscript code/2-make-facility-sf.R
+
+# bind the non-facility layers, annotate with roster identifiers, format
+Rscript code/3-make-non-facility-sf.R
+Rscript code/4-match-rosters.R
+Rscript code/5-format-agreements-dataset.R
+Rscript code/6-make-missing-identifiers.R
