@@ -26,6 +26,8 @@ jobs:
           git checkout -- .
           mkdir -p /tmp/old-287g
           Rscript --vanilla -e '
+            suppressPackageStartupMessages(library(digest))
+
             snapshot <- function(base_path, out_path) {
               if (!dir.exists(base_path)) {
                 saveRDS(data.frame(
@@ -39,10 +41,15 @@ jobs:
               files <- list.files(base_path, recursive = TRUE, full.names = TRUE)
               files <- files[!file.info(files)$isdir]
               rel_paths <- substring(files, nchar(base_path) + 2)
+              file_hashes <- vapply(
+                files,
+                function(path) digest::digest(file = path, algo = "sha256"),
+                character(1)
+              )
 
               saveRDS(data.frame(
                 rel_path = rel_paths,
-                file_hash = unname(tools::md5sum(files)),
+                file_hash = unname(file_hashes),
                 stringsAsFactors = FALSE
               ), out_path)
             }
