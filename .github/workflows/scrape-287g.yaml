@@ -60,18 +60,23 @@ jobs:
                 "digest",
                 "dplyr",
                 "fs",
+                "haven",
                 "httr",
+                "httr2",
                 "openxlsx",
                 "readr",
                 "readxl",
                 "rvest",
                 "sf",
                 "sfarrow",
+                "stringi",
                 "stringdist",
                 "stringr",
+                "tidygeocoder",
                 "tigris",
                 "tidyr",
-                "tidyverse"
+                "tidyverse",
+                "xml2"
               ),
               repos = "https://cloud.r-project.org"
             )
