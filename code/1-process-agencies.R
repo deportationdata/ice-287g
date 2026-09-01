@@ -7,7 +7,7 @@ source("code/functions.R")
 
 agency_files <- list.files(
   "sheets",
-  pattern = "^participatingAgencies.*\\.xlsx$",
+  pattern = "^[p|P]articipatingAgencies.*\\.xlsx$",
   recursive = TRUE,
   full.names = TRUE
 )
