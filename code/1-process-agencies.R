@@ -101,6 +101,11 @@ agencies_all <- participating_agencies |>
       state == "Northern Mariana Islands",
       "Commonwealth of the Northern Mariana Islands",
       state
+    ),
+    county = if_else(
+      county == "#Na",
+      NA_character_,
+      county
     )
   ) |>
   mutate(
