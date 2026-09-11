@@ -7,7 +7,7 @@ source("code/functions.R")
 
 agency_files <- list.files(
   "sheets",
-  pattern = "^participatingAgencies.*\\.xlsx$",
+  pattern = "^[p|P]articipatingAgencies.*\\.xlsx$",
   recursive = TRUE,
   full.names = TRUE
 )
@@ -101,6 +101,11 @@ agencies_all <- participating_agencies |>
       state == "Northern Mariana Islands",
       "Commonwealth of the Northern Mariana Islands",
       state
+    ),
+    county = if_else(
+      county == "#Na",
+      NA_character_,
+      county
     )
   ) |>
   mutate(
