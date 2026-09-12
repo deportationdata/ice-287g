@@ -50,3 +50,6 @@ rsconnect/
 
 # Ignore locally-generated scrape outputs
 .vscode/
+
+.DS_Store
+**/.DS_Store
