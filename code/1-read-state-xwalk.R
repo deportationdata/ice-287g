@@ -1,7 +1,7 @@
+# State abbreviation, name and FIPS crosswalk -> data/state-xwalk.parquet
 library(tidyverse)
 
-# FIPS codes are positionally aligned to R's alphabetical state.abb order;
-# there is no key-based check
+# state_fips is positionally aligned to state.abb order, with no key-based check
 state_xwalk <- tibble(
   state_abbr = state.abb,
   state_full = state.name,
@@ -14,9 +14,7 @@ state_xwalk <- tibble(
   )
 ) |>
   bind_rows(
-    # "District Of Columbia" keeps the capital Of so it matches str_to_title()
-    # of the sheet's state column; MP's full name is the target 1-read-
-    # agreements.R remaps to, the sheet spelling being too far for a fuzzy snap
+    # other scripts match these spellings verbatim; do not "fix" them
     tibble(
       state_abbr = c("DC", "AS", "GU", "MP", "PR", "VI"),
       state_full = c(

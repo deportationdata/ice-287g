@@ -1,3 +1,4 @@
+# Campus boundary polygons -> data/university-boundaries.parquet
 library(tidyverse)
 library(sf)
 
@@ -5,8 +6,6 @@ source("code/functions.R")
 
 sf_use_s2(FALSE)
 
-# campus polygons arrive in ESRI Web Mercator; 4326 at write means consumers
-# need no CRS override
 university_boundaries <- st_read(
   "inputs/colleges-and-universities-campuses/CollegeUniversityCampuses.shp"
 ) |>

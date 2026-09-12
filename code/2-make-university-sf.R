@@ -1,3 +1,5 @@
+# Matches campus-police agreements to university boundary polygons -> data/university-sf.parquet
+
 library(tidyverse)
 library(sf)
 library(tigris)
@@ -14,8 +16,6 @@ manual_polygons <- arrow::read_parquet("data/manual-polygons.parquet")
 state_xwalk <- arrow::read_parquet("data/state-xwalk.parquet")
 university_boundaries <- read_sf_parquet("data/university-boundaries.parquet")
 
-# university boundary lookup ---------------------------------------------
-
 university_lookup <- university_boundaries |>
   left_join(state_xwalk, by = c("state" = "state_abbr")) |>
   transmute(
@@ -23,13 +23,10 @@ university_lookup <- university_boundaries |>
     university_key = norm_key(name),
     state_key = norm_state(state_full),
     state_fips,
-    # campus county per the address fields, an independent check against the
-    # county the polygon actually sits in
+    # county from the address fields, independent of the one the polygon sits in
     university_county_fips = county_fips,
     geometry
   )
-
-# manual name overrides --------------------------------------------------
 
 university_name_overrides <-
   tribble(
@@ -37,8 +34,6 @@ university_name_overrides <-
     "Florida A&M University", "Florida Agricultural And Mechanical University",
     "Tallahassee State College", "Tallahassee Community College"
   )
-
-# manual university overrides -------------------------------------------
 
 university_overrides <- manual_polygons |>
   select(
@@ -51,13 +46,9 @@ university_overrides <- manual_polygons |>
     manual_note = note
   )
 
-# university agreements --------------------------------------------------
-
 university_sf <- agreements |>
   left_join(university_overrides, by = c("agency", "state", "county")) |>
-  # an agreement enters if manually routed here, or if it is classified as a
-  # campus and carries no override; the NA == comparison is what keeps
-  # non-overridden rows out of the first clause
+  # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "university" |
       (geom_class == "university_polygon" & is.na(manual_match_layer))
@@ -72,14 +63,12 @@ university_sf <- agreements |>
   ) |>
   left_join(university_name_overrides, by = "university_guess") |>
   mutate(
-    # manual override beats the hardcoded name fix beats the raw guess
     university_key = norm_key(
       coalesce(manual_university_match, university_guess_fixed, university_guess)
     ),
     state_key = norm_state(state),
     sheet_county_key = norm_county(county)
   ) |>
-  # single exact tier: normalized-key equality within state, no fuzzy fallback
   left_join(university_lookup, by = c("state_key", "university_key")) |>
   st_as_sf() |>
   mutate(
@@ -92,17 +81,14 @@ university_sf <- agreements |>
     needs_review = needs_review | is.na(match_name) | st_is_empty(geometry)
   )
 
-# the campus layer holds duplicate keys for multi-campus systems, which is fine
-# unless an agreement actually matches one
+# the campus layer holds duplicate keys for multi-campus systems
 stopifnot(
   "a duplicated campus key fanned an agreement out into multiple rows" = !anyDuplicated(
     university_sf$agreement_id
   )
 )
 
-# a campus is not a census unit, so its municipality comes from the place or
-# county-subdivision polygon with the largest overlap; a campus outside any
-# municipality legitimately stays NA
+# a campus is not a census unit, so place comes from the largest overlap and stays NA outside any
 places_ref <- places(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(overlap_place_fips = PLACEFP, geometry)
 
@@ -111,9 +97,6 @@ matched_campuses <- university_sf |>
   select(agreement_id) |>
   st_transform(3857)
 
-# Web Mercator areas are latitude-distorted but consistent among one campus's
-# competing overlaps, which is all the ranking needs; ties break on ascending
-# FIPS for determinism
 place_overlap <- matched_campuses |>
   st_intersection(places_ref |> st_transform(3857)) |>
   mutate(overlap_area = st_area(geometry)) |>
@@ -123,9 +106,7 @@ place_overlap <- matched_campuses |>
   slice_head(n = 1) |>
   ungroup()
 
-# campuses intersecting no incorporated place fall back to the county
-# subdivision (townships and New England towns are municipalities too); one
-# barely clipping a place still gets that place, never a cousub
+# campuses in no incorporated place fall back to cousubs (townships and New England towns are municipalities too)
 unplaced_campuses <- matched_campuses |>
   anti_join(place_overlap, by = "agreement_id")
 
@@ -137,7 +118,6 @@ cousub_overlap <- if (nrow(unplaced_campuses) > 0) {
     distinct(state_fips) |>
     pull(state_fips)
 
-  # cousubs download per state, only for states with an unplaced campus
   map(
     unplaced_states,
     \(fp) county_subdivisions(state = fp, cb = TRUE, year = YEAR, class = "sf")
@@ -157,8 +137,6 @@ cousub_overlap <- if (nrow(unplaced_campuses) > 0) {
   tibble(agreement_id = integer(), overlap_place_fips = character())
 }
 
-# the address fields give a county independent of the polygon's, so
-# disagreement flags a suspect campus match
 county_overlap <- matched_campuses |>
   st_intersection(
     counties(cb = TRUE, year = YEAR, class = "sf") |>
@@ -194,18 +172,13 @@ university_sf <- university_sf |>
   ) |>
   mutate(
     place_fips = overlap_place_fips,
-    # the polygon-derived county wins; the address county is the fallback
     county_fips = coalesce(overlap_county_fips, county_fips),
-    # only the county is compared: the address city is postal geography and
-    # routinely disagrees with the census place (FIU's address is "Miami", the
-    # campus is in University Park CDP)
+    # city is never compared: the postal city routinely differs from the census place
     university_address_mismatch = coalesce(
       university_county_fips != overlap_county_fips,
       FALSE
     ),
-    # a system's police department covers every campus but the layer holds one
-    # polygon per campus, so a campus in a different county than the sheet
-    # names is only part of the jurisdiction
+    # one polygon per campus, so a system PD's other campuses can sit in other counties
     university_county_mismatch = coalesce(
       sheet_county_fips != county_fips,
       FALSE
@@ -228,7 +201,5 @@ university_sf <- university_sf |>
     university_county_mismatch,
     geometry
   )
-
-# save university geometries ---------------------------------------------
 
 write_sf_parquet(university_sf, "data/university-sf.parquet")

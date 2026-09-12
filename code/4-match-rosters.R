@@ -1,16 +1,9 @@
+# Match agreements to roster ORIs -> data/agreement-identifiers.parquet
 library(tidyverse)
 
 source("code/functions.R")
 
-# ORIs and roster FIPS codes are annotations on an agreement, not inputs to any
-# geometry match, so they are resolved here at the end and written to their own
-# table for 5-format-agreements-dataset.R to join by agreement_id
-
-# every roster matches the same way: exact state + county + agency name,
-# preferring an identical full name when the aggressive agency_key collides
-# (Mahanoy City PD and Mahanoy Township PD both key as "mahanoy"), then falling
-# back to a statewide name match when the sheet's county is missing, a typo or
-# in disagreement — accepted only when the name identifies one ORI in the state
+# tiers: exact state+county+agency, then statewide full name, then statewide key
 match_agency_source <- function(
   agreements,
   lookup,
@@ -23,11 +16,16 @@ match_agency_source <- function(
     c("state_key", "county_key", "agency_key", "source_fullname_key")
   )
 
+  # dedupe here only: the uniqueness tiers must count raw rows to see collisions
+  lookup_deduped <- dedupe_lookup(lookup)
+
+  # a blank sheet county must not "exactly" match an unknown roster county
   exact <- agreements |>
     left_join(
-      lookup,
+      lookup_deduped,
       by = c("state_key", "county_key", "agency_key"),
-      relationship = "many-to-many"
+      relationship = "many-to-many",
+      na_matches = "never"
     ) |>
     group_by(agreement_id) |>
     arrange(
@@ -46,10 +44,7 @@ match_agency_source <- function(
     ) |>
     select(-source_fullname_key)
 
-  # the full name discriminates where the aggressive key cannot: "Melbourne
-  # Police Department" is one agency statewide even though agency_key
-  # "melbourne" also covers Melbourne Village PD. Every roster gets this tier;
-  # only the looser agency_key tier below is opt-in
+  # the full name discriminates where the aggressive agency_key collides
   fullname_unique <- lookup |>
     group_by(state_key, source_fullname_key) |>
     filter(n_distinct(.data[[ori_col]]) == 1) |>
@@ -109,7 +104,6 @@ match_agency_source <- function(
     arrange(agreement_id)
 }
 
-# one candidate row per key, so a join can only multiply on the match keys
 dedupe_lookup <- function(x) {
   x |>
     group_by(state_key, county_key, agency_key, source_fullname_key) |>
@@ -132,8 +126,7 @@ leaic_lookup <- leaic |>
     leaic_name = name,
     leaic_county_fips = county_fips,
     leaic_place_fips = place_fips
-  ) |>
-  dedupe_lookup()
+  )
 
 lear_lookup <- lear |>
   select(
@@ -144,8 +137,7 @@ lear_lookup <- lear |>
     lear_ori = ori,
     lear_name = name,
     lear_county_fips = county_fips
-  ) |>
-  dedupe_lookup()
+  )
 
 crime_lookup <- crime |>
   select(
@@ -156,11 +148,9 @@ crime_lookup <- crime |>
     crime_ori = ori,
     crime_name = name,
     crime_county_fips = county_fips
-  ) |>
-  dedupe_lookup()
+  )
 
-# HIFLD contributes no ORI, but its station addresses give an independent
-# county per agency for the same cross-check the other rosters feed
+# HIFLD has no ORI; it contributes an independent county for the cross-check
 hifld_lookup <- hifld |>
   filter(!is.na(county_fips)) |>
   select(
@@ -169,14 +159,9 @@ hifld_lookup <- hifld |>
     agency_key,
     source_fullname_key = fullname_key,
     hifld_county_fips = county_fips
-  ) |>
-  dedupe_lookup()
+  )
 
-# a cleaned name several real agencies share cannot identify a record, so
-# 5-format's place confirmation applies only where every roster agrees the name
-# names at most one agency statewide. Counted from the raw rosters because the
-# deduped lookups would collapse duplicate-ORI records (Miami PD carries two
-# ORIs in LEAIC) that must count as collisions
+# counted from raw rosters: deduping would hide name collisions from 5-format
 roster_key_unique_tbl <- bind_rows(
   leaic |> distinct(state_key, agency_key, id = ori),
   lear |> distinct(state_key, agency_key, id = ori),
@@ -214,46 +199,37 @@ agreement_identifiers <- arrow::read_parquet("data/agreements.parquet") |>
   match_agency_source(hifld_lookup, "hifld_county_fips", "hifld_match_type") |>
   left_join(roster_key_unique_tbl, by = c("state_key", "agency_key")) |>
   mutate(
-    # a key absent from every roster has no collision evidence either way, so
-    # treat it as not-unique and it can never certify a confirmation
+    # no roster evidence means not-unique, so it can never certify a match
     roster_key_unique = coalesce(roster_key_unique, FALSE)
   ) |>
   mutate(
-    # rosters naming the same agency with different ORIs means at least one
-    # match is wrong; the flag rides as its own column because the geometry
-    # scripts have already written their needs_review, and 5-format ORs it in
+    # conflicting roster ORIs mean a match is wrong; 5-format ORs this in
     ori_conflict = coalesce(
       (!is.na(leaic_ori) & !is.na(lear_ori) & leaic_ori != lear_ori) |
         (!is.na(leaic_ori) & !is.na(crime_ori) & leaic_ori != crime_ori) |
         (!is.na(lear_ori) & !is.na(crime_ori) & lear_ori != crime_ori),
       FALSE
     ),
-    # how an ORI was found outranks which roster found it: an agency named in
-    # its own county identifies a record more surely than a statewide name
-    # search does, whatever the roster's vintage. Two Manor Township PDs sit in
-    # Pennsylvania, and only one is in the newest roster, so a statewide hit
-    # there must not displace another roster's exact county match. Rosters tie
-    # by recency: CDE (2025) over LEAR (2016) over LEAIC (2012)
+    # tier outranks roster; ties by recency: crime 2025, lear 2016, leaic 2012
     crime_rank = match_tier_rank(crime_match_type),
     lear_rank = match_tier_rank(lear_match_type),
     leaic_rank = match_tier_rank(leaic_match_type),
     best_rank = pmin(crime_rank, lear_rank, leaic_rank),
     ori_source = case_when(
-      !is.na(crime_ori) & crime_rank == best_rank ~ "crime_lookup",
+      !is.na(crime_ori) & crime_rank == best_rank ~ "crime",
       !is.na(lear_ori) & lear_rank == best_rank ~ "lear",
       !is.na(leaic_ori) & leaic_rank == best_rank ~ "leaic",
       TRUE ~ NA_character_
     ),
     ORI9 = case_when(
-      ori_source == "crime_lookup" ~ crime_ori,
+      ori_source == "crime" ~ crime_ori,
       ori_source == "lear" ~ lear_ori,
       ori_source == "leaic" ~ leaic_ori,
       TRUE ~ NA_character_
     )
   ) |>
   select(-crime_rank, -lear_rank, -leaic_rank, -best_rank) |>
-  # a manual row with a county applies only to agreements naming it, while a
-  # county-less row applies to that agency statewide, so the specific one wins
+  # a county-less manual row applies statewide; the county-specific row wins
   left_join(
     manual_agency_ori |>
       filter(!is.na(county), county != "") |>
@@ -298,7 +274,6 @@ agreement_identifiers <- arrow::read_parquet("data/agreements.parquet") |>
     hifld_match_type
   )
 
-# downstream joins on agreement_id would silently fan out on a duplicate
 stopifnot(
   "agreement-identifiers must carry exactly one row per agreement_id" = !anyDuplicated(
     agreement_identifiers$agreement_id

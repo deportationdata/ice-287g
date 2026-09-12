@@ -1,3 +1,5 @@
+# Delete duplicate downloads and empty folders under agreements/ and sheets/.
+
 library(digest)
 
 get_file_hash <- function(filepath) {
@@ -6,12 +8,27 @@ get_file_hash <- function(filepath) {
   return(file_hash)
 }
 
+# ICE links byte-identical files under several agencies, so scope by agency
+dedupe_scope_key <- function(base_path, file_path, file_hash) {
+  rel_path <- substring(file_path, nchar(base_path) + 2)
+  parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
+  # parts[1] is the snapshot folder; scope is STATE/AGENCY, empty for sheets
+  scope <- parts[-c(1, length(parts))]
+  paste(c(scope, file_hash), collapse = "/")
+}
+
+# walk wayback folders first so a re-download is deleted, not the archived copy
+order_wayback_first <- function(paths) {
+  paths <- sort(paths)
+  is_wayback <- grepl("wayback", paths, fixed = TRUE)
+  c(paths[is_wayback], paths[!is_wayback])
+}
+
 remove_duplicate_files_recursive <- function(base_path) {
   seen_files <- list()
 
-  # walk all files depth-first (sorted for determinism)
   all_files <- list.files(base_path, recursive = TRUE, full.names = TRUE)
-  all_files <- sort(all_files)
+  all_files <- order_wayback_first(all_files)
 
   for (file_path in all_files) {
     if (!file.exists(file_path) || file.info(file_path)$isdir) {
@@ -27,8 +44,10 @@ remove_duplicate_files_recursive <- function(base_path) {
       next
     }
 
-    if (is.null(seen_files[[file_hash]])) {
-      seen_files[[file_hash]] <- file_path
+    file_key <- dedupe_scope_key(base_path, file_path, file_hash)
+
+    if (is.null(seen_files[[file_key]])) {
+      seen_files[[file_key]] <- file_path
     } else {
       cat(sprintf("Deleting: %s\n", file_path))
       file.remove(file_path)
@@ -39,9 +58,8 @@ remove_duplicate_files_recursive <- function(base_path) {
 remove_duplicate_files_one_level <- function(base_path) {
   seen_files <- list()
 
-  # only look one level of subfolders deep
   subfolders <- list.dirs(base_path, recursive = FALSE, full.names = TRUE)
-  subfolders <- sort(subfolders)
+  subfolders <- order_wayback_first(subfolders)
 
   for (subfolder in subfolders) {
     if (!file.info(subfolder)$isdir) {
@@ -65,8 +83,10 @@ remove_duplicate_files_one_level <- function(base_path) {
         next
       }
 
-      if (is.null(seen_files[[file_hash]])) {
-        seen_files[[file_hash]] <- file_path
+      file_key <- dedupe_scope_key(base_path, file_path, file_hash)
+
+      if (is.null(seen_files[[file_key]])) {
+        seen_files[[file_key]] <- file_path
       } else {
         cat(sprintf("Deleting: %s\n", file_path))
         file.remove(file_path)
@@ -81,7 +101,6 @@ delete_empty_dirs <- function(base_path) {
   all_dirs <- rev(all_dirs)
 
   for (dir_path in all_dirs) {
-    # skip the root itself
     if (normalizePath(dir_path) == normalizePath(base_path)) {
       next
     }
@@ -89,15 +108,12 @@ delete_empty_dirs <- function(base_path) {
     contents <- list.files(dir_path, all.files = TRUE, no.. = TRUE)
 
     if (length(contents) == 0) {
-      tryCatch(
-        {
-          unlink(dir_path, recursive = FALSE)
-          cat(sprintf("Deleted: %s\n", dir_path))
-        },
-        error = function(e) {
-          cat(sprintf("Error deleting: %s\n", dir_path))
-        }
-      )
+      # unlink needs recursive = TRUE for a dir, and returns 0 on success
+      if (unlink(dir_path, recursive = TRUE) == 0) {
+        cat(sprintf("Deleted: %s\n", dir_path))
+      } else {
+        cat(sprintf("Error deleting: %s\n", dir_path))
+      }
     }
   }
 }
@@ -113,10 +129,15 @@ delete_path_log_only_dirs <- function(base_path) {
 
     contents <- list.files(dir_path, all.files = TRUE, no.. = TRUE)
 
-    if (identical(contents, "download_path_log.csv")) {
-      unlink(file.path(dir_path, "download_path_log.csv"))
-      unlink(dir_path, recursive = FALSE)
-      cat(sprintf("Deleted path-log-only folder: %s\n", dir_path))
+    # download_path_log.csv is the legacy name for manifest.csv
+    if (length(contents) > 0 &&
+          all(contents %in% c("manifest.csv", "download_path_log.csv"))) {
+      unlink(file.path(dir_path, contents))
+      if (unlink(dir_path, recursive = TRUE) == 0) {
+        cat(sprintf("Deleted path-log-only folder: %s\n", dir_path))
+      } else {
+        cat(sprintf("Error deleting: %s\n", dir_path))
+      }
     }
   }
 }

@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
-# Diff two all_agreements_sf.parquet files (main vs PR) into a markdown PR
-# comment. Geometry is dropped, so location changes surface only through the
-# non-geometry columns derived from it.
+# Diff two all_agreements_sf.parquet files (main vs PR) into a markdown comment
 
 suppressMessages({
   library(arrow)
@@ -50,8 +48,7 @@ make_key <- function(df) {
       "match_name",
       "facility_city",
       "facility_state",
-      # the two sides come from different branches, so key columns from either
-      # schema are accepted and intersect() drops whichever are absent
+      # either branch's schema is accepted; intersect() drops absent columns
       "facility_name",
       "county_match",
       "municipality_match",
@@ -97,7 +94,8 @@ changes <- inner_join(
       (!is.na(main) & !is.na(pr) & main != pr)
   ) |>
   left_join(
-    pr_df |> distinct(.key, agency, state, county),
+    pr_df |>
+      distinct(across(any_of(c(".key", "agency", "state", "county")))),
     by = ".key"
   )
 

@@ -1,3 +1,5 @@
+# Matches state-level agreements to state and territory polygons -> data/state-sf.parquet
+
 library(tidyverse)
 library(sf)
 library(tigris)
@@ -12,13 +14,11 @@ manual_polygons <- arrow::read_parquet("data/manual-polygons.parquet")
 
 YEAR <- 2024
 
-# str_to_title aligns tigris's "District of Columbia" with the sheet's
-# capitalization for the exact name join; territories are excluded here and
-# dissolved from counties below
+# sheet and manual names must match tigris NAME exactly; str_to_title would break "District of Columbia"
 states_sf <- tigris::states(cb = TRUE, year = YEAR, class = "sf") |>
   filter(as.integer(STATEFP) <= 56 | STATEFP == "72") |> # states plus PR
   transmute(
-    state = str_to_title(NAME),
+    state = NAME,
     statefp = STATEFP,
     geometry
   )
@@ -57,14 +57,13 @@ state_overrides <- manual_polygons |>
 
 state_agreements_sf <- agreements |>
   left_join(state_overrides, by = c("agency", "state", "county")) |>
-  # manual_match_layer is NA for non-override rows, so is.na() is what admits
-  # them; an override routing elsewhere drops the row for that layer to pick up
+  # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "state" |
       (geom_class == "state_polygon" & is.na(manual_match_layer))
   ) |>
   mutate(
-    # an override aimed at another layer must not leak its name into this one
+    # manual_polygons is shared by every layer, so blank a name aimed elsewhere
     manual_state_match = if_else(
       manual_match_layer == "state",
       manual_state_match,
@@ -72,9 +71,6 @@ state_agreements_sf <- agreements |>
     ),
     state_match = coalesce(manual_state_match, state)
   ) |>
-  # exact name equality, no normalization key: agreement states and manual
-  # names must match tigris spellings exactly ("Commonwealth of the Northern
-  # Mariana Islands")
   left_join(state_lookup, by = c("state_match" = "state")) |>
   mutate(
     match_name = if_else(is.na(statefp), NA_character_, state_match),
@@ -85,8 +81,7 @@ state_agreements_sf <- agreements |>
     ),
     state_fips = statefp,
     geoid = state_fips,
-    # OR-accumulate so an upstream flag is never reset; unmatched agreements
-    # are kept with empty geometries
+    # keep-all: unmatched agreements ride along with empty geometries
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
   select(

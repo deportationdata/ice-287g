@@ -1,3 +1,4 @@
+# Assemble the published datasets -> all_agreements_sf and agreement-level-sf
 library(tidyverse)
 library(sf)
 
@@ -8,9 +9,24 @@ facility_sf <- read_sf_parquet("data/facility-sf.parquet")
 
 agreements <- arrow::read_parquet("data/agreements.parquet")
 
-# ORIs and roster county codes are annotations rather than match inputs, so
-# they join on by agreement_id here; the per-source match_type provenance stays
-# in 4-match-rosters.R's own table
+# annotation only: appearance and status semantics stay ICE-primary-source
+pre2018_best <- readr::read_csv(
+  "data/pre2018-agreements-best-guess.csv",
+  show_col_types = FALSE
+) |>
+  transmute(
+    .lineage_key = paste(toupper(state), norm_agency(agency)),
+    pre2018_first_signed = first_signed_best,
+    pre2018_confidence = confidence
+  ) |>
+  distinct(.lineage_key, .keep_all = TRUE)
+
+agreements <- agreements |>
+  mutate(.lineage_key = paste(toupper(state), norm_agency(agency))) |>
+  left_join(pre2018_best, by = ".lineage_key") |>
+  mutate(pre2018_partnership = !is.na(pre2018_first_signed)) |>
+  select(-.lineage_key)
+
 agreement_identifiers <-
   arrow::read_parquet("data/agreement-identifiers.parquet") |>
   select(
@@ -47,12 +63,11 @@ all_agreements_sf <-
       mutate(match_layer = "facility")
   ) |>
   st_make_valid() |>
-  # layer files carry only match results; the sheet's descriptive columns come
-  # back from agreements.parquet
   left_join(
     agreements |>
       select(
         agreement_id,
+        status,
         state,
         county,
         agency,
@@ -61,18 +76,22 @@ all_agreements_sf <-
         signed,
         moa,
         addendum,
+        first_appeared,
+        last_appeared,
+        removed_by,
+        removal_flag,
+        pre2018_partnership,
+        pre2018_first_signed,
+        pre2018_confidence,
         geom_class
       ),
     by = "agreement_id"
   ) |>
   left_join(agreement_identifiers, by = "agreement_id") |>
   mutate(
-    # facility rows have no census polygon; the published contract that
-    # slicer-shiny-app reads carries the facility's county fips as its geoid
+    # facility rows have no polygon; the published geoid contract is county fips
     geoid = if_else(match_layer == "facility", county_fips, geoid),
-    # each roster codes the agency's county independently of the match, so
-    # disagreement flags a suspect geometry; only layers matched against a
-    # county or place boundary can be checked this way
+    # only county/municipal matches can be cross-checked against roster counties
     checkable_layer = match_layer %in% c("county", "municipal"),
     leaic_fips_mismatch = case_when(
       match_layer == "county" ~ coalesce(
@@ -103,8 +122,7 @@ all_agreements_sf <-
       ),
       NA
     ),
-    # CDE can list several counties for one agency ("LEE, MACON" becomes
-    # "01081;01087"), so test membership rather than equality
+    # CDE can list several counties ("01081;01087"), so test membership
     crime_fips_mismatch = if_else(
       checkable_layer,
       coalesce(
@@ -125,10 +143,7 @@ all_agreements_sf <-
       ),
       NA
     ),
-    # an ambiguous municipal match clears when LEAIC's independently coded place
-    # lands on the same census place and no roster shows a second agency with
-    # that cleaned name statewide, since a shared name cannot identify a
-    # record; 99xxx are balance-of-county pseudo-codes
+    # "00000" and "99xxx" are LEAIC place sentinels, not real census places
     leaic_place_confirmed = coalesce(
       match_layer == "municipal" &
         !is.na(leaic_place_fips) &
@@ -150,6 +165,7 @@ all_agreements_sf <-
   ) |>
   select(
     agreement_id,
+    status,
     state,
     county,
     agency,
@@ -158,6 +174,13 @@ all_agreements_sf <-
     signed,
     moa,
     addendum,
+    first_appeared,
+    last_appeared,
+    removed_by,
+    removal_flag,
+    pre2018_partnership,
+    pre2018_first_signed,
+    pre2018_confidence,
     geom_class,
     match_layer,
     match_name,
@@ -210,8 +233,7 @@ all_agreements_sf <-
 
 write_sf_parquet(all_agreements_sf, "data/all_agreements_sf.parquet")
 
-# an agreement can span several matched features (a DOC's facilities sit in
-# many counties), so codes are kept only when they identify a single area
+# an agreement can span several features, so a code is kept only when unique
 single_or_na <- function(x) {
   ux <- unique(x[!is.na(x)])
   if (length(ux) == 1) ux else NA_character_
@@ -220,12 +242,20 @@ single_or_na <- function(x) {
 agreement_level_sf <- all_agreements_sf |>
   group_by(
     agreement_id,
+    status,
     agency,
     state,
     county,
     signed,
     moa,
     addendum,
+    first_appeared,
+    last_appeared,
+    removed_by,
+    removal_flag,
+    pre2018_partnership,
+    pre2018_first_signed,
+    pre2018_confidence,
     ORI9,
     support_type,
     agency_level,
@@ -243,6 +273,7 @@ agreement_level_sf <- all_agreements_sf |>
   ) |>
   select(
     # preserve the source spreadsheet order, followed by derived/spatial fields
+    status,
     state,
     agency,
     agency_level,
@@ -251,6 +282,13 @@ agreement_level_sf <- all_agreements_sf |>
     signed,
     moa,
     addendum,
+    first_appeared,
+    last_appeared,
+    removed_by,
+    removal_flag,
+    pre2018_partnership,
+    pre2018_first_signed,
+    pre2018_confidence,
     ORI9,
     state_fips,
     county_fips,

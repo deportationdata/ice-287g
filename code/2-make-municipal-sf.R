@@ -1,3 +1,5 @@
+# Matches municipal agreements to census places/county subdivisions -> data/municipal-sf.parquet
+
 library(tidyverse)
 library(sf)
 library(tigris)
@@ -25,8 +27,6 @@ stopifnot(
         names(manual_polygons)
     )
 )
-
-# place and county-subdivision boundaries --------------------------------
 
 # Census LSAD codes carry the legal entity type
 lsad_type <- c(
@@ -73,9 +73,7 @@ cousubs_sf <-
     geometry
   )
 
-# keep every same-named candidate and let the sheet's county pick between them
-# below; in New England the town (county subdivision) is the municipal
-# government, so it outranks the same-named CDP
+# in New England the town (cousub) is the municipal government, so it outranks the same-named CDP
 new_england <- c(
   "connecticut",
   "maine",
@@ -101,8 +99,7 @@ places_lookup <-
     )
   )
 
-# counties each candidate touches: cousubs carry their county FIPS; places
-# can span several counties, so take every county they intersect
+# places can span several counties, so take every county they intersect; cousubs carry their own
 counties_ref <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(
     state_key = norm_state(STATE_NAME),
@@ -122,8 +119,6 @@ candidate_counties <- bind_rows(
 ) |>
   distinct(geoid, cand_county_fips)
 
-# manual municipal overrides --------------------------------------------
-
 municipal_overrides <- manual_polygons |>
   select(
     agency,
@@ -135,19 +130,13 @@ municipal_overrides <- manual_polygons |>
     manual_note = note
   )
 
-# regional departments ---------------------------------------------------
-
-# a regional department polices a set of municipalities, so it gets one row per
-# member and the agreement-level union covers the whole force. Members are
-# matched as county subdivisions, which is what a Pennsylvania borough or
-# township is, and the county disambiguates repeated names
+# regional departments: one row per member municipality, unioned at the agreement level
 regional_members <- manual_regional |>
   mutate(
     state_key = norm_state(state),
     place_key = norm_place(municipality),
     member_county_key = norm_county(municipality_county),
-    # norm_place drops the type word, so Dover borough and Dover township share
-    # a key; the type written in the input file tells them apart
+    # norm_place drops the type word, so Dover borough and Dover township share a key
     member_type = case_when(
       str_detect(str_to_lower(municipality), "\\btownship\\b") ~ "township",
       str_detect(str_to_lower(municipality), "\\bborough\\b") ~ "borough",
@@ -189,9 +178,7 @@ regional_members <- manual_regional |>
     by = c("state_key", "place_key", "member_county_fips", "member_type")
   )
 
-# a member that fails to resolve would silently shrink a department's
-# jurisdiction, and one that matches twice would double-count it, so either
-# must stop the run rather than ship a wrong boundary
+# an unresolved member silently shrinks a department's jurisdiction, a doubled one inflates it
 stopifnot(
   "every regional member municipality must match one county subdivision" =
     all(!is.na(regional_members$geoid)) &&
@@ -217,17 +204,15 @@ regional_sf <- agreements |>
     geometry
   )
 
-# municipal agreements ---------------------------------------------------
+# municipal agreements
 
 municipal_base <- agreements |>
-  # regional departments are matched above, one row per member municipality
   anti_join(regional_members, by = c("agency", "state", "county")) |>
   left_join(
     municipal_overrides,
     by = c("agency", "state", "county")
   ) |>
-  # the exact complement of 2-make-pa-constable-sf.R's inclusion filter, which
-  # matches constables to wards and precincts instead
+  # exact complement of 2-make-pa-constable-sf.R's inclusion filter; constables must not land here
   filter(
     !(state == "Pennsylvania" &
       str_detect(
@@ -235,8 +220,7 @@ municipal_base <- agreements |>
         "\\bconstables?\\b"
       ))
   ) |>
-  # a manual "municipal" layer pulls a row in regardless of geom_class, and a
-  # manual non-municipal layer routes a municipal_polygon row to another script
+  # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "municipal" |
       (geom_class == "municipal_polygon" & is.na(manual_match_layer))
@@ -252,7 +236,7 @@ municipal_base <- agreements |>
     state_key = norm_state(state),
     place_key = norm_place(city_match),
     sheet_county_key = norm_county(county),
-    # township is tested before town so "X Township" never reads as a town
+    # township must be tested before town so "X Township" never reads as a town
     municipal_type_hint = case_when(
       str_detect(str_to_lower(agency), "\\btownship\\b|\\btwp\\b") ~ "township",
       str_detect(str_to_lower(agency), "\\bborough\\b|\\bboro\\b") ~ "borough",
@@ -301,9 +285,7 @@ municipal_matches <- municipal_base |>
       sheet_county_fips == cand_county_fips,
       NA
     ),
-    # "Briar Creek Township PD" must take the township, not the same-named
-    # borough — but only when the token is not part of the candidate's own
-    # name ("Cross City" is a town named Cross City)
+    # a type word inside the candidate's own name is not a type claim ("Cross City" is a town)
     hint_is_type_claim = !is.na(municipal_type_hint) &
       !coalesce(
         str_detect(
@@ -324,9 +306,7 @@ municipal_matches <- municipal_base |>
     geoid,
     .by_group = TRUE
   ) |>
-  # candidate_counties holds one row per county a candidate touches, so collapse
-  # to the best-ranked row per polygon before picking a winner; geoid is the
-  # deterministic final tiebreak
+  # candidate_counties fans one row per county touched, so collapse per polygon before picking
   distinct(geoid, .keep_all = TRUE) |>
   slice_head(n = 1) |>
   ungroup() |>
@@ -334,7 +314,6 @@ municipal_matches <- municipal_base |>
     match_ambiguous = !is.na(geoid) &
       ((n_candidates > 1 & !coalesce(county_confirmed, FALSE)) |
         (!is.na(sheet_county_fips) & !coalesce(county_confirmed, TRUE))),
-    # the agency name claims an entity type the winning candidate lacks
     type_mismatch = !is.na(geoid) &
       hint_is_type_claim &
       !coalesce(cand_type == municipal_type_hint, FALSE)
@@ -348,18 +327,16 @@ municipal_sf <- municipal_matches |>
       src == "cousub" ~ "cousub_name",
       src == "place" ~ "place_name"
     ),
-    # ships the matched polygon's own name, not the query that found it
     match_name = if_else(is.na(geoid), NA_character_, place_guess),
     state_fips = statefp,
-    # places carry no county attribute, so fall back to the sheet's county once
-    # the matched polygon has confirmed it
+    # places carry no county attribute, so fall back to the sheet's confirmed county
     county_fips = case_when(
       !is.na(statefp) & !is.na(countyfp) ~ paste0(statefp, countyfp),
       coalesce(county_confirmed, FALSE) ~ sheet_county_fips,
       TRUE ~ NA_character_
     ),
     place_fips = placefp,
-    # unmatched agreements ride along with an empty sentinel geometry
+    # keep-all: unmatched agreements ride along with an empty sentinel geometry
     geometry = st_sfc(
       map(geometry, \(g) {
         if (inherits(g, "sfg")) g else st_geometrycollection()
@@ -369,9 +346,7 @@ municipal_sf <- municipal_matches |>
   ) |>
   st_as_sf() |>
   mutate(
-    # match_ambiguous and type_mismatch stay separate columns rather than
-    # folding in here: 5-format clears them when LEAIC's independently coded
-    # place confirms the match, and flags them otherwise
+    # match_ambiguous/type_mismatch stay separate columns: 5-format resolves them against LEAIC
     needs_review = needs_review |
       is.na(geometry) |
       st_is_empty(geometry)
@@ -392,9 +367,7 @@ municipal_sf <- municipal_matches |>
     geometry
   )
 
-# a matched municipality whose sheet county is missing or unverified still
-# lacks one, so take the county overlapping the polygon most (planar areas are
-# fine for ranking overlaps of a single polygon)
+# a polygon with no confirmed county takes the county it overlaps most
 county_overlap <- municipal_sf |>
   filter(!is.na(geoid), is.na(county_fips)) |>
   select(agreement_id) |>
@@ -416,8 +389,6 @@ municipal_sf <- municipal_sf |>
   left_join(county_overlap, by = "agreement_id") |>
   mutate(county_fips = coalesce(county_fips, overlap_county_fips)) |>
   select(-overlap_county_fips)
-
-# save municipal geometries ----------------------------------------------
 
 bind_rows(municipal_sf, st_transform(regional_sf, st_crs(municipal_sf))) |>
   st_transform(4326) |>

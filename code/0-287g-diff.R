@@ -1,3 +1,5 @@
+# Diff agreements/ and sheets/ against /tmp/old-287g into /tmp/287g-changes.txt.
+
 suppressPackageStartupMessages({
   library(digest)
 })

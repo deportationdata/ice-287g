@@ -1,3 +1,5 @@
+# Matches county-level agreements to tigris county polygons -> data/county-sf.parquet
+
 library(tidyverse)
 library(sf)
 library(tigris)
@@ -12,8 +14,7 @@ manual_polygons <- arrow::read_parquet("data/manual-polygons.parquet")
 
 YEAR <- 2024
 
-# NAMELSAD keeps the legal suffix ("X County", "X Parish", "X city"), as does
-# the ICE county field, and both sides pass through norm_county
+# both NAMELSAD and the ICE county field keep the legal suffix ("X County", "X Parish", "X city"), hence norm_county
 counties_sf <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
   transmute(
     county = str_to_title(NAMELSAD),
@@ -37,22 +38,20 @@ county_overrides <- manual_polygons |>
 
 county_agreements_sf <- agreements |>
   left_join(county_overrides, by = c("agency", "state", "county")) |>
-  # manual_match_layer is NA for non-override rows, so is.na() is what admits
-  # them; an override routing elsewhere drops the row for that layer to pick up
+  # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "county" |
       (geom_class == "county_polygon" & is.na(manual_match_layer))
   ) |>
   mutate(
-    # an override aimed at another layer must not leak its name into this one
+    # manual_polygons is shared by every layer, so blank a name aimed elsewhere
     manual_county_match = if_else(
       manual_match_layer == "county",
       manual_county_match,
       NA_character_
     ),
     county_match = coalesce(manual_county_match, county),
-    # state_key comes from the agreement's original state, so a manual override
-    # can redirect the county name but never cross a state line
+    # keyed on the agreement's own state, so an override can never cross a state line
     state_key = norm_state(state),
     county_key = norm_county(county_match)
   ) |>
@@ -81,11 +80,9 @@ county_agreements_sf <- agreements |>
       paste0(statefp, countyfp),
       NA_character_
     ),
-    # same string as county_fips here; both ship because they mean different
-    # things downstream (admin code vs census geoid)
+    # duplicates county_fips on purpose: admin code vs census geoid downstream
     geoid = county_fips,
-    # OR-accumulate so an upstream flag is never reset; unmatched agreements
-    # are kept with empty geometries
+    # keep-all: unmatched agreements ride along with empty geometries
     needs_review = needs_review | is.na(geometry) | st_is_empty(geometry)
   ) |>
   select(

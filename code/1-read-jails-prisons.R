@@ -1,3 +1,4 @@
+# HIFLD prisons and BJS jails, geocoded -> data/jails-prisons.parquet
 library(tidyverse)
 library(sf)
 library(tigris)
@@ -41,19 +42,16 @@ stopifnot(
   )
 )
 
-# the facility matcher's operator tier depends on this column; without the
-# guard an upstream artifact that drops it silently loses ~100 matches
 stopifnot(
   "remote jails_prisons.parquet carries no operator_name; the facility operator match tier would silently die" = any(
     !is.na(jails_prisons$operator_name) & jails_prisons$operator_name != ""
   )
 )
 
-# ICPSR jails records carry street addresses but no coordinates, so a
-# jails-only match could never map. The cache is keyed by address and
-# append-only: only new records hit the API
+# the committed cache is append-only and keyed by address; do not regenerate it
 jails_geocode_cache_path <- "data/jails-prisons-geocoded-arcgis.rds"
 
+# ICPSR jails carry street addresses but no coordinates, so they are geocoded
 jails_prisons <- jails_prisons |>
   mutate(
     geocode_address = if_else(
@@ -95,8 +93,7 @@ for (chunk in split(new_addresses, ceiling(seq_along(new_addresses) / 250))) {
   message(nrow(jails_geocode_cache), " jail addresses geocoded")
 }
 
-# accept street-level matches only: a city or zip centroid would place the
-# jail arbitrarily
+# street-level matches only: a city or zip centroid would place the jail wrong
 jails_geocoded <- if ("attributes.Addr_type" %in% names(jails_geocode_cache)) {
   jails_geocode_cache |>
     filter(
@@ -125,8 +122,7 @@ counties_lookup <- tigris::counties(cb = TRUE, year = YEAR, class = "sf") |>
     geometry
   )
 
-# neither source ships county fields, so these start NA and the st_within fill
-# below supplies them; a source-named county would take precedence
+# neither source ships a county; the st_within fill below supplies it
 jails_prisons_tbl <- bind_rows(
   hifld_prisons |>
     transmute(
@@ -183,9 +179,7 @@ counties_from_xy <- jails_prisons_tbl |>
   distinct(source_row_id, .keep_all = TRUE) |>
   select(source_row_id, county_spatial, county_fips_spatial, county_key_spatial)
 
-# regional jails list several counties in one field and the operator tier tests
-# membership against county_key, so a source-named county passes through
-# norm_ori_county intact instead of being replaced by the single spatial county
+# regional jails list several counties in one field, so a source county wins
 jails_prisons_tbl <- jails_prisons_tbl |>
   left_join(counties_from_xy, by = "source_row_id") |>
   mutate(

@@ -1,12 +1,11 @@
+# FBI Crime Data Explorer agency roster, by state -> data/crime.parquet
 library(tidyverse)
 library(arrow)
 library(httr2)
 
 source("code/functions.R")
 
-# FBI Crime Data Explorer agency roster, one request per state. The raw
-# download is committed, so the API is hit only when the cache is missing:
-# delete it to refresh. Needs a free key from https://api.data.gov/signup/
+# the raw download is committed; the API is hit only when the cache is missing
 crime_cache_path <- "data/crime-data-all-states.parquet"
 
 if (!file.exists(crime_cache_path)) {
@@ -81,9 +80,7 @@ crime <- arrow::read_parquet(crime_cache_path) |>
     fullname_key = norm_ori_fullname(name)
   )
 
-# CDE names an agency's county, sometimes several ("LEE, MACON"); convert each
-# to FIPS so 5-format can test membership. Spacing differs between sources
-# ("DE KALB" vs "DeKalb"), so keys drop it and the few that turn ambiguous go
+# spacing differs between sources ("DE KALB" vs "DeKalb"), so keys drop it
 county_fips_xwalk <- tigris::fips_codes |>
   transmute(
     state_key = norm_state(state_name),
@@ -94,6 +91,7 @@ county_fips_xwalk <- tigris::fips_codes |>
   filter(n() == 1) |>
   ungroup()
 
+# CDE can name several counties in one cell ("LEE, MACON"), so all are kept
 county_fips_tbl <- crime |>
   distinct(state_key, county) |>
   mutate(county_component = county) |>
@@ -104,8 +102,7 @@ county_fips_tbl <- crime |>
   left_join(county_fips_xwalk, by = c("state_key", "county_join_key")) |>
   group_by(state_key, county) |>
   summarize(
-    # any unconvertible component voids the set: a partial list could miss the
-    # county that would have agreed
+    # a partial list could miss the county that would have agreed, so void it
     county_fips = if_else(
       any(is.na(county_fips)),
       NA_character_,

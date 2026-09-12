@@ -1,3 +1,5 @@
+# Matches PA constable agreements to PASDA municipalities and LRC wards/precincts -> data/pa-constable-sf.parquet
+
 library(tidyverse)
 library(sf)
 
@@ -5,26 +7,22 @@ sf_use_s2(FALSE)
 
 source("code/functions.R")
 
-# municipality boundaries from PA Spatial Data Access
 pasda_municipalities <- st_read(
   "inputs/2026-pennsylvania-municipalities/PaMunicipalities2026_04.shp",
   quiet = TRUE
 )
 
-# voting district boundaries from PA Legislative Reapportionment Commission (LRC)
 lrc_voting_districts <- st_read(
   "inputs/2021-pennsylvania-lrc-voting-district-boundaries/WP_VotingDistricts.shp",
   quiet = TRUE
 )
 
-# ward boundaries from PA LRC
 lrc_wards <- st_read(
   "inputs/2021-pennsylvania-lrc-voting-district-boundaries/WP_Wards.shp",
   quiet = TRUE
 )
 
-# county boundaries from PA LRC; the ward layer carries only a county FIPS, so
-# names for keying come from here
+# the ward layer carries only a county FIPS, so county names for keying come from here
 lrc_counties <- st_read(
   "inputs/2021-pennsylvania-lrc-voting-district-boundaries/WP_Counties.shp",
   quiet = TRUE
@@ -50,8 +48,7 @@ muni_type_from_lrc <- function(x) {
   )
 }
 
-# layer names carry the number after the label word ("Ward 3", "Precinct 2"),
-# as digits with an optional ordinal suffix or spelled out first..tenth
+# the number follows the label ("Ward 3") as digits, an ordinal, or first..tenth
 parse_layer_number <- function(x, label) {
   token <- str_match(
     x,
@@ -67,8 +64,7 @@ parse_layer_number <- function(x, label) {
   pa_constable_ordinal_number(token)
 }
 
-# the source sheet spells Mifflin County "Miffin"; every lookup layer runs
-# through the same repair so keys stay comparable
+# the source sheet misspells Mifflin County as "Miffin"; every layer runs the same repair
 pa_county_key <- function(x) {
   x |>
     str_replace(regex("\\bMiffin\\b", ignore_case = TRUE), "Mifflin") |>
@@ -103,8 +99,7 @@ pasda_lookup <- pasda_municipalities |>
     geometry
   )
 
-# VTDST20 ships as both place_fips and vtd_code: the agreement-level contract
-# carries both
+# VTDST20 ships as both place_fips and vtd_code; downstream expects both
 vtd_lookup <- lrc_voting_districts |>
   st_transform(4326) |>
   mutate(
@@ -143,8 +138,6 @@ ward_lookup <- lrc_wards |>
     place_fips = as.character(FIPS_MCD),
     geoid = as.character(cou_cbt_wa),
     municipality_match = str_to_title(MUNICIPALI),
-    # LRC encodes the municipality class as CBT: 2 = city, 4 = township,
-    # 6 = borough
     municipality_type = case_when(
       CBT == "2" ~ "city",
       CBT == "4" ~ "township",
@@ -169,9 +162,7 @@ ward_lookup <- lrc_wards |>
     geometry
   )
 
-# constable geometry comes from PASDA/LRC layers, never tigris cousubs; this
-# filter must stay the exact complement of 2-make-municipal-sf.R's exclusion so
-# the two scripts partition PA municipal agencies
+# must stay the exact complement of 2-make-municipal-sf.R's constable exclusion
 pa_constables <- arrow::read_parquet("data/agreements.parquet") |>
   filter(
     state == "Pennsylvania",
@@ -189,8 +180,7 @@ pa_constables <- bind_cols(
     source_county_key = na_if(pa_county_key(county), "")
   )
 
-# county and municipality type are post-join gates, not join keys: a constable
-# with no usable county or type hint passes rather than losing every candidate
+# post-join gates, not join keys: a missing county or type hint passes instead of dropping all candidates
 filter_candidates <- function(candidates) {
   candidates |>
     filter(
@@ -201,8 +191,7 @@ filter_candidates <- function(candidates) {
     )
 }
 
-# unique-match-only: a constable with more than one surviving candidate falls
-# through to the unmatched sentinel rather than being arbitrarily assigned
+# unique-match-only: several surviving candidates fall through to unmatched rather than being assigned
 select_unique_matches <- function(candidates, match_type) {
   candidates |>
     add_count(agreement_id, name = "candidate_count") |>
@@ -249,7 +238,6 @@ pa_matches <- bind_rows(
 ) |>
   transmute(
     agreement_id,
-    # the most specific matched unit names the geometry
     match_name = coalesce(vtd_name, ward_name, municipality_match),
     match_type,
     state_fips,
@@ -264,8 +252,7 @@ matched <- pa_constables |>
   select(agreement_id, needs_review) |>
   inner_join(pa_matches, by = "agreement_id")
 
-# keep-all: constables with no unique candidate ride along with empty
-# geometries and needs_review = TRUE
+# keep-all: constables with no unique candidate ride along with empty geometries
 unmatched <- pa_constables |>
   filter(!agreement_id %in% pa_matches$agreement_id) |>
   transmute(

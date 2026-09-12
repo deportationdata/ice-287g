@@ -1,7 +1,7 @@
+# Manual override CSVs -> data/manual-{points,polygons,regional}.parquet
 library(tidyverse)
 
-# all-character col_types: readr would otherwise parse all-empty columns as
-# logical and drop leading zeros from zips
+# all-character: readr would guess logical for empty columns and drop zip zeros
 manual_points <- read_csv(
   "inputs/manual-facility-points.csv",
   col_types = cols(.default = col_character())
@@ -11,17 +11,14 @@ manual_points <- read_csv(
     state,
     county,
     facility_name = manual_facility_name,
-    # CNMI's positive longitude (145.7) is correct: Saipan sits east of the
-    # prime meridian, so do not "fix" the sign
+    # CNMI's positive longitude is correct (Saipan is east of the meridian)
     latitude = as.numeric(latitude),
     longitude = as.numeric(longitude),
     reason = manual_reason,
     note = manual_note
   )
 
-# match_layer/match_name are consumed verbatim by the layer matchers ("Hopewell
-# City" targets the county layer for a VA independent city); agency/state/county
-# key against the cleaned agreements values
+# match_layer/match_name are consumed verbatim by the layer matchers
 manual_polygons <- read_csv(
   "inputs/manual-non-facility-polygons.csv",
   col_types = cols(.default = col_character())
@@ -36,9 +33,7 @@ manual_polygons <- read_csv(
     note = manual_note
   )
 
-# a regional department polices several municipalities at once, which no single
-# boundary name can express, so its members are listed one per row with the
-# source that documents the membership
+# a regional department's member municipalities, one per row
 manual_regional <- read_csv(
   "inputs/manual-regional-municipalities.csv",
   col_types = cols(.default = col_character())
@@ -48,8 +43,7 @@ manual_regional <- read_csv(
     state,
     county,
     municipality,
-    # members can sit in different counties, and the same township name recurs
-    # across them (Morris Township is in both Greene and Washington)
+    # township names recur across counties (Morris Township: Greene, Washington)
     municipality_county,
     source,
     note

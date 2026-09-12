@@ -1,9 +1,9 @@
+# LEAIC agency/ORI crosswalk (ICPSR 35158, 2012) -> data/leaic.parquet
 library(tidyverse)
 library(arrow)
 
 source("code/functions.R")
 
-# Law Enforcement Agency Identifiers Crosswalk (ICPSR 35158, 2012)
 load("inputs/35158-0001-Data.rda")
 
 leaic <- da35158.0001 |>
@@ -11,8 +11,7 @@ leaic <- da35158.0001 |>
   transmute(
     name = str_squish(NAME),
     ori = str_squish(ORI9),
-    # FSTATE/FCOUNTY/FPLACE are labelled values ("(01) Alabama"), so extract
-    # and zero-pad the digits: as.character would keep the label text
+    # FSTATE/FCOUNTY/FPLACE are labelled values ("(01) Alabama"), not digits
     fstate = str_pad(str_extract(as.character(FSTATE), "[0-9]+"), 2, pad = "0"),
     fcounty = str_pad(str_extract(as.character(FCOUNTY), "[0-9]+"), 3, pad = "0"),
     county_fips = if_else(
@@ -27,7 +26,7 @@ leaic <- da35158.0001 |>
     agency_key = norm_ori_agency(name),
     fullname_key = norm_ori_fullname(name)
   ) |>
-  # LEAIC codes missing ORIs as "-1"; drop those rows along with blank ORIs
+  # LEAIC codes a missing ORI as "-1"; that sentinel must never ship
   filter(!is.na(ori), !ori %in% c("", "-1")) |>
   select(
     state_key,

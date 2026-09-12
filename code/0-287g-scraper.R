@@ -1,13 +1,11 @@
+# Scrape ICE's 287(g) workbook and linked MOAs into sheets/ and agreements/.
+
 library(httr)
 library(rvest)
 library(openxlsx)
 library(stringr)
 library(fs)
 library(digest)
-
-get_file_hash <- function(filepath) {
-  digest(file = filepath, algo = "sha256")
-}
 
 sanitize_path_component <- function(x, fallback = "unnamed") {
   x <- as.character(x)
@@ -70,9 +68,6 @@ make_unique_file_path <- function(folder, file_name) {
   }
 }
 
-# --- Download 287(g) spreadsheets ---
-
-# base 287(g) page URL
 url <- "https://www.ice.gov/identify-and-arrest/287g"
 
 ice_get <- function(url, ...) {
@@ -89,15 +84,27 @@ ice_get <- function(url, ...) {
   )
 }
 
-# get page content
 results <- ice_get(url)
 stop_for_status(results)
 page <- read_html(content(results, as = "text", encoding = "UTF-8"))
 
-# function to normalize ICE URLs
+# ICE publishes some MOA urls SafeLinks-wrapped; the real one is in url=
+unwrap_safelink <- function(u) {
+  if (is.na(u) || !str_detect(u, "safelinks\\.protection\\.outlook\\.com")) {
+    return(u)
+  }
+  inner <- str_extract(u, "(?<=[?&]url=)[^&]+")
+  if (is.na(inner)) u else URLdecode(inner)
+}
+
 make_absolute_url <- function(href) {
   if (is.na(href) || is.null(href) || href == "") {
     return(NA_character_)
+  }
+
+  # test "//host/path" before "/path": startsWith("/") matches both
+  if (startsWith(href, "//")) {
+    return(paste0("https:", href))
   }
 
   if (startsWith(href, "/")) {
@@ -107,7 +114,6 @@ make_absolute_url <- function(href) {
   return(href)
 }
 
-# --- Find participating agencies spreadsheet robustly ---
 all_links <- page |>
   html_elements("a[href]")
 
@@ -187,7 +193,6 @@ if (length(pending) == 0) {
   cat("No pending agencies file found - skipping.\n")
 }
 
-# abort early with a clear message if nothing found
 if (length(participating) == 0) {
   cat("\nERROR: No participating agencies Excel link found on the ICE page.\n")
   cat("Here are all links found on the page:\n")
@@ -206,7 +211,6 @@ if (length(participating) == 0) {
   stop("Aborting: no participating agencies Excel link found.")
 }
 
-# create results folders
 base_results_folder <- "sheets"
 dir.create(base_results_folder, showWarnings = FALSE, recursive = TRUE)
 
@@ -214,22 +218,23 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 results_folder <- file.path(base_results_folder, paste0("sheets_", timestamp))
 dir.create(results_folder, showWarnings = FALSE, recursive = TRUE)
 sheet_download_log <- data.frame(
-  url = character(),
-  original_filename = character(),
-  sanitized_filename = character(),
   saved_path = character(),
   file_hash = character(),
+  url = character(),
+  retrieved_at = character(),
+  state = character(),
+  agency = character(),
+  original_filename = character(),
+  note = character(),
   stringsAsFactors = FALSE
 )
 
-# function to download and save excel files
 download_excel_from_url <- function(url, folder, label = "file") {
   tryCatch(
     {
       results <- ice_get(url)
       stop_for_status(results)
 
-      # try to get filename from content-disposition header first
       cd <- headers(results)[["content-disposition"]]
 
       if (!is.null(cd) && grepl("filename=", cd)) {
@@ -238,7 +243,6 @@ download_excel_from_url <- function(url, folder, label = "file") {
         file_name_only <- str_trim(file_name_only)
         file_name_only <- str_remove_all(file_name_only, "^[\"']|[\"']$")
       } else {
-        # fall back to last segment of URL
         file_name_only <- basename(str_split(url, "\\?")[[1]][1])
 
         if (
@@ -261,16 +265,19 @@ download_excel_from_url <- function(url, folder, label = "file") {
       file_path <- make_unique_file_path(folder, file_name_only)
       file_name_only <- basename(file_path)
       writeBin(content(results, as = "raw"), file_path)
-      file_hash <- get_file_hash(file_path)
+      file_hash <- digest(file = file_path, algo = "sha256")
 
       sheet_download_log <<- rbind(
         sheet_download_log,
         data.frame(
-          url = url,
-          original_filename = original_file_name_only,
-          sanitized_filename = file_name_only,
           saved_path = file_path,
           file_hash = file_hash,
+          url = url,
+          retrieved_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+          state = NA_character_,
+          agency = NA_character_,
+          original_filename = original_file_name_only,
+          note = NA_character_,
           stringsAsFactors = FALSE
         )
       )
@@ -286,7 +293,6 @@ download_excel_from_url <- function(url, folder, label = "file") {
   )
 }
 
-# download participating and pending files
 downloaded_participating <- c()
 
 for (url in participating) {
@@ -311,29 +317,44 @@ for (url in pending) {
 
 write.csv(
   sheet_download_log,
-  file.path(results_folder, "download_path_log.csv"),
-  row.names = FALSE
+  file.path(results_folder, "manifest.csv"),
+  row.names = FALSE,
+  na = ""
 )
 
 if (length(downloaded_participating) == 0) {
   stop("ERROR: Failed to download any participating agencies file.")
 }
 
-# --- Download agreement files ---
+# Agreement documents linked from the participating-agencies workbook.
 
-# read the excel document as a workbook
 file_path <- downloaded_participating[1]
 wb <- loadWorkbook(file_path)
 sheet_name <- names(wb)[1]
 df <- readWorkbook(wb, sheet = sheet_name, colNames = FALSE)
 
-# extract hyperlinks from column 7 using the workbook object
 ws <- wb$worksheets[[1]]
 
-# pull hyperlink targets from the sheet XML
+# readWorkbook drops empty rows/cols, which would misattribute MOA links
+valued <- !is.na(ws$sheet_data$v)
+valued_rows <- ws$sheet_data$rows[valued]
+valued_cols <- ws$sheet_data$cols[valued]
+if (
+  length(valued_rows) == 0 ||
+    min(valued_rows) != 1L ||
+    nrow(df) != max(valued_rows) ||
+    min(valued_cols) != 1L ||
+    ncol(df) != max(valued_cols)
+) {
+  stop(
+    "Sheet has empty rows or columns inside the data region; ",
+    "hyperlink-to-row alignment would misattribute MOA links. ",
+    "Inspect the downloaded workbook before re-running."
+  )
+}
+
 hyperlink_map <- ws$hyperlinks
 
-# build lookup: Excel cell ref -> URL target
 hyperlink_lookup <- list()
 
 if (!is.null(hyperlink_map) && length(hyperlink_map) > 0) {
@@ -353,7 +374,6 @@ if (!is.null(hyperlink_map) && length(hyperlink_map) > 0) {
   }
 }
 
-# helper function: row number and column -> hyperlink target
 get_hyperlink_for_row <- function(row_idx, column) {
   column_index <- match(column, LETTERS)
 
@@ -370,7 +390,6 @@ get_hyperlink_for_row <- function(row_idx, column) {
   return(NULL)
 }
 
-# collect MOA and addendum links with their document type
 hyperlinks_list <- c()
 states_list <- c()
 agencies_list <- c()
@@ -414,7 +433,6 @@ cat(sprintf(
   length(hyperlinks_list)
 ))
 
-# create agreements folders
 documents_folder <- "agreements"
 dir.create(documents_folder, showWarnings = FALSE, recursive = TRUE)
 
@@ -424,52 +442,42 @@ timestamp_folder <- file.path(
 )
 dir.create(timestamp_folder, showWarnings = FALSE, recursive = TRUE)
 agreement_download_log <- data.frame(
-  state = character(),
-  agency_name = character(),
-  hyperlink = character(),
-  document_type = character(),
-  original_state_folder = character(),
-  sanitized_state_folder = character(),
-  original_agency_folder = character(),
-  sanitized_agency_folder = character(),
-  original_filename = character(),
-  sanitized_filename = character(),
   saved_path = character(),
   file_hash = character(),
+  url = character(),
+  retrieved_at = character(),
+  state = character(),
+  agency = character(),
+  original_filename = character(),
+  note = character(),
   stringsAsFactors = FALSE
 )
 
-# track failed downloads
 failed <- c()
 
-# loop through hyperlink, state, agency, and document type combinations
 for (i in seq_along(hyperlinks_list)) {
-  hyperlink <- hyperlinks_list[i]
+  hyperlink <- unwrap_safelink(hyperlinks_list[i])
   state <- states_list[i]
   agency_name <- agencies_list[i]
   document_type <- document_types_list[i]
 
-  # clean state and agency names for use as folder names
   safe_state_name <- sanitize_path_component(state, fallback = "unknown_state")
   safe_agency_name <- sanitize_path_component(
     agency_name,
     fallback = "unknown_agency"
   )
 
-  # create state and agency folders
   state_folder <- file.path(timestamp_folder, safe_state_name)
   agency_folder <- file.path(state_folder, safe_agency_name)
 
   dir.create(agency_folder, showWarnings = FALSE, recursive = TRUE)
 
-  # download agreement file
   tryCatch(
     {
       Sys.sleep(1)
       results <- ice_get(hyperlink)
 
       if (status_code(results) == 200) {
-        # prefer content-disposition filename, fall back to URL basename
         cd <- headers(results)[["content-disposition"]]
 
         if (!is.null(cd) && grepl("filename=", cd)) {
@@ -503,23 +511,20 @@ for (i in seq_along(hyperlinks_list)) {
         file_name <- make_unique_file_path(agency_folder, file_name_only)
         file_name_only <- basename(file_name)
         writeBin(content(results, as = "raw"), file_name)
-        file_hash <- get_file_hash(file_name)
+        file_hash <- digest(file = file_name, algo = "sha256")
 
         agreement_download_log <<- rbind(
           agreement_download_log,
           data.frame(
-            state = state,
-            agency_name = agency_name,
-            hyperlink = hyperlink,
-            document_type = document_type,
-            original_state_folder = state,
-            sanitized_state_folder = safe_state_name,
-            original_agency_folder = agency_name,
-            sanitized_agency_folder = safe_agency_name,
-            original_filename = original_file_name_only,
-            sanitized_filename = file_name_only,
             saved_path = file_name,
             file_hash = file_hash,
+            url = hyperlink,
+            retrieved_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ",
+                                  tz = "UTC"),
+            state = state,
+            agency = agency_name,
+            original_filename = original_file_name_only,
+            note = document_type,
             stringsAsFactors = FALSE
           )
         )
@@ -545,7 +550,6 @@ for (i in seq_along(hyperlinks_list)) {
   )
 }
 
-# log failed downloads
 if (length(failed) > 0) {
   failed_log_path <- file.path(timestamp_folder, "failed_downloads.txt")
   writeLines(failed, failed_log_path)
@@ -559,8 +563,9 @@ if (length(failed) > 0) {
 
 write.csv(
   agreement_download_log,
-  file.path(timestamp_folder, "download_path_log.csv"),
-  row.names = FALSE
+  file.path(timestamp_folder, "manifest.csv"),
+  row.names = FALSE,
+  na = ""
 )
 
 cat("Done.\n")

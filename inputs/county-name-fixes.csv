@@ -1,34 +1,48 @@
-state,county,county_fixed
-Alabama,Frankin County,Franklin County
-Arkansas,Bowie County,Miller County
-Arkansas,Pop County,Pope County
-Arkansas,Pulaksi County,Pulaski County
-Florida,Flager County,Flagler County
-Florida,Lake Conty,Lake County
-Florida,St. Luice County,St. Lucie County
-Kansas,Montgomery,Montgomery County
-Kentucky,Adaitr County,Adair County
-Kentucky,Whitely County,Whitley County
-Louisiana,Arcadia County,Acadia Parish
-Louisiana,Chalmette Parish,St. Bernard Parish
-Louisiana,German Coast County,St. Charles Parish
-Louisiana,Richland County,Richland Parish
-Louisiana,Saint Landry County,St. Landry Parish
-Mississippi,Pearl County,Pearl River County
-Mississippi,Prentiss Couty,Prentiss County
-Missouri,North County,St. Louis County
-Missouri,Saint Francois County,St. Francois County
-Oklahoma,Bryant County,Bryan County
-Oklahoma,Custer Countey,Custer County
-Oklahoma,Wood County,Woods County
-Pennsylvania,Lawrence,Lawrence County
-Tennessee,Louden County,Loudon County
-Tennessee,Sparta-White County,White County
-Texas,Fall County,Falls County
-Texas,Guadalupe Conty,Guadalupe County
-Texas,Knox Couty,Knox County
-Texas,Overton County,Rusk County
-Texas,San Patricio,San Patricio County
-Texas,Zavala Couny,Zavala County
-West Virginia,Kenawha County,Kanawha County
-Louisiana,Calacasieu Parish,Calcasieu Parish
+state,county,county_fixed,note
+Alabama,Frankin County,Franklin County,
+Arkansas,Bowie County,Miller County,"Texarkana AR sits in Miller County; Bowie is the Texas side of Texarkana"
+Arkansas,Pop County,Pope County,
+Arkansas,Pulaksi County,Pulaski County,
+Florida,Flager County,Flagler County,
+Florida,Lake Conty,Lake County,
+Florida,St. Luice County,St. Lucie County,
+Georgia,Decatur,Decatur County,"sheet drops the County suffix (Decatur County Sheriff's Office, seen 2026-09-11 sheet)"
+Guam,Kattan District,Guam,"Guam has a single county-equivalent named Guam; Kattan is the island's southern district (Office of the Attorney General row, 2026-09-11 sheet)"
+Kansas,Montgomery,Montgomery County,
+Kentucky,Adaitr County,Adair County,
+Kentucky,Whitely County,Whitley County,
+Louisiana,Arcadia County,Acadia Parish,
+Louisiana,Calacasieu Parish,Calcasieu Parish,
+Louisiana,Chalmette Parish,St. Bernard Parish,
+Louisiana,German Coast County,St. Charles Parish,
+Louisiana,La Salle Parish,Lasalle Parish,"Census NAMELSAD spells the Louisiana parish LaSalle; str_to_title makes the join key Lasalle Parish (Urania PD, 2026-09-11 sheet)"
+Louisiana,Richland County,Richland Parish,
+Louisiana,Saint Landry County,St. Landry Parish,
+Louisiana,Saint Tammany Parish,St. Tammany Parish,"Census abbreviates St. (Mandeville PD, 2026-09-11 sheet)"
+Louisiana,Tangipahoian Parish,Tangipahoa Parish,"Kentwood sits in Tangipahoa Parish (2026-09-11 sheet)"
+Michigan,Berrian County,Berrien County,"ICE misspells both the agency and county; Berrien County Sheriff's Office (2026-09-11 sheet)"
+Mississippi,Pearl County,Pearl River County,
+Mississippi,Prentiss Couty,Prentiss County,
+Mississippi,Sumner County,Franklin County,"no Sumner County in MS; Meadville PD's town is the Franklin County seat (2026-09-11 sheet)"
+Missouri,North County,St. Louis County,
+Missouri,Saint Francois County,St. Francois County,
+Nevada,Ormsby County,Carson City,"Ormsby County was consolidated into Carson City in 1969; Nevada DOC is in Carson City (2026-09-11 sheet)"
+North Dakota,Grand Forks,Grand Forks County,"sheet drops the County suffix (Grand Forks County Sheriff's Office, seen 2026-09-11 sheet)"
+Oklahoma,Bryant County,Bryan County,
+Oklahoma,Custer Countey,Custer County,
+Oklahoma,Leflore County,Le Flore County,"Census/tigris NAMELSAD spells the Oklahoma county Le Flore (seen 2026-09-11 sheet)"
+Oklahoma,Wood County,Woods County,
+Pennsylvania,Lawrence,Lawrence County,
+Pennsylvania,Miffin County,Mifflin County,"Lewistown Borough is the Mifflin County seat (seen 2026-09-11 sheet)"
+Tennessee,Louden County,Loudon County,
+Tennessee,Sparta-White County,White County,
+Texas,Fall County,Falls County,
+Texas,Guadalupe Conty,Guadalupe County,
+Texas,Knox Couty,Knox County,
+Texas,Lampasas,Lampasas County,"sheet drops the County suffix (Lampasas County Constable Precinct 1, 2026-09-11 sheet)"
+Texas,Morris,Morris County,"sheet drops the County suffix (Naples PD, 2026-09-11 sheet)"
+Texas,Overton County,Rusk County,
+Texas,San Patricio,San Patricio County,
+Texas,Zavala Couny,Zavala County,
+Virginia,Hopewell County,Hopewell City,"Hopewell is an independent city (tigris NAMELSAD Hopewell city); it has no county (2026-09-11 sheet)"
+West Virginia,Kenawha County,Kanawha County,
