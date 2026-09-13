@@ -3,19 +3,36 @@ name: "Scrape 287(g) agreements"
 on:
   schedule:
     # hourly: ICE sometimes replaces the sheet more than once a day (the
-    # archive holds am/pm pairs). The cheap-gate step below keeps unchanged
-    # runs to two small requests, so this costs ice.gov almost nothing.
+    # archive holds am/pm pairs). The sheet check keeps unchanged runs to two small
+    # requests plus a sharded revalidation of the MOA pdfs.
     # minute 17 avoids the top-of-the-hour scheduling pile-up
     - cron: '17 * * * *'
   workflow_dispatch:
+    inputs:
+      full_pass:
+        description: "revalidate every MOA url, not just this hour's shard"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   pull-requests: write
 
+# never cancel a run mid-scrape; a newer tick queues behind it
+concurrency:
+  group: 287g-acquire
+  cancel-in-progress: false
+
 jobs:
-  scrape:
+  # Everything ICE published is committed and pushed here, before any pipeline
+  # code runs, so a red data build can never discard an acquisition.
+  acquire:
     runs-on: [self-hosted]
+    timeout-minutes: 150
+    outputs:
+      branch: ${{ steps.update_branch.outputs.branch }}
+      changed: ${{ steps.check_changes.outputs.changed }}
+      pr_number: ${{ steps.create_pr.outputs.pr_number }}
 
     steps:
       - uses: actions/checkout@v4
@@ -30,9 +47,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # While an agreements-update PR sits unmerged, build on its branch so
-          # each day's scrape lands as a new commit there. The old behavior
-          # skipped the run entirely when files overlapped an open PR, which
-          # silently dropped the Sep 8-11 2026 snapshots while PR #58 waited.
+          # each run's changes land as a new commit there.
           open_branch=$(gh pr list --state open --json headRefName \
             --jq '[.[].headRefName | select(startswith("agreements-update"))][0] // empty')
           if [ -n "$open_branch" ]; then
@@ -48,13 +63,11 @@ jobs:
             echo "existing_pr=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check whether the ICE sheet changed (cheap gate)
-        id: gate
+      - name: Check whether the ICE sheet changed (quick check)
+        id: sheet_check
         run: |
-          # Hourly schedule, but a full scrape re-downloads every MOA PDF —
-          # so first fetch just the participating-agencies sheet and compare
-          # its hash to the newest snapshot. Any failure falls through to a
-          # full scrape, which has its own error handling.
+          # Fetch just the participating-agencies sheet and compare its hash to
+          # the archive. Any failure falls through to a full scrape.
           ua="Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36"
           url=$(curl -sL --retry 3 -A "$ua" "https://www.ice.gov/identify-and-arrest/287g" \
             | grep -oiE 'href="[^"]*participatingAgencies[^"]*\.xlsx[^"]*"' \
@@ -68,152 +81,111 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if ! curl -sL -f --retry 3 -A "$ua" "$url" -o /tmp/gate-sheet.xlsx; then
-            echo "Gate download failed — running full scrape."
+          if ! curl -sL -f --retry 3 -A "$ua" "$url" -o "$RUNNER_TEMP/sheet-check.xlsx"; then
+            echo "Sheet check download failed — running full scrape."
             echo "changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          new_hash=$(sha256sum /tmp/gate-sheet.xlsx | cut -d' ' -f1)
-          latest_dir=$(ls -d sheets/sheets_2* 2>/dev/null | sort | tail -1 || true)
-          # manifest.csv is the unified manifest; download_path_log.csv is
-          # its predecessor, tolerated until every branch is converted
-          if [ -n "$latest_dir" ] && cat "$latest_dir"/manifest.csv "$latest_dir"/download_path_log.csv 2>/dev/null | grep -q "$new_hash"; then
+          new_hash=$(sha256sum "$RUNNER_TEMP/sheet-check.xlsx" | cut -d' ' -f1)
+          echo "sheet_hash=$new_hash" >> "$GITHUB_OUTPUT"
+          # a failed PDF download is retried on the next tick, not the next sheet edit
+          if find agreements -name failed_downloads.txt -size +0 2>/dev/null | grep -q .; then
+            echo "Outstanding failed downloads — running full scrape."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          newest_dir=$(ls -d sheets/sheets_2* 2>/dev/null | sort | tail -1 || true)
+          today=$(date -u +%Y-%m-%d)
+          # a folder's hashes are in its manifest.csv, or in a download_path_log.csv where it has that instead
+          if [ -n "$newest_dir" ] && cat "$newest_dir"/manifest.csv "$newest_dir"/download_path_log.csv 2>/dev/null | grep -q "$new_hash"; then
             echo "Sheet unchanged (sha256 $new_hash) — skipping scrape."
             echo "changed=false" >> "$GITHUB_OUTPUT"
+          elif cat sheets/sheets_2*/manifest.csv sheets/sheets_2*/download_path_log.csv 2>/dev/null | grep -q "$new_hash"; then
+            # ICE is re-serving an older sheet. Record that once per day (the row is
+            # appended after the clean-tree step, or it would be wiped) and let the run
+            # proceed so it is committed; the sheet itself collapses as a duplicate.
+            if grep -qs "^$today,$new_hash," sheets/seen-log.csv; then
+              echo "Sheet reverted to $new_hash, already logged today — skipping."
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "Sheet reverted to a previously seen hash — logging and scraping."
+              echo "event=revert" >> "$GITHUB_OUTPUT"
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            fi
           else
             echo "Sheet changed or no prior snapshot — running full scrape."
+            echo "event=new" >> "$GITHUB_OUTPUT"
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Ensure clean working tree and save current snapshot
-        if: steps.gate.outputs.changed == 'true'
+      - name: Ensure clean working tree
         run: |
           git lfs pull
           git checkout -- .
-          # the runner is persistent and a skipped run used to leave its
-          # untracked snapshot folders behind, contaminating the next day's
-          # diff — remove anything git doesn't track before scraping
-          git clean -fd agreements/ sheets/
-          mkdir -p /tmp/old-287g
-          Rscript --vanilla -e '
-            # this step runs before "Install R packages", so a cold runner
-            # must bootstrap digest itself
-            if (!requireNamespace("digest", quietly = TRUE)) {
-              install.packages("digest", repos = "https://cloud.r-project.org")
-            }
-            suppressPackageStartupMessages(library(digest))
+          # the runner is persistent; drop anything git doesn't track before acquiring
+          git clean -fd agreements/ sheets/ manifests/
 
-            snapshot <- function(base_path, out_path) {
-              if (!dir.exists(base_path)) {
-                saveRDS(data.frame(
-                  rel_path = character(),
-                  file_hash = character(),
-                  stringsAsFactors = FALSE
-                ), out_path)
-                return()
-              }
-
-              files <- list.files(base_path, recursive = TRUE, full.names = TRUE)
-              files <- files[!file.info(files)$isdir]
-              rel_paths <- substring(files, nchar(base_path) + 2)
-              file_hashes <- vapply(
-                files,
-                function(path) digest::digest(file = path, algo = "sha256"),
-                character(1)
-              )
-
-              saveRDS(data.frame(
-                rel_path = rel_paths,
-                file_hash = unname(file_hashes),
-                stringsAsFactors = FALSE
-              ), out_path)
-            }
-
-            snapshot("agreements", "/tmp/old-287g/agreements.rds")
-            snapshot("sheets", "/tmp/old-287g/sheets.rds")
-          '
+      - name: Record the sheet event
+        if: steps.sheet_check.outputs.event != ''
+        run: |
+          # one row per distinct (day, sheet hash): evidence of what ICE served when
+          [ -f sheets/seen-log.csv ] || echo "date,sheet_hash,event" > sheets/seen-log.csv
+          echo "$(date -u +%Y-%m-%d),${{ steps.sheet_check.outputs.sheet_hash }},${{ steps.sheet_check.outputs.event }}" >> sheets/seen-log.csv
 
       - name: Install R packages
-        if: steps.gate.outputs.changed == 'true'
         run: |
           Rscript --vanilla -e '
             pkgs <- c(
-              "arrow",
-              "digest",
-              "dplyr",
-              "fs",
-              "haven",
-              "httr",
-              "httr2",
-              "openxlsx",
-              "readr",
-              "readxl",
-              "rvest",
-              "sf",
-              "sfarrow",
-              "stringi",
-              "stringdist",
-              "stringr",
-              "tidygeocoder",
-              "tigris",
-              "tidyr",
-              "tidyverse",
-              "xml2"
+              "arrow", "digest", "dplyr", "fs", "haven", "httr", "httr2", "openxlsx",
+              "readr", "readxl", "rvest", "sf", "stringi", "stringdist",
+              "stringr", "tidygeocoder", "tigris", "tidyr", "tidyverse", "xml2"
             )
             # the self-hosted runner keeps its library between runs; a full
             # reinstall recompiles arrow from source (~50 min), so only fetch
             # what is missing (delete the package from the library to force a
             # version refresh)
-            missing <- pkgs[
-              !vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)
-            ]
+            missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
             if (length(missing) > 0) {
               install.packages(missing, repos = "https://cloud.r-project.org")
             }
           '
 
-      - name: Run scraper
-        if: steps.gate.outputs.changed == 'true'
-        run: Rscript --vanilla code/0-287g-scraper.R
+      - name: Snapshot the sheet
+        if: steps.sheet_check.outputs.changed == 'true'
+        run: Rscript --vanilla code/0-acquire-scraper.R
+
+      - name: Revalidate MOA documents
+        env:
+          # every url when the sheet changed or failures are outstanding; one shard
+          # of six otherwise, so every url is revalidated every six hours
+          MOA_FULL: ${{ (steps.sheet_check.outputs.changed == 'true' || inputs.full_pass == true) && '1' || '' }}
+        run: |
+          export MOA_SHARD=$(( 10#$(date -u +%H) % 6 ))
+          Rscript --vanilla code/0-acquire-moa-pass.R
 
       - name: Run deduplicator
-        if: steps.gate.outputs.changed == 'true'
-        run: Rscript --vanilla code/0-287g-deduplicate.R
+        run: Rscript --vanilla code/0-acquire-dedupe.R
 
       - name: Check for changes
-        if: steps.gate.outputs.changed == 'true'
         id: check_changes
         run: |
-          git add agreements/ sheets/
-
+          git add agreements/ sheets/ manifests/
           if git diff --cached --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
-          # Generate change summary comparing old vs new files
-          Rscript --vanilla code/0-287g-diff.R
-
-          # If files changed but contents are identical after deduplication, skip
-          if grep -qF 'NO_REAL_CHANGES' /tmp/287g-changes.txt; then
-            echo "Files differ but contents are identical — skipping."
-            git reset HEAD -- agreements/ sheets/
-            git checkout -- agreements/ sheets/
-            # checkout restores tracked files only; also drop the untracked
-            # snapshot folders this run created, or they leak into tomorrow
-            git clean -fd agreements/ sheets/
-            echo "changed=false" >> $GITHUB_OUTPUT
+          Rscript --vanilla code/0-acquire-diff.R
+          if grep -qF 'NO_REAL_CHANGES' "$RUNNER_TEMP/287g-changes.txt"; then
+            echo "Only the pass log moved — nothing to commit."
+            git reset HEAD -- agreements/ sheets/ manifests/
+            git checkout -- agreements/ sheets/ manifests/
+            git clean -fd agreements/ sheets/ manifests/
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run CI-friendly data pipeline
-        if: steps.check_changes.outputs.changed == 'true'
-        run: |
-          bash code/run_ci.sh
-          git add data/
-
-      - name: Commit and push
+      - name: Commit and push the acquisition
         if: steps.check_changes.outputs.changed == 'true'
         run: |
           git config --local user.email "action@github.com"
@@ -230,43 +202,93 @@ jobs:
           {
             echo "Automated update: changes detected in 287(g) agreement files."
             echo ""
-            cat /tmp/287g-changes.txt
-          } > /tmp/pr-body.txt
-          head -c 60000 /tmp/pr-body.txt > /tmp/pr-body.trimmed.txt
-          if [ "$(wc -c < /tmp/pr-body.txt)" -gt 60000 ]; then
-            printf "\n\n_...truncated at 60k chars._\n" >> /tmp/pr-body.trimmed.txt
+            cat "$RUNNER_TEMP/287g-changes.txt"
+          } > "$RUNNER_TEMP/pr-body.txt"
+          head -c 60000 "$RUNNER_TEMP/pr-body.txt" > "$RUNNER_TEMP/pr-body.trimmed.txt"
+          if [ "$(wc -c < "$RUNNER_TEMP/pr-body.txt")" -gt 60000 ]; then
+            printf "\n\n_...truncated at 60k chars._\n" >> "$RUNNER_TEMP/pr-body.trimmed.txt"
           fi
-
           if [ "${{ steps.update_branch.outputs.existing_pr }}" = "true" ]; then
-            # each day's incremental diff lands as a comment on the open PR
-            # (the snapshot step captured the PR branch's state, so the diff
-            # covers only what this run added)
             pr_num=$(gh pr list --state open \
               --head "${{ steps.update_branch.outputs.branch }}" \
               --json number --jq '.[0].number')
-            gh pr comment "$pr_num" --body-file /tmp/pr-body.trimmed.txt
-            gh pr edit "$pr_num" \
-              --title "287(g) update through $(date +%Y-%m-%d)"
-            pr_url=$(gh pr view "$pr_num" --json url --jq .url)
+            gh pr comment "$pr_num" --body-file "$RUNNER_TEMP/pr-body.trimmed.txt"
+            gh pr edit "$pr_num" --title "287(g) update through $(date +%Y-%m-%d)"
           else
             pr_url=$(gh pr create \
               --title "287(g) update $(date +%Y-%m-%d)" \
-              --body-file /tmp/pr-body.trimmed.txt \
+              --body-file "$RUNNER_TEMP/pr-body.trimmed.txt" \
               --base main)
             pr_num="${pr_url##*/}"
           fi
-          echo "pr_url=${pr_url}" >> "$GITHUB_OUTPUT"
           echo "pr_number=${pr_num}" >> "$GITHUB_OUTPUT"
 
+      - name: Clean up temp files
+        if: always()
+        run: rm -f "$RUNNER_TEMP"/sheet-check.xlsx "$RUNNER_TEMP"/287g-changes.txt "$RUNNER_TEMP"/pr-body*.txt
+
+  # The data build runs against the pushed acquisition; its failure costs one
+  # build, never a snapshot.
+  build:
+    needs: acquire
+    if: needs.acquire.outputs.changed == 'true'
+    runs-on: [self-hosted]
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.acquire.outputs.branch }}
+          clean: true
+          lfs: true
+          fetch-depth: 0
+
+      - name: Install R packages
+        run: |
+          Rscript --vanilla -e '
+            pkgs <- c(
+              "arrow", "digest", "dplyr", "fs", "haven", "httr", "httr2", "openxlsx",
+              "readr", "readxl", "rvest", "sf", "stringi", "stringdist",
+              "stringr", "tidygeocoder", "tigris", "tidyr", "tidyverse", "xml2"
+            )
+            missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
+            if (length(missing) > 0) {
+              install.packages(missing, repos = "https://cloud.r-project.org")
+            }
+          '
+
+      - name: Build the datasets
+        env:
+          # a tripped invariant fails this job, and only this job
+          QA_STRICT: "1"
+        run: |
+          bash code/run_ci.sh
+          git add data/
+
+      - name: Commit and push the datasets
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          if git diff --cached --quiet; then
+            echo "Datasets unchanged."
+          else
+            git commit -m "Update 287(g) datasets [skip ci]"
+            git push origin HEAD
+          fi
+
       - name: Trigger diff workflow
-        if: steps.create_pr.outputs.pr_number != ''
+        if: needs.acquire.outputs.pr_number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh api -X POST "repos/${{ github.repository }}/dispatches" \
             -f event_type=diff-pr \
-            -F "client_payload[pr_number]=${{ steps.create_pr.outputs.pr_number }}"
+            -F "client_payload[pr_number]=${{ needs.acquire.outputs.pr_number }}"
 
-      - name: Clean up temp files
-        if: always()
-        run: rm -rf /tmp/old-287g /tmp/287g-changes.txt /tmp/pr-body*.txt
+      - name: Report a failed build on the PR
+        if: failure() && needs.acquire.outputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment "${{ needs.acquire.outputs.pr_number }}" --body \
+            "Data build failed at $(git rev-parse --short HEAD); the raw snapshot is committed on this branch. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

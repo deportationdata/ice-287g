@@ -49,6 +49,14 @@ manual_regional <- read_csv(
     note
   )
 
-arrow::write_parquet(manual_points, "data/manual-points.parquet")
-arrow::write_parquet(manual_polygons, "data/manual-polygons.parquet")
-arrow::write_parquet(manual_regional, "data/manual-regional.parquet")
+# a judicial district's or circuit's counties, one per row, with the source for each
+manual_judicial <- read_csv(
+  "inputs/manual-judicial-district-counties.csv",
+  col_types = cols(.default = col_character())
+) |>
+  transmute(agency, state, county, source, note)
+
+arrow::write_parquet(manual_points, "data/intermediate/manual-facility-points.parquet")
+arrow::write_parquet(manual_polygons, "data/intermediate/manual-non-facility-polygons.parquet")
+arrow::write_parquet(manual_regional, "data/intermediate/manual-regional-municipalities.parquet")
+arrow::write_parquet(manual_judicial, "data/intermediate/manual-judicial-district-counties.parquet")

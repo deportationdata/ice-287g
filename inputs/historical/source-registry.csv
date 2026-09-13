@@ -1,0 +1,6 @@
+source_id,as_of,as_of_basis,unit,reader_script,provenance_file,note
+ice_sheet,,per publication,sheet row,1-read-sheets.R,sheets/*,every archived ICE roster capture from 2008-04-29 onward; the identities it yields are the partnership universe
+ice_lists,,on-page caption,agency,1-read-historical-ice-lists.R,sheets/sheets_wayback_pre2011/,ICE's undated agency lists as of 2007-09-19 (28) and 2008-03-10 (41) from the partners page before the dated table appeared
+ice_archive_index,2026-04-20,retrieved,agreement,1-read-historical-ice-archive-index.R,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv,ICE's MOA directory also holds non-287(g) documents (a Cook County forfeiture MOU; a Morristown application letter) so it may not add a partnership
+oig_2009,2009-10-28,stated as-of,jurisdiction incl. pending,1-read-historical-oig-2009.R,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf,DHS OIG-10-63 App. E Table 3 from ICE OSLC data; the only roster between the Aug 2009 and Apr 2010 captures
+ice_press,,release date,agreement,2-make-partnerships.R,inputs/historical/press-claims.csv,agreements ICE announced that never reached a roster; the only source that may add a partnership; each row carries its own evidence url

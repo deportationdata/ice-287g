@@ -1,5 +1,8 @@
 agency,state,county,manual_facility_name,manual_address,manual_city,manual_county,manual_state,manual_zip,latitude,longitude,manual_reason,manual_note
-"Rappahannock, Shenandoah, Warren Regional Jail Authority",Virginia,,Rappahannock Shenandoah Warren Regional Jail,,,,"Virginia",,39.0019,-78.1698,manual_regional_authority,
-Southwest Virginia Regional Jail Authority,Virginia,,Southwestern Regional Jail,,,,"Virginia",,37.8052,-82.0957,manual_regional_authority,
-CNMI Department of Corrections,Commonwealth of the Northern Mariana Islands,,CNMI Department of Corrections,,,,"Commonwealth of the Northern Mariana Islands",,15.1579,145.7074,manual_territory_doc,
-Metropolitan Moore County Sheriff's Office,Tennessee,,Moore County Sheriff's Office,,,,"Tennessee",,35.2812,-86.3780,manual_original,
+"Rappahannock, Shenandoah, Warren Regional Jail Authority",Virginia,,Rappahannock Shenandoah Warren Regional Jail,,,,Virginia,,39.0019,-78.1698,manual_regional_authority,
+CNMI Department of Corrections,Commonwealth of the Northern Mariana Islands,,CNMI Department of Corrections,,,,Commonwealth of the Northern Mariana Islands,,15.1579,145.7074,manual_territory_doc,
+Metropolitan Moore County Sheriff's Office,Tennessee,,Moore County Sheriff's Office,,,,Tennessee,,35.2812,-86.3780,manual_original,
+Lee County Port Authority Police,Florida,,Southwest Florida International Airport,,Fort Myers,Lee County,Florida,,26.53611,-81.75528,manual_port_airport,RSW airport reference point; the authority also runs Page Field (reviewed 2026-09-13)
+Melbourne International Airport Police Department,Florida,,Melbourne Orlando International Airport,,Melbourne,Brevard County,Florida,,28.10278,-80.64528,manual_port_airport,MLB airport reference point (reviewed 2026-09-13)
+Sanford Airport Police Department,Florida,,Orlando Sanford International Airport,,Sanford,Seminole County,Florida,,28.77778,-81.23750,manual_port_airport,SFB airport reference point (reviewed 2026-09-13)
+Sarasota Manatee Airport Authority Police Department,Florida,,Sarasota Bradenton International Airport,,Sarasota,Sarasota County,Florida,,27.39556,-82.55444,manual_port_airport,SRQ airport reference point; the field spans Sarasota and Manatee counties (reviewed 2026-09-13)

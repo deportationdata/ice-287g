@@ -1,2 +1,5 @@
 state,agency,support_type,signed,signed_fixed,note
 Oklahoma,Ottawa County Sheriff's Office,Task Force Model,2025-02-23,2026-02-23,"year typo in ICE's sheet: the agreement is absent from every published list through the 2026-02-17 sheet and first appears in the 2026-02-27 sheet, so it cannot predate Feb 2026"
+New York,Mohawk Village Police Department,Task Force Model,2016-03-19,2026-03-19,year typo in ICE's sheet: the agreement first appears in March 2026 and its MOA (MohawkVillagePoliceDeptNY_TFM_MOA_03192026.pdf) is dated 2026-03-19
+Florida,Melbourne Beach Police Department,Task Force Model,2025-04-14,2025-05-13,ICE prints neighbouring Melbourne PD's date; the MOA (MelbourneBeachPoliceDeptFL_TFM_MOA_05132025.pdf) is signed 05/13/2025 and ICE printed 05-13 on 20 lists (2025-05-15 to 06-26) before switching (audit 2026-09-13)
+Florida,"Florida Department of Environmental Protection, Division of Law Enforcement",Task Force Model,2025-02-14,2025-04-24,"a second row for the division carrying FDLE's date on 8 lists (2025-07-15 to 07-29), linking the same MOA (FloridaDeptEnvironProtectDivLawEnf_TFM_MOA_04252025.pdf) as the 2025-04-24 listing (audit 2026-09-13)"
