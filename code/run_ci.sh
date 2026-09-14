@@ -5,5 +5,7 @@ set -e
 export R_PROFILE_USER=/dev/null
 export R_ENVIRON_USER=/dev/null
 export RENV_CONFIG_AUTOLOADER_ENABLED=FALSE
+# .Rprofile is skipped here, so repeat its allocator setting (see README)
+export ARROW_DEFAULT_MEMORY_POOL=system
 
 bash code/run_all.sh

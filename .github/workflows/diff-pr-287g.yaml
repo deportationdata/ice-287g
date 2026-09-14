@@ -6,7 +6,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'data/all_agreements_sf.parquet'
+      - 'data/intermediate/match-all-features.parquet'
   workflow_dispatch:
     inputs:
       pr_number:
@@ -45,7 +45,8 @@ jobs:
           lfs: false
           sparse-checkout: |
             code/diff-agreements-pr.R
-            data/all_agreements_sf.parquet
+            data/intermediate/match-all-features.parquet
+            data/qa/qa-summary.csv
           sparse-checkout-cone-mode: false
 
       - name: Checkout main into _main/
@@ -54,8 +55,12 @@ jobs:
           ref: main
           path: _main
           lfs: false
+          # every path the feature layer is committed under on main
           sparse-checkout: |
+            data/intermediate/match-all-features.parquet
+            data/intermediate/all_agreements_sf.parquet
             data/all_agreements_sf.parquet
+            data/qa/qa-summary.csv
           sparse-checkout-cone-mode: false
 
       - name: Set up R
@@ -76,10 +81,22 @@ jobs:
 
       - name: Run diff script
         run: |
+          main_sf=_main/data/intermediate/match-all-features.parquet
+          [ -f "$main_sf" ] || main_sf=_main/data/intermediate/all_agreements_sf.parquet
+          [ -f "$main_sf" ] || main_sf=_main/data/all_agreements_sf.parquet
           Rscript --vanilla code/diff-agreements-pr.R \
-            _main/data/all_agreements_sf.parquet \
-            data/all_agreements_sf.parquet \
+            "$main_sf" \
+            data/intermediate/match-all-features.parquet \
             > /tmp/pr-diff-comment.md
+          # the QA invariants ship as a CSV so their diff reads inline
+          if [ -f _main/data/qa/qa-summary.csv ] && [ -f data/qa/qa-summary.csv ]; then
+            if ! diff -u _main/data/qa/qa-summary.csv data/qa/qa-summary.csv > /tmp/qa-summary.diff; then
+              { printf "\n\n### QA summary changes\n\n\`\`\`diff\n"; cat /tmp/qa-summary.diff; printf "\`\`\`\n"; } \
+                >> /tmp/pr-diff-comment.md
+            else
+              printf "\n\n_QA summary unchanged._\n" >> /tmp/pr-diff-comment.md
+            fi
+          fi
           head -c 60000 /tmp/pr-diff-comment.md > /tmp/pr-diff-comment.trimmed.md
           if [ $(wc -c < /tmp/pr-diff-comment.md) -gt 60000 ]; then
             printf "\n\n_...truncated at 60k chars._\n" >> /tmp/pr-diff-comment.trimmed.md

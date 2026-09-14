@@ -1,48 +1,57 @@
-state,county,county_fixed,note
-Alabama,Frankin County,Franklin County,
-Arkansas,Bowie County,Miller County,"Texarkana AR sits in Miller County; Bowie is the Texas side of Texarkana"
-Arkansas,Pop County,Pope County,
-Arkansas,Pulaksi County,Pulaski County,
-Florida,Flager County,Flagler County,
-Florida,Lake Conty,Lake County,
-Florida,St. Luice County,St. Lucie County,
-Georgia,Decatur,Decatur County,"sheet drops the County suffix (Decatur County Sheriff's Office, seen 2026-09-11 sheet)"
-Guam,Kattan District,Guam,"Guam has a single county-equivalent named Guam; Kattan is the island's southern district (Office of the Attorney General row, 2026-09-11 sheet)"
-Kansas,Montgomery,Montgomery County,
-Kentucky,Adaitr County,Adair County,
-Kentucky,Whitely County,Whitley County,
-Louisiana,Arcadia County,Acadia Parish,
-Louisiana,Calacasieu Parish,Calcasieu Parish,
-Louisiana,Chalmette Parish,St. Bernard Parish,
-Louisiana,German Coast County,St. Charles Parish,
-Louisiana,La Salle Parish,Lasalle Parish,"Census NAMELSAD spells the Louisiana parish LaSalle; str_to_title makes the join key Lasalle Parish (Urania PD, 2026-09-11 sheet)"
-Louisiana,Richland County,Richland Parish,
-Louisiana,Saint Landry County,St. Landry Parish,
-Louisiana,Saint Tammany Parish,St. Tammany Parish,"Census abbreviates St. (Mandeville PD, 2026-09-11 sheet)"
-Louisiana,Tangipahoian Parish,Tangipahoa Parish,"Kentwood sits in Tangipahoa Parish (2026-09-11 sheet)"
-Michigan,Berrian County,Berrien County,"ICE misspells both the agency and county; Berrien County Sheriff's Office (2026-09-11 sheet)"
-Mississippi,Pearl County,Pearl River County,
-Mississippi,Prentiss Couty,Prentiss County,
-Mississippi,Sumner County,Franklin County,"no Sumner County in MS; Meadville PD's town is the Franklin County seat (2026-09-11 sheet)"
-Missouri,North County,St. Louis County,
-Missouri,Saint Francois County,St. Francois County,
-Nevada,Ormsby County,Carson City,"Ormsby County was consolidated into Carson City in 1969; Nevada DOC is in Carson City (2026-09-11 sheet)"
-North Dakota,Grand Forks,Grand Forks County,"sheet drops the County suffix (Grand Forks County Sheriff's Office, seen 2026-09-11 sheet)"
-Oklahoma,Bryant County,Bryan County,
-Oklahoma,Custer Countey,Custer County,
-Oklahoma,Leflore County,Le Flore County,"Census/tigris NAMELSAD spells the Oklahoma county Le Flore (seen 2026-09-11 sheet)"
-Oklahoma,Wood County,Woods County,
-Pennsylvania,Lawrence,Lawrence County,
-Pennsylvania,Miffin County,Mifflin County,"Lewistown Borough is the Mifflin County seat (seen 2026-09-11 sheet)"
-Tennessee,Louden County,Loudon County,
-Tennessee,Sparta-White County,White County,
-Texas,Fall County,Falls County,
-Texas,Guadalupe Conty,Guadalupe County,
-Texas,Knox Couty,Knox County,
-Texas,Lampasas,Lampasas County,"sheet drops the County suffix (Lampasas County Constable Precinct 1, 2026-09-11 sheet)"
-Texas,Morris,Morris County,"sheet drops the County suffix (Naples PD, 2026-09-11 sheet)"
-Texas,Overton County,Rusk County,
-Texas,San Patricio,San Patricio County,
-Texas,Zavala Couny,Zavala County,
-Virginia,Hopewell County,Hopewell City,"Hopewell is an independent city (tigris NAMELSAD Hopewell city); it has no county (2026-09-11 sheet)"
-West Virginia,Kenawha County,Kanawha County,
+state,agency,county,county_fixed,note
+Alabama,,Frankin County,Franklin County,
+Arkansas,,Bowie County,Miller County,Texarkana AR sits in Miller County; Bowie is the Texas side of Texarkana
+Arkansas,,Pop County,Pope County,
+Arkansas,,Pulaksi County,Pulaski County,
+Florida,,Flager County,Flagler County,
+Florida,,Lake Conty,Lake County,
+Florida,,St. Luice County,St. Lucie County,
+Georgia,,Decatur,Decatur County,"sheet drops the County suffix (Decatur County Sheriff's Office, seen 2026-09-11 sheet)"
+Guam,,Kattan District,Guam,"Guam has a single county-equivalent named Guam; Kattan is the island's eastern district (Office of the Attorney General row, 2026-09-11 sheet)"
+Indiana,,Stueben County,Steuben County,
+Kansas,,Montgomery,Montgomery County,
+Kentucky,,Adaitr County,Adair County,
+Kentucky,,Whitely County,Whitley County,
+Louisiana,,Arcadia County,Acadia Parish,
+Louisiana,,Calacasieu Parish,Calcasieu Parish,
+Louisiana,,Chalmette Parish,St. Bernard Parish,
+Louisiana,,German Coast County,St. Charles Parish,
+Louisiana,,La Salle Parish,Lasalle Parish,"Census NAMELSAD spells the Louisiana parish LaSalle; str_to_title makes the join key Lasalle Parish (Urania PD, 2026-09-11 sheet)"
+Louisiana,,Richland County,Richland Parish,
+Louisiana,,Saint Landry County,St. Landry Parish,
+Louisiana,,Saint Tammany Parish,St. Tammany Parish,"Census abbreviates St. (Mandeville PD, 2026-09-11 sheet)"
+Louisiana,,Tangipahoian Parish,Tangipahoa Parish,Kentwood sits in Tangipahoa Parish (2026-09-11 sheet)
+Michigan,,Berrian County,Berrien County,ICE misspells both the agency and county; Berrien County Sheriff's Office (2026-09-11 sheet)
+Mississippi,,Pearl County,Pearl River County,
+Mississippi,,Prentiss Couty,Prentiss County,
+Mississippi,,Sumner County,Franklin County,no Sumner County in MS; Meadville PD's town is the Franklin County seat (2026-09-11 sheet)
+Missouri,,North County,St. Louis County,
+Missouri,,Saint Francois County,St. Francois County,
+Nevada,,Ormsby County,Carson City,Ormsby County was consolidated into Carson City in 1969; Nevada DOC is in Carson City (2026-09-11 sheet)
+North Dakota,,Grand Forks,Grand Forks County,"sheet drops the County suffix (Grand Forks County Sheriff's Office, seen 2026-09-11 sheet)"
+Oklahoma,,Bryant County,Bryan County,
+Oklahoma,,Custer Countey,Custer County,
+Oklahoma,,Leflore County,Le Flore County,Census/tigris NAMELSAD spells the Oklahoma county Le Flore (seen 2026-09-11 sheet)
+Oklahoma,,Wood County,Woods County,
+Pennsylvania,,Alleghany County,Allegheny County,"Robinson Township exists in both Allegheny and Washington counties, so the county must resolve"
+Pennsylvania,,Lawrence,Lawrence County,
+Pennsylvania,,Miffin County,Mifflin County,Lewistown Borough is the Mifflin County seat (seen 2026-09-11 sheet)
+Tennessee,,Louden County,Loudon County,
+Tennessee,,Sparta-White County,White County,
+Texas,,Fall County,Falls County,
+Texas,,Guadalupe Conty,Guadalupe County,
+Texas,,Knox Couty,Knox County,
+Texas,,Lampasas,Lampasas County,"sheet drops the County suffix (Lampasas County Constable Precinct 1, 2026-09-11 sheet)"
+Texas,,Morris,Morris County,"sheet drops the County suffix (Naples PD, 2026-09-11 sheet)"
+Texas,,Overton County,Rusk County,
+Texas,,San Patricio,San Patricio County,
+Texas,,Zavala Couny,Zavala County,
+Virginia,,Hopewell County,Hopewell City,Hopewell is an independent city (tigris NAMELSAD Hopewell city); it has no county (2026-09-11 sheet)
+West Virginia,,Kenawha County,Kanawha County,
+West Virginia,West Virginia State Police Department,Washington County,,"West Virginia has no Washington County; ICE printed it on every list for the state police's task-force agreement (2025-07-24 onward), so the county is left blank (reviewed 2026-09-13)"
+Georgia,Monroe Police Department,Monroe County,Walton County,"the MOA (CityofMonroePDGA7.7.2025.pdf) is the City of Monroe Police Department, GA; the City of Monroe is the seat of Walton County, and Monroe County GA has no city of Monroe"
+Pennsylvania,Butler Township Police Department,Luzerne County,Schuylkill County,"the MOA (ButlerTownshipPoliceDeptPA_TFM_MOA_04232026.pdf) gives the department's address as 211 Broad St, Ashland, PA 17921: Butler Township, Schuylkill County"
+Pennsylvania,Butler Township Police Department,Butler County,Schuylkill County,ICE's county while the MOA was pending; see the Luzerne County row. Inactive since ICE switched to Luzerne County on 2026-05-11; kept as the record (audit 2026-09-13)
+Pennsylvania,East Penn Township Constable Office,Cumberland County,Carbon County,"the MOA (EastPennTownshipConstablePA_TFM_MOA_082825.pdf) gives 167 Municipal Rd, Lehighton, PA 18235: East Penn Township, Carbon County"
+Texas,Yoakum Police Department,Yoakum County,Lavaca County,"ICE gives the City of Yoakum's police Yoakum County, 400 miles away; the MOA (YoakumPDTX_TFM_MOA_11242025.pdf) gives 900 Irvine St, Yoakum, TX 77995, in Lavaca County, and the ORI TX1430300 carries Lavaca's code (reviewed 2026-09-13)"
+North Carolina,Albemarle District Jail,Albemarle County,Pasquotank County,"North Carolina has no Albemarle County; the district jail stands at 210 Executive Drive, Elizabeth City, in Pasquotank County, and serves Pasquotank, Perquimans and Camden counties (Pasquotank County's page on the jail; review 2026-09-13)"

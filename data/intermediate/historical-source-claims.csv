@@ -1,0 +1,517 @@
+source_id,agency_id,resolution,state,agency_raw,field,value,value_date,as_of,evidence
+ice_archive_index,AL-department-of-public-safety,alias,Alabama,"Alabama, State of",moa_file,stateofalabamadepartmentofpublicsafety.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row1
+ice_archive_index,AL-etowah-county-sheriff-office,canonical,Alabama,Etowah County Sheriff's Office,moa_file,287gJEM_EtowahCoAl2016-06-18.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row2
+ice_archive_index,AL-etowah-county-sheriff-office,canonical,Alabama,Etowah County Sheriff's Office,signed,2016-06-08,2016-06-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row2
+ice_archive_index,AZ-department-of-correction,canonical,Arizona,Arizona Department of Corrections,moa_file,287gJEM_ArizonaDepartmentofCorrectionsAZ2016-06-08.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row3
+ice_archive_index,AZ-department-of-correction,canonical,Arizona,Arizona Department of Corrections,signed,2016-06-08,2016-06-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row3
+ice_archive_index,AZ-department-of-public-safety,canonical,Arizona,Arizona Department of Public Safety,moa_file,arizonadepartmentofpublicsafety.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row4
+ice_archive_index,AZ-maricopa-county-sheriff-office,prefix_containment,Arizona,Maricopa County,moa_file,maricopacounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row5
+ice_archive_index,AZ-mesa-police-department,canonical,Arizona,Mesa Police Department,moa_file,287gJEM_MesaPoliceDeparmentAz2016-06-23.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row6
+ice_archive_index,AZ-mesa-police-department,canonical,Arizona,Mesa Police Department,signed,2016-06-23,2016-06-23,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row6
+ice_archive_index,AZ-phoenix-police-department,canonical,Arizona,Phoenix Police Department,moa_file,phoenixpolicedepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row7
+ice_archive_index,AZ-pima-county-sheriff-office,canonical,Arizona,Pima County Sheriff's Office,moa_file,pimacountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row8
+ice_archive_index,AZ-pinal-county-sheriff-office,canonical,Arizona,Pinal County Sheriff's Office,moa_file,pinalcountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row9
+ice_archive_index,AZ-pinal-county-sheriff-office,canonical,Arizona,Pinal County Sheriff's Office,moa_file,287gJEM_PinalCoAz2016-06-13.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row10
+ice_archive_index,AZ-pinal-county-sheriff-office,canonical,Arizona,Pinal County Sheriff's Office,signed,2009-10-15,2009-10-15,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row9
+ice_archive_index,AZ-pinal-county-sheriff-office,canonical,Arizona,Pinal County Sheriff's Office,signed,2016-06-13,2016-06-13,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row10
+ice_archive_index,AZ-yavapai-county-sheriff-office,canonical,Arizona,Yavapai County Sheriff's Office,moa_file,yavapaicountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row11
+ice_archive_index,AZ-yavapai-county-sheriff-office,canonical,Arizona,Yavapai County Sheriff's Office,signed,2009-10-15,2009-10-15,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row11
+ice_archive_index,AR-benton-county-sheriff-office,canonical,Arkansas,Benton County Sheriff's Office,moa_file,bentoncountyarkansassheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row12
+ice_archive_index,AR-benton-county-sheriff-office,canonical,Arkansas,Benton County Sheriff's Office,moa_file,r_287gbentoncounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row13
+ice_archive_index,AR-benton-county-sheriff-office,canonical,Arkansas,Benton County Sheriff's Office,signed,2007-09-20,2007-09-20,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row12
+ice_archive_index,AR-benton-county-sheriff-office,canonical,Arkansas,Benton County Sheriff's Office,signed,2016-06-13,2016-06-13,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row13
+ice_archive_index,AR-craighead-county-sheriff-office,canonical,Arkansas,Craighead County Sheriff's Office,moa_file,287gJEM_CraigheadCoAr2019-02-28.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row14
+ice_archive_index,AR-craighead-county-sheriff-office,canonical,Arkansas,Craighead County Sheriff's Office,signed,2019-02-28,2019-02-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row14
+ice_archive_index,AR-rogers-police-department,canonical,Arkansas,Rogers Police Department,moa_file,rogersarkansaspolicedepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row15
+ice_archive_index,AR-springdale-police-department,alias,Arkansas,Springdale Arkansas Police Department,moa_file,springdalearkansaspolicedepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row16
+ice_archive_index,AR-washington-county-sheriff-office,canonical,Arkansas,Washington County Sheriff's Office,moa_file,washingtoncountyarkansassheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row17
+ice_archive_index,AR-washington-county-sheriff-office,canonical,Arkansas,Washington County Sheriff's Office,moa_file,287gJEM_WashingtonCoAr2016-06-23.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row18
+ice_archive_index,AR-washington-county-sheriff-office,canonical,Arkansas,Washington County Sheriff's Office,signed,2009-10-07,2009-10-07,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row17
+ice_archive_index,AR-washington-county-sheriff-office,canonical,Arkansas,Washington County Sheriff's Office,signed,2016-06-23,2016-06-23,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row18
+ice_archive_index,CA-los-angeles-county-sheriff-office,alias,California,Los Angeles County Board of Supervisors,moa_file,losangeles_county_board_of_supervisors.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row22
+ice_archive_index,CA-orange-county-sheriff-office,canonical,California,Orange County Sheriff's Department,moa_file,287gOrangeCountyCa2016-06-23.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row24
+ice_archive_index,CA-orange-county-sheriff-office,canonical,California,Orange County Sheriff's Department,signed,2016-06-23,2016-06-23,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row24
+ice_archive_index,CA-orange-county-sheriff-office,prefix_containment,California,"Orange, County of",moa_file,countyoforange.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row23
+ice_archive_index,CA-orange-county-sheriff-office,prefix_containment,California,"Orange, County of",signed,2006-11-02,2006-11-02,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row23
+ice_archive_index,CA-riverside-county-sheriff-office,canonical,California,Riverside County Sheriff's Office,moa_file,riversidecountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row25
+ice_archive_index,CA-san-bernardino-county-sheriff-office,prefix_containment,California,San Bernardino County,moa_file,sanbernardinocounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row26
+ice_archive_index,CO-department-of-public-safety,alias,Colorado,Colorado DPS / Colorado State Patrol,moa_file,coloradodepartmentofpublicsafetycoloradostatepatrol.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row19
+ice_archive_index,CO-el-paso-county-sheriff-office,canonical,Colorado,El Paso County Sheriff's Office,moa_file,elpasocountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row20
+ice_archive_index,CO-teller-county-sheriff-office,canonical,Colorado,Teller County Sheriff's Office,moa_file,287gJEM_TellerCoCo2019-01-06.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row21
+ice_archive_index,CO-teller-county-sheriff-office,canonical,Colorado,Teller County Sheriff's Office,signed,2019-01-06,2019-01-06,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row21
+ice_archive_index,FL-clay-county-sheriff-office,canonical,Florida,Clay County Sheriff's Office,moa_file,clay-fl-2017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row28
+ice_archive_index,FL-clay-county-sheriff-office,canonical,Florida,Clay County Sheriff's Office,signed,2017-06-30,2017-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row28
+ice_archive_index,FL-collier-county-sheriff-office,canonical,Florida,Collier County Sheriff's Office,moa_file,colliercountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row27
+ice_archive_index,FL-hernando-county-sheriff-office,canonical,Florida,Hernando County Sheriff's Office,moa_file,287gJEM_HernandoCoFl2018-02-27.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row29
+ice_archive_index,FL-hernando-county-sheriff-office,canonical,Florida,Hernando County Sheriff's Office,signed,2018-02-27,2018-02-27,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row29
+ice_archive_index,FL-jacksonville-sheriff-office,alias,Florida,Jacksonville County Sheriff's Office,moa_file,287gJEM_JacksonvilleCoFl2016-06-30.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row30
+ice_archive_index,FL-jacksonville-sheriff-office,alias,Florida,Jacksonville County Sheriff's Office,moa_file,287gJEM_JacksonvilleCoFl2020-06-09.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row31
+ice_archive_index,FL-jacksonville-sheriff-office,alias,Florida,Jacksonville County Sheriff's Office,signed,2016-06-30,2016-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row30
+ice_archive_index,FL-jacksonville-sheriff-office,alias,Florida,Jacksonville County Sheriff's Office,signed,2020-06-09,2020-06-09,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row31
+ice_archive_index,FL-lake-county-sheriff-office,canonical,Florida,Lake County Sheriff's Office,moa_file,lakecountyfl.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row32
+ice_archive_index,FL-pasco-county-sheriff-office,canonical,Florida,Pasco County Sheriff's Office,moa_file,287gPascoFl2017_8_22.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row33
+ice_archive_index,FL-pasco-county-sheriff-office,canonical,Florida,Pasco County Sheriff's Office,moa_file,287gPascoFl2020-06-10.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row34
+ice_archive_index,FL-pasco-county-sheriff-office,canonical,Florida,Pasco County Sheriff's Office,signed,2017-08-22,2017-08-22,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row33
+ice_archive_index,FL-pasco-county-sheriff-office,canonical,Florida,Pasco County Sheriff's Office,signed,2020-06-10,2020-06-10,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row34
+ice_archive_index,GA-cobb-county-sheriff-office,alias,Georgia,Cobb County SO and Board of Commissioners,moa_file,cobbcountysheriffsofficeandcobbcountyboardofcommissioners.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row35
+ice_archive_index,GA-cobb-county-sheriff-office,alias,Georgia,Cobb County SO and Board of Commissioners,signed,2007-01-31,2007-01-31,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row35
+ice_archive_index,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,moa_file,r_287gcobbcounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row36
+ice_archive_index,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,moa_file,287gJEMCobbCoGA_06-09-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row37
+ice_archive_index,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,signed,2016-06-30,2016-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row36
+ice_archive_index,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,signed,2020-06-09,2020-06-09,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row37
+ice_archive_index,GA-department-of-correction,canonical,Georgia,Georgia Department of Corrections,moa_file,287gJEM_GeorgiaDeparmentofCorrectionsGa2018-02-05.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row38
+ice_archive_index,GA-department-of-correction,canonical,Georgia,Georgia Department of Corrections,signed,2018-02-05,2018-02-05,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row38
+ice_archive_index,GA-department-of-public-safety,alias,Georgia,"Georgia, State of",moa_file,stateofgeorgiadepartmentofpublicsafety.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row39
+ice_archive_index,GA-gwinnett-county-sheriff-office,canonical,Georgia,Gwinnett County Sheriff's Office,moa_file,r_287ggwinnetcountyso.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row40
+ice_archive_index,GA-gwinnett-county-sheriff-office,canonical,Georgia,Gwinnett County Sheriff's Office,moa_file,287gJEM_GwinnettCoGa2020-03-12.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row41
+ice_archive_index,GA-gwinnett-county-sheriff-office,canonical,Georgia,Gwinnett County Sheriff's Office,signed,2016-06-30,2016-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row40
+ice_archive_index,GA-gwinnett-county-sheriff-office,canonical,Georgia,Gwinnett County Sheriff's Office,signed,2020-03-12,2020-03-12,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row41
+ice_archive_index,GA-hall-county-sheriff-office,canonical,Georgia,Hall County Sheriff's Office,moa_file,hallcountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row42
+ice_archive_index,GA-hall-county-sheriff-office,canonical,Georgia,Hall County Sheriff's Office,moa_file,287gJEM_HallCoGa2016-06-23.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row43
+ice_archive_index,GA-hall-county-sheriff-office,canonical,Georgia,Hall County Sheriff's Office,signed,2009-10-15,2009-10-15,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row42
+ice_archive_index,GA-hall-county-sheriff-office,canonical,Georgia,Hall County Sheriff's Office,signed,2016-06-23,2016-06-23,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row43
+ice_archive_index,,unresolved_absent,Illinois,Cook County State's Attorney's Office,moa_file,moucookcountystatesattorneysoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row44
+ice_archive_index,LA-east-baton-rouge-parish-sheriff-office,canonical,Louisiana,East Baton Rouge Parish Sheriff's Office,moa_file,287gBatonRougeLa2017-05-03.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row45
+ice_archive_index,LA-east-baton-rouge-parish-sheriff-office,canonical,Louisiana,East Baton Rouge Parish Sheriff's Office,moa_file,287gBatonRougeLa2020-06-09.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row46
+ice_archive_index,LA-east-baton-rouge-parish-sheriff-office,canonical,Louisiana,East Baton Rouge Parish Sheriff's Office,signed,2017-05-03,2017-05-03,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row45
+ice_archive_index,LA-east-baton-rouge-parish-sheriff-office,canonical,Louisiana,East Baton Rouge Parish Sheriff's Office,signed,2020-06-09,2020-06-09,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row46
+ice_archive_index,LA-ouachita-parish-sheriff-office,canonical,Louisiana,Ouachita Parish Sheriff's Office,moa_file,287gJEM_OuachitaPLa2019-02-28.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row47
+ice_archive_index,LA-ouachita-parish-sheriff-office,canonical,Louisiana,Ouachita Parish Sheriff's Office,moa_file,287gJEM_OuachitaCoLA_06-08-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row48
+ice_archive_index,LA-ouachita-parish-sheriff-office,canonical,Louisiana,Ouachita Parish Sheriff's Office,signed,2019-02-28,2019-02-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row47
+ice_archive_index,LA-ouachita-parish-sheriff-office,canonical,Louisiana,Ouachita Parish Sheriff's Office,signed,2020-06-08,2020-06-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row48
+ice_archive_index,LA-terrebonne-parish-sheriff-office,canonical,Louisiana,Terrebonne Parish Sheriff's Office,moa_file,287gJEM_TerrebonnePLa2019-02-28.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row49
+ice_archive_index,LA-terrebonne-parish-sheriff-office,canonical,Louisiana,Terrebonne Parish Sheriff's Office,signed,2019-02-28,2019-02-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row49
+ice_archive_index,MD-cecil-county-sheriff-office,canonical,Maryland,Cecil County Sheriff's Office,moa_file,cecilCountyMD_MOA_02132019.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row50
+ice_archive_index,MD-cecil-county-sheriff-office,canonical,Maryland,Cecil County Sheriff's Office,signed,2019-02-13,2019-02-13,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row50
+ice_archive_index,MD-frederick-county-sheriff-office,canonical,Maryland,Frederick County Sheriff's Office,moa_file,frederickcountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row51
+ice_archive_index,MD-frederick-county-sheriff-office,canonical,Maryland,Frederick County Sheriff's Office,moa_file,Frederick_County_MOA_2016.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row52
+ice_archive_index,MD-frederick-county-sheriff-office,canonical,Maryland,Frederick County Sheriff's Office,signed,2008-02-01,2008-02-01,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row51
+ice_archive_index,MD-frederick-county-sheriff-office,canonical,Maryland,Frederick County Sheriff's Office,signed,2016-08-03,2016-08-03,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row52
+ice_archive_index,MD-harford-county-sheriff-office,canonical,Maryland,Harford County Sheriff's Office,moa_file,287gJEM_HarfordCoMd2016-10-26.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row53
+ice_archive_index,MD-harford-county-sheriff-office,canonical,Maryland,Harford County Sheriff's Office,signed,2016-10-26,2016-10-26,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row53
+ice_archive_index,MA-barnstable-county-sheriff-office,canonical,Massachusetts,Barnstable County Sheriff's Office,moa_file,barnstablecountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row54
+ice_archive_index,MA-barnstable-county-sheriff-office,canonical,Massachusetts,Barnstable County Sheriff's Office,moa_file,287gJEM_BarnstableCoMA2020-06-09.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row55
+ice_archive_index,MA-barnstable-county-sheriff-office,canonical,Massachusetts,Barnstable County Sheriff's Office,signed,2007-08-25,2007-08-25,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row54
+ice_archive_index,MA-barnstable-county-sheriff-office,canonical,Massachusetts,Barnstable County Sheriff's Office,signed,2020-06-09,2020-06-09,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row55
+ice_archive_index,MA-bristol-county-sheriff-office,canonical,Massachusetts,Bristol County Sheriff's Office,moa_file,Bristol_MOA_01182017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row56
+ice_archive_index,MA-bristol-county-sheriff-office,canonical,Massachusetts,Bristol County Sheriff's Office,moa_file,287gBristolMa2017-02-08.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row57
+ice_archive_index,MA-bristol-county-sheriff-office,canonical,Massachusetts,Bristol County Sheriff's Office,moa_file,287gJEM_BristolCoMA_06-08-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row58
+ice_archive_index,MA-bristol-county-sheriff-office,canonical,Massachusetts,Bristol County Sheriff's Office,signed,2017-01-18,2017-01-18,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row56
+ice_archive_index,MA-bristol-county-sheriff-office,canonical,Massachusetts,Bristol County Sheriff's Office,signed,2017-02-08,2017-02-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row57
+ice_archive_index,MA-bristol-county-sheriff-office,canonical,Massachusetts,Bristol County Sheriff's Office,signed,2020-06-08,2020-06-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row58
+ice_archive_index,MA-framingham-police-department,canonical,Massachusetts,Framingham Police Department,moa_file,framinghammassachusettspolicedepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row59
+ice_archive_index,MA-department-of-correction,canonical,Massachusetts,Massachusetts Department of Correction,moa_file,massachusettsdepartmentofcorrections.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row60
+ice_archive_index,MA-department-of-correction,canonical,Massachusetts,Massachusetts Department of Correction,signed,2016-06-23,2016-06-23,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row60
+ice_archive_index,MA-plymouth-county-sheriff-office,canonical,Massachusetts,Plymouth County Sheriff's Department,moa_file,Plymouth_MOA_01182017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row61
+ice_archive_index,MA-plymouth-county-sheriff-office,canonical,Massachusetts,Plymouth County Sheriff's Department,moa_file,287gJEM_PlymouthCoMA2020-06-08.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row62
+ice_archive_index,MA-plymouth-county-sheriff-office,canonical,Massachusetts,Plymouth County Sheriff's Department,signed,2017-01-18,2017-01-18,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row61
+ice_archive_index,MA-plymouth-county-sheriff-office,canonical,Massachusetts,Plymouth County Sheriff's Department,signed,2020-06-08,2020-06-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row62
+ice_archive_index,MO-state-highway-patrol,canonical,Missouri,Missouri State Highway Patrol,moa_file,287goldmissouristatehighwaypatrol.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row63
+ice_archive_index,NE-dakota-county-sheriff-office,canonical,Nebraska,Dakota County Sheriff's Office,moa_file,287g-DAKOTACounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row64
+ice_archive_index,NE-dakota-county-sheriff-office,canonical,Nebraska,Dakota County Sheriff's Office,signed,2018-01-16,2018-01-16,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row64
+ice_archive_index,NV-las-vegas-metropolitan-police-department,canonical,Nevada,Las Vegas Metropolitan Police Department,moa_file,287goldlasvegasmpd.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row65
+ice_archive_index,NV-las-vegas-metropolitan-police-department,canonical,Nevada,Las Vegas Metropolitan Police Department,moa_file,r_287glasvegaspd.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row66
+ice_archive_index,NV-las-vegas-metropolitan-police-department,canonical,Nevada,Las Vegas Metropolitan Police Department,signed,2008-09-08,2008-09-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row65
+ice_archive_index,NV-las-vegas-metropolitan-police-department,canonical,Nevada,Las Vegas Metropolitan Police Department,signed,2019-06-03,2019-06-03,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row66
+ice_archive_index,NV-lyon-county-sheriff-office,canonical,Nevada,Lyon County Sheriff's Office,moa_file,287gJEM_LyonCoNv2018-05-04.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row67
+ice_archive_index,NV-lyon-county-sheriff-office,canonical,Nevada,Lyon County Sheriff's Office,signed,2018-05-04,2018-05-04,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row67
+ice_archive_index,NV-nye-county-sheriff-office,canonical,Nevada,Nye County Sheriff's Office,moa_file,287gJEM_NyeCoNv2017-04-20.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row68
+ice_archive_index,NV-nye-county-sheriff-office,canonical,Nevada,Nye County Sheriff's Office,moa_file,287gJEM_NyeCoNV_06-09-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row69
+ice_archive_index,NV-nye-county-sheriff-office,canonical,Nevada,Nye County Sheriff's Office,signed,2017-04-20,2017-04-20,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row68
+ice_archive_index,NV-nye-county-sheriff-office,canonical,Nevada,Nye County Sheriff's Office,signed,2020-06-09,2020-06-09,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row69
+ice_archive_index,NH-hudson-city-police-department,alias,New Hampshire,Hudson Police Department,moa_file,hudsonpolicedepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row70
+ice_archive_index,NJ-cape-may-county-sheriff-office,canonical,New Jersey,Cape May County Sheriffs Office,moa_file,287gCapeMayNj2017-04-10.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row71
+ice_archive_index,NJ-cape-may-county-sheriff-office,canonical,New Jersey,Cape May County Sheriffs Office,signed,2017-10-04,2017-10-04,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row71
+ice_archive_index,NJ-monmouth-county-sheriff-office,canonical,New Jersey,Monmouth County Sheriff's Office,moa_file,287gMonmouthNJ_2009-10-15.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row72
+ice_archive_index,NJ-monmouth-county-sheriff-office,canonical,New Jersey,Monmouth County Sheriff's Office,signed,2009-10-15,2009-10-15,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row72
+ice_archive_index,NJ-monmouth-county-sheriff-office,canonical,New Jersey,Monmouth County Sheriff's Office (Addendum),moa_file,287gJEM_MonmouthCoNj2016-06-08.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row73
+ice_archive_index,NJ-monmouth-county-sheriff-office,canonical,New Jersey,Monmouth County Sheriff's Office (Addendum),signed,2019-03-08,2019-03-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row73
+ice_archive_index,,unresolved_absent,New Jersey,"Morristown, NJ",moa_file,287gmorristownnj.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row74
+ice_archive_index,NM-department-of-correction,canonical,New Mexico,New Mexico Corrections Department,moa_file,stateofnewmexicocorrectionsdepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row75
+ice_archive_index,NY-rensselaer-county-sheriff-office,canonical,New York,Rensselaer County Sheriff's Office,moa_file,287gJEM_RensselaerCoNy2018-02-09.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row76
+ice_archive_index,NY-rensselaer-county-sheriff-office,canonical,New York,Rensselaer County Sheriff's Office,signed,2018-02-09,2018-02-09,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row76
+ice_archive_index,NC-alamance-county-sheriff-office,canonical,North Carolina,Alamance County Sheriff's Office,moa_file,sheriffsofficeofalamancecounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row77
+ice_archive_index,NC-brunswick-county-sheriff-office,canonical,North Carolina,Brunswick County Sheriff's Office,moa_file,287gJEM_BrunswickCoNC_06-08-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row78
+ice_archive_index,NC-brunswick-county-sheriff-office,canonical,North Carolina,Brunswick County Sheriff's Office,signed,2020-06-08,2020-06-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row78
+ice_archive_index,NC-cabarrus-county-sheriff-office,canonical,North Carolina,Cabarrus County Sheriff's Office,moa_file,r_287gcabarrus.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row80
+ice_archive_index,NC-cabarrus-county-sheriff-office,canonical,North Carolina,Cabarrus County Sheriff's Office,signed,2016-06-28,2016-06-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row80
+ice_archive_index,NC-cabarrus-county-sheriff-office,alias,North Carolina,Cabbarus County Sheriff's Office,moa_file,cabbaruscountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row79
+ice_archive_index,NC-cabarrus-county-sheriff-office,alias,North Carolina,Cabbarus County Sheriff's Office,signed,2007-07-10,2007-07-10,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row79
+ice_archive_index,NC-durham-police-department,canonical,North Carolina,Durham Police Department,moa_file,durhampolicedepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row81
+ice_archive_index,NC-gaston-county-sheriff-office,canonical,North Carolina,Gaston County Sheriff's Office,moa_file,gastoncountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row82
+ice_archive_index,NC-mecklenburg-county-sheriff-office,canonical,North Carolina,Mecklenburg County Sheriff's Office,moa_file,mecklenburgcountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row83
+ice_archive_index,NC-nash-county-sheriff-office,canonical,North Carolina,Nash County Sheriff's Office,moa_file,287gJEM_NashCoNc2018-02-02.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row84
+ice_archive_index,NC-nash-county-sheriff-office,canonical,North Carolina,Nash County Sheriff's Office,signed,2018-02-02,2018-02-02,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row84
+ice_archive_index,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,moa_file,butlercountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row85
+ice_archive_index,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,moa_file,r_287gbutlercounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row86
+ice_archive_index,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,moa_file,287gJEM_ButlerCoOH_06-09-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row87
+ice_archive_index,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,signed,2008-02-05,2008-02-05,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row85
+ice_archive_index,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,signed,2016-09-30,2016-09-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row86
+ice_archive_index,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,signed,2020-06-09,2020-06-09,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row87
+ice_archive_index,OK-canadian-county-sheriff-office,canonical,Oklahoma,Canadian County Sheriff's Office,moa_file,287g-CanadianCounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row88
+ice_archive_index,OK-canadian-county-sheriff-office,canonical,Oklahoma,Canadian County Sheriff's Office,signed,2018-01-25,2018-01-25,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row88
+ice_archive_index,OK-okmulgee-county-criminal-justice-authority,canonical,Oklahoma,Okmulgee County Criminal Justice Authority,moa_file,287gJEM_OkmulgeeCoCrimJusOk2018-01-25.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row89
+ice_archive_index,OK-okmulgee-county-criminal-justice-authority,canonical,Oklahoma,Okmulgee County Criminal Justice Authority,signed,2018-01-25,2018-01-25,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row89
+ice_archive_index,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,moa_file,tulsacountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row90
+ice_archive_index,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,moa_file,287gJEM_TulsaCoOk2016-06-23.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row91
+ice_archive_index,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,signed,2009-10-05,2009-10-05,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row90
+ice_archive_index,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,signed,2016-06-23,2016-06-23,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row91
+ice_archive_index,SC-charleston-county-sheriff-office,canonical,South Carolina,Charleston County Sheriff's Office,moa_file,r_287gcharlestoncounty.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row92
+ice_archive_index,SC-charleston-county-sheriff-office,canonical,South Carolina,Charleston County Sheriff's Office,moa_file,287gJEM_CharlestonCoSC_06-09-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row93
+ice_archive_index,SC-charleston-county-sheriff-office,canonical,South Carolina,Charleston County Sheriff's Office,signed,2016-06-23,2016-06-23,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row92
+ice_archive_index,SC-charleston-county-sheriff-office,canonical,South Carolina,Charleston County Sheriff's Office,signed,2020-06-09,2020-06-09,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row93
+ice_archive_index,SC-horry-county-sheriff-office,canonical,South Carolina,Horry County Sheriff's Office,moa_file,287gJEM_HorryCoSc2017-06-30.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row94
+ice_archive_index,SC-horry-county-sheriff-office,canonical,South Carolina,Horry County Sheriff's Office,signed,2017-06-30,2017-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row94
+ice_archive_index,SC-lexington-county-sheriff-office,canonical,South Carolina,Lexington County Sheriff's Office,moa_file,287gJEM_LexingtonCoSc2016-11-04.PDF,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row95
+ice_archive_index,SC-lexington-county-sheriff-office,canonical,South Carolina,Lexington County Sheriff's Office,signed,2016-11-04,2016-11-04,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row95
+ice_archive_index,SC-york-county-sheriff-office,canonical,South Carolina,York County Sheriff's Office,moa_file,yorkcountysheriffsofficesouthcarolina.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row96
+ice_archive_index,SC-york-county-sheriff-office,canonical,South Carolina,York County Sheriff's Office,moa_file,287gJEM_YorkCoSc2016-06-30.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row97
+ice_archive_index,SC-york-county-sheriff-office,canonical,South Carolina,York County Sheriff's Office,signed,2009-10-15,2009-10-15,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row96
+ice_archive_index,SC-york-county-sheriff-office,canonical,South Carolina,York County Sheriff's Office,signed,2016-06-28,2016-06-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row97
+ice_archive_index,TN-davidson-county-sheriff-office,alias,Tennessee,Davidson County (Metro) Sheriff's Office,moa_file,davidsoncountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row98
+ice_archive_index,TN-greene-county-sheriff-office,canonical,Tennessee,Greene County Sheriff's Office,moa_file,287gJEM_GreeneCoTn2019-02-28.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row99
+ice_archive_index,TN-greene-county-sheriff-office,canonical,Tennessee,Greene County Sheriff's Office,signed,2019-02-28,2019-02-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row99
+ice_archive_index,TN-knox-county-sheriff-office,canonical,Tennessee,Knox County Sheriff's Office,moa_file,287gJEM_KnoxCoTn2017-06-15.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row100
+ice_archive_index,TN-knox-county-sheriff-office,canonical,Tennessee,Knox County Sheriff's Office,signed,2017-06-15,2017-06-15,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row100
+ice_archive_index,TX-aransas-county-sheriff-office,canonical,Texas,Aransas County Sheriff's Office,moa_file,aransas-tx-2017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row101
+ice_archive_index,TX-aransas-county-sheriff-office,canonical,Texas,Aransas County Sheriff's Office,signed,2017-06-30,2017-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row101
+ice_archive_index,TX-burnet-county-sheriff-office,canonical,Texas,Burnet County Sheriff's Office,moa_file,287gJEM_BurnetCoTx2018-02-02.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row102
+ice_archive_index,TX-burnet-county-sheriff-office,canonical,Texas,Burnet County Sheriff's Office,signed,2018-02-02,2018-02-02,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row102
+ice_archive_index,TX-calhoun-county-sheriff-office,canonical,Texas,Calhoun County Sheriff's Office,moa_file,calhoun-tx-2017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row103
+ice_archive_index,TX-calhoun-county-sheriff-office,canonical,Texas,Calhoun County Sheriff's Office,signed,2017-06-28,2017-06-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row103
+ice_archive_index,TX-carrollton-police-department,canonical,Texas,Carrollton Police Department,moa_file,r_287gcarrollton.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row104
+ice_archive_index,TX-chambers-county-sheriff-office,canonical,Texas,Chambers County Sheriff's Office,moa_file,chambers-tx-2017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row105
+ice_archive_index,TX-chambers-county-sheriff-office,canonical,Texas,Chambers County Sheriff's Office,signed,2017-07-17,2017-07-17,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row105
+ice_archive_index,TX-dewitt-county-sheriff-office,canonical,Texas,DeWitt County Sheriff's Office,moa_file,DeWitt-tx-2017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row106
+ice_archive_index,TX-dewitt-county-sheriff-office,canonical,Texas,DeWitt County Sheriff's Office,signed,2017-06-30,2017-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row106
+ice_archive_index,TX-galveston-county-sheriff-office,canonical,Texas,Galveston County Sheriff's Office,moa_file,galveston-tx-2017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row107
+ice_archive_index,TX-galveston-county-sheriff-office,canonical,Texas,Galveston County Sheriff's Office,signed,2017-06-30,2017-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row107
+ice_archive_index,TX-goliad-county-sheriff-office,canonical,Texas,Goliad County Sheriff's Office,moa_file,287gJEM_GoliadCoTx2017-06-26.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row108
+ice_archive_index,TX-goliad-county-sheriff-office,canonical,Texas,Goliad County Sheriff's Office,signed,2017-06-26,2017-06-26,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row108
+ice_archive_index,TX-jackson-county-sheriff-office,canonical,Texas,Jackson County Sheriff's Office,moa_file,287gJEM_JacksonCoTx2017-01-26.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row109
+ice_archive_index,TX-jackson-county-sheriff-office,canonical,Texas,Jackson County Sheriff's Office,signed,2017-01-26,2017-01-26,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row109
+ice_archive_index,TX-kendall-county-sheriff-office,canonical,Texas,Kendall County Sheriff's Office,moa_file,287g_KendallCountyTX.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row110
+ice_archive_index,TX-kendall-county-sheriff-office,canonical,Texas,Kendall County Sheriff's Office,moa_file,287gJEM_KendallCoTX_03-13-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row111
+ice_archive_index,TX-kendall-county-sheriff-office,canonical,Texas,Kendall County Sheriff's Office,signed,2018-03-26,2018-03-26,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row110
+ice_archive_index,TX-kendall-county-sheriff-office,canonical,Texas,Kendall County Sheriff's Office,signed,2020-03-13,2020-03-13,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row111
+ice_archive_index,TX-lavaca-county-sheriff-office,canonical,Texas,Lavaca County Sheriff's Office,moa_file,287gJEM_LavacaCoTx2017-06-30.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row112
+ice_archive_index,TX-lavaca-county-sheriff-office,canonical,Texas,Lavaca County Sheriff's Office,signed,2017-06-30,2017-06-30,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row112
+ice_archive_index,TX-lubbock-county-sheriff-office,canonical,Texas,Lubbock County Sheriff's Office,moa_file,287gJEM_LubbockCoTx2016-11-16.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row113
+ice_archive_index,TX-lubbock-county-sheriff-office,canonical,Texas,Lubbock County Sheriff's Office,signed,2016-11-16,2016-11-16,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row113
+ice_archive_index,TX-matagorda-county-sheriff-office,canonical,Texas,Matagorda County Sheriff's Office,moa_file,287gMatagordaTx2017_07_27.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row114
+ice_archive_index,TX-matagorda-county-sheriff-office,canonical,Texas,Matagorda County Sheriff's Office,signed,2017-07-27,2017-07-27,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row114
+ice_archive_index,TX-montgomery-county-sheriff-office,canonical,Texas,Montgomery County Sheriff's Office,moa_file,montgomery-tx-2017.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row115
+ice_archive_index,TX-montgomery-county-sheriff-office,canonical,Texas,Montgomery County Sheriff's Office,signed,2017-06-28,2017-06-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row115
+ice_archive_index,TX-potter-county-sheriff-office,canonical,Texas,Potter County Sheriff's Office,moa_file,287gJEM_PotterCoTx2018-01-25.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row116
+ice_archive_index,TX-potter-county-sheriff-office,canonical,Texas,Potter County Sheriff's Office,signed,2018-01-25,2018-01-25,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row116
+ice_archive_index,TX-refugio-county-sheriff-office,canonical,Texas,Refugio County Sheriff's Office,moa_file,287gJEM_RefugioCoTx2017-06-28.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row117
+ice_archive_index,TX-refugio-county-sheriff-office,canonical,Texas,Refugio County Sheriff's Office,signed,2017-06-28,2017-06-28,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row117
+ice_archive_index,TX-rockwall-county-sheriff-office,canonical,Texas,Rockwall County Sheriff's Office,moa_file,287gJEM_RockwallCoTx2018-01-25.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row118
+ice_archive_index,TX-rockwall-county-sheriff-office,canonical,Texas,Rockwall County Sheriff's Office,signed,2018-01-25,2018-01-25,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row118
+ice_archive_index,TX-smith-county-sheriff-office,canonical,Texas,Smith County Sheriff's Office,moa_file,287gJEM_SmithCoTx2017-04-25.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row119
+ice_archive_index,TX-smith-county-sheriff-office,canonical,Texas,Smith County Sheriff's Office,signed,2017-04-25,2017-04-25,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row119
+ice_archive_index,TX-tarrant-county-sheriff-office,canonical,Texas,Tarrant County Sheriff's Office,moa_file,287gJEM_TarrantCoTx2017-06-19.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row120
+ice_archive_index,TX-tarrant-county-sheriff-office,canonical,Texas,Tarrant County Sheriff's Office,signed,2017-06-19,2017-06-19,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row120
+ice_archive_index,TX-terrell-county-sheriff-office,canonical,Texas,Terrell County Sheriff's Office,moa_file,287gJEM_TerrellCoTx2018-01-25.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row121
+ice_archive_index,TX-terrell-county-sheriff-office,canonical,Texas,Terrell County Sheriff's Office,signed,2018-01-25,2018-01-25,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row121
+ice_archive_index,TX-victoria-county-sheriff-office,canonical,Texas,Victoria County Sheriff's Office,moa_file,287gJEM_VictoriaCoTx2017-07-12.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row122
+ice_archive_index,TX-victoria-county-sheriff-office,canonical,Texas,Victoria County Sheriff's Office,signed,2017-07-12,2017-07-12,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row122
+ice_archive_index,TX-walker-county-sheriff-office,canonical,Texas,Walker County Sheriff's Office,moa_file,287gJEM_WalkerCoTx2017-07-20.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row123
+ice_archive_index,TX-walker-county-sheriff-office,canonical,Texas,Walker County Sheriff's Office,signed,2017-07-20,2017-07-20,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row123
+ice_archive_index,TX-waller-county-sheriff-office,canonical,Texas,Waller County Sheriff's Office,moa_file,287gWallerTx2017-05-22.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row124
+ice_archive_index,TX-waller-county-sheriff-office,canonical,Texas,Waller County Sheriff's Office,signed,2017-05-22,2017-05-22,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row124
+ice_archive_index,TX-wharton-county-sheriff-office,canonical,Texas,Wharton County Sheriff's Office,moa_file,287gJEM_WhartonCoTx2017-07-17.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row125
+ice_archive_index,TX-wharton-county-sheriff-office,canonical,Texas,Wharton County Sheriff's Office,signed,2017-07-17,2017-07-17,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row125
+ice_archive_index,GA-whitfield-county-sheriff-office,name_national,Texas,Whitfield County Sheriff's Office,moa_file,whitfieldcountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row126
+ice_archive_index,TX-williamson-county-sheriff-office,canonical,Texas,Williamson County Sheriff's Office,moa_file,287gJEM_WilliamsonCoTx2018-02-08.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row127
+ice_archive_index,TX-williamson-county-sheriff-office,canonical,Texas,Williamson County Sheriff's Office,moa_file,287gJEM_WilliamsonCoTX_05-04-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row128
+ice_archive_index,TX-williamson-county-sheriff-office,canonical,Texas,Williamson County Sheriff's Office,signed,2018-02-08,2018-02-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row127
+ice_archive_index,TX-williamson-county-sheriff-office,canonical,Texas,Williamson County Sheriff's Office,signed,2020-05-04,2020-05-04,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row128
+ice_archive_index,VA-culpeper-county-sheriff-office,canonical,Virginia,Culpeper County Sheriff's Office,moa_file,287g_CulpeperCounty_2018-04-24.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row129
+ice_archive_index,VA-culpeper-county-sheriff-office,canonical,Virginia,Culpeper County Sheriff's Office,moa_file,287gJEM_CulpeperCoVA_06-08-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row130
+ice_archive_index,VA-culpeper-county-sheriff-office,canonical,Virginia,Culpeper County Sheriff's Office,signed,2018-04-24,2018-04-24,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row129
+ice_archive_index,VA-culpeper-county-sheriff-office,canonical,Virginia,Culpeper County Sheriff's Office,signed,2020-06-08,2020-06-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row130
+ice_archive_index,VA-herndon-police-department,canonical,Virginia,Herndon Police Department,moa_file,herndonpolicedepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row131
+ice_archive_index,VA-manassas-park-police-department,prefix_containment,Virginia,"Manassas Park, City of",moa_file,cityofmanassaspark.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row132
+ice_archive_index,VA-manassas-police-department,spelling,Virginia,"Manassas, City of",moa_file,cityofmanassas.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row133
+ice_archive_index,VA-prince-william-county-police-department,canonical,Virginia,Prince William County Police Department,moa_file,boardofcountysupervisorsofprincewilliamcountypolicedepartment.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row134
+ice_archive_index,VA-prince-william-county-sheriff-office,canonical,Virginia,Prince William County Sheriff's Office,moa_file,boardofcountysupervisorsofprincewilliamcountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row135
+ice_archive_index,VA-prince-william-manassas-regional-adult-detention-center,alias,Virginia,Prince William-Manassas Regional ADC,moa_file,jailboardofprincewilliam-manassasregionaladultdetentioncenter.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row136
+ice_archive_index,VA-prince-william-manassas-regional-adult-detention-center,alias,Virginia,Prince William-Manassas Regional ADC,moa_file,287gJEM_PrinceWilliam-ManassasRegionalAdultDetentionCenterVa2016-06-23.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row137
+ice_archive_index,VA-prince-william-manassas-regional-adult-detention-center,alias,Virginia,Prince William-Manassas Regional ADC,signed,2009-10-15,2009-10-15,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row136
+ice_archive_index,VA-prince-william-manassas-regional-adult-detention-center,alias,Virginia,Prince William-Manassas Regional ADC,signed,2016-06-23,2016-06-23,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row137
+ice_archive_index,VA-rockingham-county-sheriff-office,canonical,Virginia,Rockingham County Sheriff's Office,moa_file,rockinghamcountyvirginiasheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row138
+ice_archive_index,VA-shenandoah-county-sheriff-office,canonical,Virginia,Shenandoah County Sheriff's Office,moa_file,shenandoahcountysheriffsoffice.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row139
+ice_archive_index,WI-lafayette-county-sheriff-office,canonical,Wisconsin,Lafayette County Sheriff's Office,moa_file,287gWSO_LafayetteCoWI_8-21-2020.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row140
+ice_archive_index,WI-lafayette-county-sheriff-office,canonical,Wisconsin,Lafayette County Sheriff's Office,signed,2020-08-21,2020-08-21,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row140
+ice_archive_index,WI-waukesha-county-sheriff-office,canonical,Wisconsin,Waukesha County Sheriff's Office,moa_file,287gJEM_WaukeshaCoWi2018-02-22.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row141
+ice_archive_index,WI-waukesha-county-sheriff-office,canonical,Wisconsin,Waukesha County Sheriff's Office,signed,2018-02-22,2018-02-22,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row141
+ice_lists,AL-department-of-public-safety,alias,Alabama,Alabama State Police,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,AL-department-of-public-safety,alias,Alabama,Alabama State Police,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,AZ-department-of-public-safety,canonical,Arizona,AZ Department of Public Safety,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,AZ-department-of-public-safety,canonical,Arizona,AZ Department of Public Safety,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,AZ-department-of-correction,canonical,Arizona,Department of Corrections,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,AZ-department-of-correction,canonical,Arizona,Department of Corrections,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,AZ-maricopa-county-sheriff-office,canonical,Arizona,Maricopa County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,AZ-maricopa-county-sheriff-office,canonical,Arizona,Maricopa County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,AR-benton-county-sheriff-office,canonical,Arkansas,Benton County Sheriff's Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,AR-springdale-police-department,canonical,Arkansas,City of Springdale Police Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,AR-rogers-police-department,canonical,Arkansas,Rogers Police Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,AR-washington-county-sheriff-office,canonical,Arkansas,Washington County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,CA-los-angeles-county-sheriff-office,canonical,California,Los Angeles County Sheriff's Department,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,CA-los-angeles-county-sheriff-office,canonical,California,Los Angeles County Sheriff's Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,CA-orange-county-sheriff-office,canonical,California,Orange County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,CA-orange-county-sheriff-office,canonical,California,Orange County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,CA-riverside-county-sheriff-office,canonical,California,Riverside County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,CA-riverside-county-sheriff-office,canonical,California,Riverside County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,CA-san-bernardino-county-sheriff-office,canonical,California,San Bernardino County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,CA-san-bernardino-county-sheriff-office,canonical,California,San Bernardino County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,CO-department-of-public-safety,canonical,Colorado,CO Dept. of Public Safety,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,CO-department-of-public-safety,canonical,Colorado,CO Dept. of Public Safety,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,CO-el-paso-county-sheriff-office,canonical,Colorado,El Paso County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,CO-el-paso-county-sheriff-office,canonical,Colorado,El Paso County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,FL-collier-county-sheriff-office,canonical,Florida,Collier County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,FL-collier-county-sheriff-office,canonical,Florida,Collier County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,FL-department-of-law-enforcement,canonical,Florida,Florida Department of Law Enforcement,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,FL-department-of-law-enforcement,canonical,Florida,Florida Department of Law Enforcement,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,GA-department-of-public-safety,canonical,Georgia,Department of Public Safety,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,GA-department-of-public-safety,canonical,Georgia,Georgia Dept. of Public Safety,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,GA-hall-county-sheriff-office,prefix_containment,Georgia,Hall County Georgia,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,GA-whitfield-county-sheriff-office,canonical,Georgia,Whitfield County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,MD-frederick-county-sheriff-office,canonical,Maryland,Frederick County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,MA-barnstable-county-sheriff-office,canonical,Massachusetts,Barnstable County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,MA-barnstable-county-sheriff-office,canonical,Massachusetts,Barnstable County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,MA-department-of-correction,canonical,Massachusetts,Department of Corrections,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,MA-department-of-correction,canonical,Massachusetts,Department of Corrections,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,MA-framingham-police-department,canonical,Massachusetts,Framingham Police Department,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,MA-framingham-police-department,canonical,Massachusetts,Framingham Police Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,NH-hudson-city-police-department,canonical,New Hampshire,Hudson City Police Department,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,NH-hudson-city-police-department,canonical,New Hampshire,Hudson City Police Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,NM-department-of-correction,canonical,New Mexico,New Mexico Corrections Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,NC-alamance-county-sheriff-office,canonical,North Carolina,Alamance County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,NC-alamance-county-sheriff-office,canonical,North Carolina,Alamance County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,NC-cabarrus-county-sheriff-office,canonical,North Carolina,Cabarrus Co. Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,NC-cabarrus-county-sheriff-office,canonical,North Carolina,Cabarrus County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,NC-durham-police-department,canonical,North Carolina,Durham Police Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,NC-gaston-county-sheriff-office,canonical,North Carolina,Gaston County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,NC-gaston-county-sheriff-office,canonical,North Carolina,Gaston County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,NC-mecklenburg-county-sheriff-office,canonical,North Carolina,Mecklenburg County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,NC-mecklenburg-county-sheriff-office,canonical,North Carolina,Mecklenburg County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,SC-york-county-sheriff-office,canonical,South Carolina,York County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,TN-davidson-county-sheriff-office,canonical,Tennessee,Davidson County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,TN-davidson-county-sheriff-office,canonical,Tennessee,Davidson County Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,VA-herndon-police-department,spelling,Virginia,Herndon Police,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,VA-herndon-police-department,canonical,Virginia,Herndon Police Department,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,VA-prince-william-county-police-department,alias,Virginia,Prince William Police Department,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,VA-prince-william-county-sheriff-office,alias,Virginia,Prince William Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,VA-prince-william-manassas-regional-adult-detention-center,spelling,Virginia,Prince William-Manassas Adult Detention Center,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,VA-prince-william-manassas-regional-adult-detention-center,spelling,Virginia,Prince William-Manassas Adult Detention Center,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,VA-rockingham-county-sheriff-office,canonical,Virginia,Rockingham Co. Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,VA-rockingham-county-sheriff-office,canonical,Virginia,Rockingham County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_lists,VA-shenandoah-county-sheriff-office,canonical,Virginia,Shenandoah Co. Sheriff's Office,listed,TRUE,,2008-03-10,sheets/sheets_wayback_pre2011/20080324215905_s3.html
+ice_lists,VA-shenandoah-county-sheriff-office,canonical,Virginia,Shenandoah County Sheriff's Office,listed,TRUE,,2007-09-19,sheets/sheets_wayback_pre2011/20080114130103_s3.html
+ice_press,MA-state-police,minted,Massachusetts,Massachusetts State Police,rescinded,2007-01-11,2007-01-11,2007-01-11,https://web.archive.org/web/20070113134756/http://www.boston.com/news/local/massachusetts/articles/2007/01/11/governor_to_rescind_romney_immigrant_arrest_agreement/
+ice_press,MA-state-police,minted,Massachusetts,Massachusetts State Police,signed,2006-12-13,2006-12-13,2006-12-13,https://web.archive.org/web/20080509095204/http://www.ice.gov/pi/news/newsreleases/articles/061213boston.htm
+oig_2009,AL-department-of-public-safety,canonical,Alabama,Alabama Department of Public Safety,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row1
+oig_2009,AL-department-of-public-safety,canonical,Alabama,Alabama Department of Public Safety,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row1
+oig_2009,AL-department-of-public-safety,canonical,Alabama,Alabama Department of Public Safety,signed,2003-09-10,2003-09-10,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row1
+oig_2009,AL-etowah-county-sheriff-office,canonical,Alabama,Etowah County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row2
+oig_2009,AL-etowah-county-sheriff-office,canonical,Alabama,Etowah County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row2
+oig_2009,AL-etowah-county-sheriff-office,canonical,Alabama,Etowah County Sheriff's Office,signed,2008-07-08,2008-07-08,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row2
+oig_2009,AZ-department-of-correction,canonical,Arizona,Arizona Department of Corrections,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row7
+oig_2009,AZ-department-of-correction,canonical,Arizona,Arizona Department of Corrections,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row7
+oig_2009,AZ-department-of-correction,canonical,Arizona,Arizona Department of Corrections,signed,2005-09-16,2005-09-16,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row7
+oig_2009,AZ-department-of-public-safety,canonical,Arizona,Arizona Department of Public Safety,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row8
+oig_2009,AZ-department-of-public-safety,canonical,Arizona,Arizona Department of Public Safety,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row8
+oig_2009,AZ-department-of-public-safety,canonical,Arizona,Arizona Department of Public Safety,signed,2007-04-15,2007-04-15,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row8
+oig_2009,AZ-mesa-police-department,canonical,Arizona,City of Mesa Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row9
+oig_2009,AZ-mesa-police-department,canonical,Arizona,City of Mesa Police Department,pending,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row9
+oig_2009,AZ-phoenix-police-department,canonical,Arizona,City of Phoenix Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row10
+oig_2009,AZ-phoenix-police-department,canonical,Arizona,City of Phoenix Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row10
+oig_2009,AZ-phoenix-police-department,canonical,Arizona,City of Phoenix Police Department,signed,2008-03-10,2008-03-10,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row10
+oig_2009,AZ-florence-police-department,canonical,Arizona,Florence Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row11
+oig_2009,AZ-florence-police-department,canonical,Arizona,Florence Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row11
+oig_2009,AZ-florence-police-department,canonical,Arizona,Florence Police Department,signed,2009-10-21,2009-10-21,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row11
+oig_2009,AZ-maricopa-county-sheriff-office,canonical,Arizona,Maricopa County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row12
+oig_2009,AZ-maricopa-county-sheriff-office,canonical,Arizona,Maricopa County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row12
+oig_2009,AZ-maricopa-county-sheriff-office,canonical,Arizona,Maricopa County Sheriff's Office,signed,2007-02-07,2007-02-07,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row12
+oig_2009,AZ-pima-county-sheriff-office,canonical,Arizona,Pima County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row13
+oig_2009,AZ-pima-county-sheriff-office,canonical,Arizona,Pima County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row13
+oig_2009,AZ-pima-county-sheriff-office,canonical,Arizona,Pima County Sheriff's Office,signed,2008-03-10,2008-03-10,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row13
+oig_2009,AZ-pinal-county-sheriff-office,canonical,Arizona,Pinal County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row14
+oig_2009,AZ-pinal-county-sheriff-office,canonical,Arizona,Pinal County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row14
+oig_2009,AZ-pinal-county-sheriff-office,canonical,Arizona,Pinal County Sheriff's Office,signed,2008-03-10,2008-03-10,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row14
+oig_2009,AZ-yavapai-county-sheriff-office,canonical,Arizona,Yavapai County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row15
+oig_2009,AZ-yavapai-county-sheriff-office,canonical,Arizona,Yavapai County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row15
+oig_2009,AZ-yavapai-county-sheriff-office,canonical,Arizona,Yavapai County Sheriff's Office,signed,2008-03-10,2008-03-10,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row15
+oig_2009,AR-benton-county-sheriff-office,canonical,Arkansas,Benton County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row3
+oig_2009,AR-benton-county-sheriff-office,canonical,Arkansas,Benton County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row3
+oig_2009,AR-benton-county-sheriff-office,canonical,Arkansas,Benton County Sheriff's Office,signed,2007-09-26,2007-09-26,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row3
+oig_2009,AR-springdale-police-department,canonical,Arkansas,City of Springdale Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row4
+oig_2009,AR-springdale-police-department,canonical,Arkansas,City of Springdale Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row4
+oig_2009,AR-springdale-police-department,canonical,Arkansas,City of Springdale Police Department,signed,2007-09-26,2007-09-26,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row4
+oig_2009,AR-rogers-police-department,canonical,Arkansas,Rogers Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row5
+oig_2009,AR-rogers-police-department,canonical,Arkansas,Rogers Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row5
+oig_2009,AR-rogers-police-department,canonical,Arkansas,Rogers Police Department,signed,2007-09-25,2007-09-25,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row5
+oig_2009,AR-washington-county-sheriff-office,canonical,Arkansas,Washington County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row6
+oig_2009,AR-washington-county-sheriff-office,canonical,Arkansas,Washington County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row6
+oig_2009,AR-washington-county-sheriff-office,canonical,Arkansas,Washington County Sheriff's Office,signed,2007-09-26,2007-09-26,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row6
+oig_2009,CA-san-bernardino-county-sheriff-office,canonical,California,San Bernardino County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row16
+oig_2009,CA-san-bernardino-county-sheriff-office,canonical,California,San Bernardino County Sheriff's Office,pending,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row16
+oig_2009,CA-san-bernardino-county-sheriff-office,canonical,California,San Bernardino County Sheriff's Office,signed,2005-10-19,2005-10-19,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row16
+oig_2009,CO-department-of-public-safety,canonical,Colorado,Colorado Department of Public Safety,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row17
+oig_2009,CO-department-of-public-safety,canonical,Colorado,Colorado Department of Public Safety,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row17
+oig_2009,CO-department-of-public-safety,canonical,Colorado,Colorado Department of Public Safety,signed,2007-03-29,2007-03-29,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row17
+oig_2009,CO-el-paso-county-sheriff-office,canonical,Colorado,El Paso County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row18
+oig_2009,CO-el-paso-county-sheriff-office,canonical,Colorado,El Paso County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row18
+oig_2009,CO-el-paso-county-sheriff-office,canonical,Colorado,El Paso County Sheriff's Office,signed,2007-05-17,2007-05-17,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row18
+oig_2009,CT-danbury-police-department,canonical,Connecticut,City of Danbury Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row19
+oig_2009,CT-danbury-police-department,canonical,Connecticut,City of Danbury Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row19
+oig_2009,CT-danbury-police-department,canonical,Connecticut,City of Danbury Police Department,signed,2009-10-15,2009-10-15,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row19
+oig_2009,DE-department-of-correction,canonical,Delaware,Delaware Department of Corrections,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row20
+oig_2009,DE-department-of-correction,canonical,Delaware,Delaware Department of Corrections,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row20
+oig_2009,DE-department-of-correction,canonical,Delaware,Delaware Department of Corrections,signed,2009-10-15,2009-10-15,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row20
+oig_2009,FL-bay-county-sheriff-office,canonical,Florida,Bay County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row21
+oig_2009,FL-bay-county-sheriff-office,canonical,Florida,Bay County Sheriff's Office,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row21
+oig_2009,FL-bay-county-sheriff-office,canonical,Florida,Bay County Sheriff's Office,signed,2008-06-15,2008-06-15,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row21
+oig_2009,FL-collier-county-sheriff-office,canonical,Florida,Collier County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row22
+oig_2009,FL-collier-county-sheriff-office,canonical,Florida,Collier County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row22
+oig_2009,FL-collier-county-sheriff-office,canonical,Florida,Collier County Sheriff's Office,signed,2007-08-06,2007-08-06,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row22
+oig_2009,FL-department-of-law-enforcement,canonical,Florida,Florida Department of Law Enforcement,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row23
+oig_2009,FL-department-of-law-enforcement,canonical,Florida,Florida Department of Law Enforcement,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row23
+oig_2009,FL-department-of-law-enforcement,canonical,Florida,Florida Department of Law Enforcement,signed,2002-07-02,2002-07-02,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row23
+oig_2009,FL-jacksonville-sheriff-office,canonical,Florida,Jacksonville Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row24
+oig_2009,FL-jacksonville-sheriff-office,canonical,Florida,Jacksonville Sheriff's Office,pending,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row24
+oig_2009,FL-jacksonville-sheriff-office,canonical,Florida,Jacksonville Sheriff's Office,signed,2008-07-08,2008-07-08,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row24
+oig_2009,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row25
+oig_2009,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row25
+oig_2009,GA-cobb-county-sheriff-office,canonical,Georgia,Cobb County Sheriff's Office,signed,2007-02-13,2007-02-13,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row25
+oig_2009,GA-department-of-public-safety,canonical,Georgia,Georgia Department of Public Safety,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row26
+oig_2009,GA-department-of-public-safety,canonical,Georgia,Georgia Department of Public Safety,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row26
+oig_2009,GA-department-of-public-safety,canonical,Georgia,Georgia Department of Public Safety,signed,2007-07-27,2007-07-27,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row26
+oig_2009,GA-gwinnett-county-sheriff-office,canonical,Georgia,Gwinnett County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row27
+oig_2009,GA-gwinnett-county-sheriff-office,canonical,Georgia,Gwinnett County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row27
+oig_2009,GA-gwinnett-county-sheriff-office,canonical,Georgia,Gwinnett County Sheriff's Office,signed,2009-10-15,2009-10-15,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row27
+oig_2009,GA-hall-county-sheriff-office,canonical,Georgia,Hall County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row28
+oig_2009,GA-hall-county-sheriff-office,canonical,Georgia,Hall County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row28
+oig_2009,GA-hall-county-sheriff-office,canonical,Georgia,Hall County Sheriff's Office,signed,2008-02-29,2008-02-29,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row28
+oig_2009,GA-whitfield-county-sheriff-office,canonical,Georgia,Whitfield County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row29
+oig_2009,GA-whitfield-county-sheriff-office,canonical,Georgia,Whitfield County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row29
+oig_2009,GA-whitfield-county-sheriff-office,canonical,Georgia,Whitfield County Sheriff's Office,signed,2008-02-04,2008-02-04,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row29
+oig_2009,MD-frederick-county-sheriff-office,canonical,Maryland,Frederick County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row30
+oig_2009,MD-frederick-county-sheriff-office,canonical,Maryland,Frederick County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row30
+oig_2009,MD-frederick-county-sheriff-office,canonical,Maryland,Frederick County Sheriff's Office,signed,2008-02-06,2008-02-06,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row30
+oig_2009,MN-department-of-public-safety,canonical,Minnesota,Minnesota Department of Public Safety,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row31
+oig_2009,MN-department-of-public-safety,canonical,Minnesota,Minnesota Department of Public Safety,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row31
+oig_2009,MN-department-of-public-safety,canonical,Minnesota,Minnesota Department of Public Safety,signed,2008-09-22,2008-09-22,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row31
+oig_2009,MO-state-highway-patrol,canonical,Missouri,Missouri State Highway Patrol,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row32
+oig_2009,MO-state-highway-patrol,canonical,Missouri,Missouri State Highway Patrol,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row32
+oig_2009,MO-state-highway-patrol,canonical,Missouri,Missouri State Highway Patrol,signed,2008-06-25,2008-06-25,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row32
+oig_2009,NV-las-vegas-metropolitan-police-department,canonical,Nevada,Las Vegas Metropolitan Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row33
+oig_2009,NV-las-vegas-metropolitan-police-department,canonical,Nevada,Las Vegas Metropolitan Police Department,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row33
+oig_2009,NV-las-vegas-metropolitan-police-department,canonical,Nevada,Las Vegas Metropolitan Police Department,signed,2008-09-08,2008-09-08,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row33
+oig_2009,NH-hudson-city-police-department,canonical,New Hampshire,Hudson City Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row34
+oig_2009,NH-hudson-city-police-department,canonical,New Hampshire,Hudson City Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row34
+oig_2009,NH-hudson-city-police-department,canonical,New Hampshire,Hudson City Police Department,signed,2007-05-05,2007-05-05,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row34
+oig_2009,NJ-hudson-county-department-of-correction,canonical,New Jersey,Hudson County Department of Corrections,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row35
+oig_2009,NJ-hudson-county-department-of-correction,canonical,New Jersey,Hudson County Department of Corrections,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row35
+oig_2009,NJ-hudson-county-department-of-correction,canonical,New Jersey,Hudson County Department of Corrections,signed,2008-08-11,2008-08-11,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row35
+oig_2009,NJ-monmouth-county-sheriff-office,canonical,New Jersey,Monmouth County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row36
+oig_2009,NJ-monmouth-county-sheriff-office,canonical,New Jersey,Monmouth County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row36
+oig_2009,NJ-monmouth-county-sheriff-office,canonical,New Jersey,Monmouth County Sheriff's Office,signed,2009-10-15,2009-10-15,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row36
+oig_2009,NC-alamance-county-sheriff-office,canonical,North Carolina,Alamance County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row37
+oig_2009,NC-alamance-county-sheriff-office,canonical,North Carolina,Alamance County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row37
+oig_2009,NC-alamance-county-sheriff-office,canonical,North Carolina,Alamance County Sheriff's Office,signed,2007-01-10,2007-01-10,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row37
+oig_2009,NC-cabarrus-county-sheriff-office,canonical,North Carolina,Cabarrus County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row38
+oig_2009,NC-cabarrus-county-sheriff-office,canonical,North Carolina,Cabarrus County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row38
+oig_2009,NC-cabarrus-county-sheriff-office,canonical,North Carolina,Cabarrus County Sheriff's Office,signed,2007-08-02,2007-08-02,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row38
+oig_2009,NC-durham-police-department,canonical,North Carolina,Durham Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row39
+oig_2009,NC-durham-police-department,canonical,North Carolina,Durham Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row39
+oig_2009,NC-durham-police-department,canonical,North Carolina,Durham Police Department,signed,2008-02-01,2008-02-01,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row39
+oig_2009,NC-gaston-county-sheriff-office,canonical,North Carolina,Gaston County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row40
+oig_2009,NC-gaston-county-sheriff-office,canonical,North Carolina,Gaston County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row40
+oig_2009,NC-gaston-county-sheriff-office,canonical,North Carolina,Gaston County Sheriff's Office,signed,2007-02-22,2007-02-22,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row40
+oig_2009,NC-guilford-county-sheriff-office,canonical,North Carolina,Guilford County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row41
+oig_2009,NC-guilford-county-sheriff-office,canonical,North Carolina,Guilford County Sheriff's Office,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row41
+oig_2009,NC-guilford-county-sheriff-office,canonical,North Carolina,Guilford County Sheriff's Office,signed,2009-10-15,2009-10-15,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row41
+oig_2009,NC-henderson-county-sheriff-office,canonical,North Carolina,Henderson County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row42
+oig_2009,NC-henderson-county-sheriff-office,canonical,North Carolina,Henderson County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row42
+oig_2009,NC-henderson-county-sheriff-office,canonical,North Carolina,Henderson County Sheriff's Office,signed,2008-06-25,2008-06-25,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row42
+oig_2009,NC-mecklenburg-county-sheriff-office,canonical,North Carolina,Mecklenburg County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row43
+oig_2009,NC-mecklenburg-county-sheriff-office,canonical,North Carolina,Mecklenburg County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row43
+oig_2009,NC-mecklenburg-county-sheriff-office,canonical,North Carolina,Mecklenburg County Sheriff's Office,signed,2006-02-27,2006-02-27,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row43
+oig_2009,NC-wake-county-sheriff-office,canonical,North Carolina,Wake County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row44
+oig_2009,NC-wake-county-sheriff-office,canonical,North Carolina,Wake County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row44
+oig_2009,NC-wake-county-sheriff-office,canonical,North Carolina,Wake County Sheriff's Office,signed,2008-06-25,2008-06-25,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row44
+oig_2009,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row45
+oig_2009,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row45
+oig_2009,OH-butler-county-sheriff-office,canonical,Ohio,Butler County Sheriff's Office,signed,2008-02-05,2008-02-05,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row45
+oig_2009,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row46
+oig_2009,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row46
+oig_2009,OK-tulsa-county-sheriff-office,canonical,Oklahoma,Tulsa County Sheriff's Office,signed,2007-08-06,2007-08-06,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row46
+oig_2009,,unresolved_absent,Rhode Island,Rhode Island Department of Corrections,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row47
+oig_2009,,unresolved_absent,Rhode Island,Rhode Island Department of Corrections,pending,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row47
+oig_2009,RI-state-police,canonical,Rhode Island,Rhode Island State Police,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row48
+oig_2009,RI-state-police,canonical,Rhode Island,Rhode Island State Police,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row48
+oig_2009,RI-state-police,canonical,Rhode Island,Rhode Island State Police,signed,2009-10-15,2009-10-15,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row48
+oig_2009,SC-beaufort-county-sheriff-office,canonical,South Carolina,Beaufort County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row49
+oig_2009,SC-beaufort-county-sheriff-office,canonical,South Carolina,Beaufort County Sheriff's Office,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row49
+oig_2009,SC-beaufort-county-sheriff-office,canonical,South Carolina,Beaufort County Sheriff's Office,signed,2008-06-25,2008-06-25,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row49
+oig_2009,SC-charleston-county-sheriff-office,canonical,South Carolina,Charleston County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row50
+oig_2009,SC-charleston-county-sheriff-office,canonical,South Carolina,Charleston County Sheriff's Office,pending,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row50
+oig_2009,SC-york-county-sheriff-office,canonical,South Carolina,York County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row51
+oig_2009,SC-york-county-sheriff-office,canonical,South Carolina,York County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row51
+oig_2009,SC-york-county-sheriff-office,canonical,South Carolina,York County Sheriff's Office,signed,2007-10-16,2007-10-16,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row51
+oig_2009,TN-davidson-county-sheriff-office,canonical,Tennessee,Davidson County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row52
+oig_2009,TN-davidson-county-sheriff-office,canonical,Tennessee,Davidson County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row52
+oig_2009,TN-davidson-county-sheriff-office,canonical,Tennessee,Davidson County Sheriff's Office,signed,2007-02-21,2007-02-21,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row52
+oig_2009,TN-highway-patrol-department-of-safety,spelling,Tennessee,Tennessee Department of Safety,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row53
+oig_2009,TN-highway-patrol-department-of-safety,spelling,Tennessee,Tennessee Department of Safety,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row53
+oig_2009,TN-highway-patrol-department-of-safety,spelling,Tennessee,Tennessee Department of Safety,signed,2008-06-25,2008-06-25,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row53
+oig_2009,TX-carrollton-police-department,canonical,Texas,Carrollton Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row54
+oig_2009,TX-carrollton-police-department,canonical,Texas,Carrollton Police Department,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row54
+oig_2009,TX-carrollton-police-department,canonical,Texas,Carrollton Police Department,signed,2008-08-12,2008-08-12,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row54
+oig_2009,TX-farmers-branch-police-department,canonical,Texas,Farmers Branch Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row55
+oig_2009,TX-farmers-branch-police-department,canonical,Texas,Farmers Branch Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row55
+oig_2009,TX-farmers-branch-police-department,canonical,Texas,Farmers Branch Police Department,signed,2008-07-08,2008-07-08,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row55
+oig_2009,TX-harris-county-sheriff-office,canonical,Texas,Harris County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row56
+oig_2009,TX-harris-county-sheriff-office,canonical,Texas,Harris County Sheriff's Office,pending,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row56
+oig_2009,TX-harris-county-sheriff-office,canonical,Texas,Harris County Sheriff's Office,signed,2008-07-20,2008-07-20,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row56
+oig_2009,UT-washington-county-sheriff-office,canonical,Utah,Washington County Sheriff Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row57
+oig_2009,UT-washington-county-sheriff-office,canonical,Utah,Washington County Sheriff Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row57
+oig_2009,UT-washington-county-sheriff-office,canonical,Utah,Washington County Sheriff Office,signed,2008-09-22,2008-09-22,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row57
+oig_2009,UT-weber-county-sheriff-office,canonical,Utah,Weber County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row58
+oig_2009,UT-weber-county-sheriff-office,canonical,Utah,Weber County Sheriff's Office,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row58
+oig_2009,UT-weber-county-sheriff-office,canonical,Utah,Weber County Sheriff's Office,signed,2008-09-22,2008-09-22,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row58
+oig_2009,VA-herndon-police-department,canonical,Virginia,Herndon Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row59
+oig_2009,VA-herndon-police-department,canonical,Virginia,Herndon Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row59
+oig_2009,VA-herndon-police-department,canonical,Virginia,Herndon Police Department,signed,2007-03-21,2007-03-21,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row59
+oig_2009,VA-loudoun-county-sheriff-office,canonical,Virginia,Loudoun County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row60
+oig_2009,VA-loudoun-county-sheriff-office,canonical,Virginia,Loudoun County Sheriff's Office,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row60
+oig_2009,VA-loudoun-county-sheriff-office,canonical,Virginia,Loudoun County Sheriff's Office,signed,2008-06-25,2008-06-25,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row60
+oig_2009,VA-manassas-park-police-department,canonical,Virginia,Manassas Park Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row61
+oig_2009,VA-manassas-park-police-department,canonical,Virginia,Manassas Park Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row61
+oig_2009,VA-manassas-park-police-department,canonical,Virginia,Manassas Park Police Department,signed,2008-03-10,2008-03-10,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row61
+oig_2009,VA-manassas-police-department,canonical,Virginia,Manassas Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row62
+oig_2009,VA-manassas-police-department,canonical,Virginia,Manassas Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row62
+oig_2009,VA-manassas-police-department,canonical,Virginia,Manassas Police Department,signed,2008-03-05,2008-03-05,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row62
+oig_2009,VA-prince-william-county-police-department,canonical,Virginia,Prince William County Police Department,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row63
+oig_2009,VA-prince-william-county-police-department,canonical,Virginia,Prince William County Police Department,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row63
+oig_2009,VA-prince-william-county-police-department,canonical,Virginia,Prince William County Police Department,signed,2008-02-26,2008-02-26,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row63
+oig_2009,VA-prince-william-county-sheriff-office,canonical,Virginia,Prince William County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row64
+oig_2009,VA-prince-william-county-sheriff-office,canonical,Virginia,Prince William County Sheriff's Office,model,Task Force,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row64
+oig_2009,VA-prince-william-county-sheriff-office,canonical,Virginia,Prince William County Sheriff's Office,signed,2008-02-26,2008-02-26,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row64
+oig_2009,VA-prince-william-manassas-regional-adult-detention-center,alias,Virginia,Prince William-Manassas Regional Jail,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row65
+oig_2009,VA-prince-william-manassas-regional-adult-detention-center,alias,Virginia,Prince William-Manassas Regional Jail,model,Jail Enforcement,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row65
+oig_2009,VA-prince-william-manassas-regional-adult-detention-center,alias,Virginia,Prince William-Manassas Regional Jail,signed,2007-07-09,2007-07-09,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row65
+oig_2009,VA-rockingham-county-sheriff-office,canonical,Virginia,Rockingham County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row66
+oig_2009,VA-rockingham-county-sheriff-office,canonical,Virginia,Rockingham County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row66
+oig_2009,VA-rockingham-county-sheriff-office,canonical,Virginia,Rockingham County Sheriff's Office,signed,2007-04-25,2007-04-25,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row66
+oig_2009,VA-shenandoah-county-sheriff-office,canonical,Virginia,Shenandoah County Sheriff's Office,listed,TRUE,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row67
+oig_2009,VA-shenandoah-county-sheriff-office,canonical,Virginia,Shenandoah County Sheriff's Office,model,Hybrid,,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row67
+oig_2009,VA-shenandoah-county-sheriff-office,canonical,Virginia,Shenandoah County Sheriff's Office,signed,2007-05-10,2007-05-10,2009-10-28,inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf#row67
