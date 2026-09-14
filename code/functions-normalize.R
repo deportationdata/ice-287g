@@ -137,6 +137,16 @@ marshal_as_police <- function(name, state_key) {
           str_replace_all(name, regex("\\bmarshal['’]?s?\\b", ignore_case = TRUE), "Police"))
 }
 
+# a town's department of public safety is its police department, which is how the rosters name
+# most of them (Sikeston, Gordonsville, Center Line's "Division of Public Safety and Security").
+# Municipal agreements only: a state department of public safety is not its state police.
+# Tested 2026-09-13: 5 agreements gained, none lost or changed
+public_safety_as_police <- function(name, jurisdiction_level) {
+  if_else(coalesce(jurisdiction_level == "Municipal", FALSE),
+          str_replace(name, regex("\\b(department|division) of public safety\\b.*$", ignore_case = TRUE), "Police Department"),
+          name)
+}
+
 # keeps every word, so "Melbourne PD" and "Melbourne Village PD" stay distinct
 norm_ori_fullname <- function(x) {
   x |>

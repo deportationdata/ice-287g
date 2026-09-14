@@ -224,11 +224,11 @@ manual_agency_ori <- read_csv(
   distinct(state, county, agency, .keep_all = TRUE)
 
 agreement_identifiers <- arrow::read_parquet("data/intermediate/agreements.parquet") |>
-  select(agreement_id, state, county, agency) |>
+  select(agreement_id, state, county, agency, jurisdiction_level) |>
   mutate(
     state_key = norm_state(state),
     county_key = norm_ori_county(county),
-    agency_key = norm_ori_agency(marshal_as_police(agency, state_key)),
+    agency_key = norm_ori_agency(marshal_as_police(public_safety_as_police(agency, jurisdiction_level), state_key)),
     fullname_key = norm_ori_fullname(agency)
   ) |>
   match_agency_source(leaic_lookup, "leaic_ori", "leaic_match_type") |>
@@ -295,14 +295,16 @@ agreement_identifiers <- arrow::read_parquet("data/intermediate/agreements.parqu
       select(state, agency, manual_ori_general = ORI9),
     by = c("state", "agency")
   ) |>
+  # a manual ORI outranks the rosters, which is how a wrong roster match is corrected (Oak
+  # Grove Village MO); a roster that already agrees keeps its provenance
   mutate(
     manual_ori = coalesce(manual_ori_specific, manual_ori_general),
     ori_source = if_else(
-      is.na(ORI9) & !is.na(manual_ori),
+      !is.na(manual_ori) & coalesce(ORI9 != manual_ori, TRUE),
       "manual",
       ori_source
     ),
-    ORI9 = coalesce(ORI9, manual_ori)
+    ORI9 = coalesce(manual_ori, ORI9)
   ) |>
   select(
     agreement_id,
