@@ -13,7 +13,7 @@ government, FOIA and academic sources into one agency-level table. A
 companion to the other [deportationdata](https://github.com/deportationdata)
 repositories, built with the same approach.
 
-## Two grains
+## Two levels of analysis
 
 - An **agency** is one law-enforcement body in one state, tracked across
   every era it dealt with ICE (`agency_id`, e.g.
@@ -52,7 +52,7 @@ a pull request shows what moved.
 
 | file | contents |
 |---|---|
-| **`data/agreement-level-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (its TYPE as printed is `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, identifiers, `geom_class`, `geometry_vintage`, `match_quality`, `review_reason`, geometry. The file the slicer consumes. |
+| **`data/agreements.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (its TYPE as printed is `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, identifiers, `geom_class`, `geometry_vintage`, `match_quality`, `review_reason`, geometry. The file the slicer consumes. |
 | **`data/agencies.parquet`** | One row per agency across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to, MOA archive status and which sources attest it. |
 | `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window. |
 | `data/intermediate/identity-agreements.parquet`, `data/intermediate/sheet-publications.parquet`, `data/intermediate/sheet-publication-files.parquet`, `data/intermediate/sheet-row-agreements.parquet`, `data/intermediate/identity-agency-spellings.parquet` | The identity layer: every distinct sheet ever published, every row of every sheet resolved to an agreement, and every spelling ICE printed for each agency. |
