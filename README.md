@@ -9,22 +9,23 @@ department's member municipalities, university campus, Pennsylvania constable
 ward, airport, or detention facility — and annotated with agency identifiers
 (ORI codes, FIPS codes) from four independent law-enforcement rosters. The
 program's history before ICE published spreadsheets is reconstructed from
-government, FOIA and academic sources into one partnership-level table. A
+government, FOIA and academic sources into one agency-level table. A
 companion to the other [deportationdata](https://github.com/deportationdata)
 repositories, built with the same approach.
 
 ## Two grains
 
-- A **partnership** is the relationship between ICE and one agency in one
-  state (`partnership_id`, e.g. `NC-alamance-county-sheriff-office`, derived
-  from the agency's canonical name so a spelling change never forks it).
-- An **agreement** is one signed instrument under a partnership: a support
+- An **agency** is one law-enforcement body in one state, tracked across
+  every era it dealt with ICE (`agency_id`, e.g.
+  `NC-alamance-county-sheriff-office`, derived from its canonical name so a
+  spelling change never forks it).
+- An **agreement** is one signed instrument under an agency: a support
   model signed on a date (`agreement_id`, e.g.
-  `NC-alamance-county-sheriff-office#JEM#2007-01-10`). A partnership can hold
+  `NC-alamance-county-sheriff-office#JEM#2007-01-10`). An agency can hold
   several — a re-signing supersedes its predecessor, and a sheriff may run jail,
   task-force and warrant-service agreements at once. `status` is `active`
   (on the current sheet), `superseded` (a later agreement of the same
-  partnership took over) or `removed`.
+  agency took over) or `removed`.
 
 Both ids are content-derived and stable across runs; an id changes only when
 the canonical name it is built from changes, which is exactly when the diff
@@ -33,7 +34,7 @@ deserves a manual check.
 ## Data files
 
 `data/` holds only the published products: the agreement-level geometry file, the
-partnership history and the committed QA reports in `data/qa/`. Everything the
+agency history and the committed QA reports in `data/qa/`. Everything the
 pipeline builds on the way — rosters, per-layer and per-feature matches, the identity layer,
 source claims and the two API caches — is in `data/intermediate/`, committed so
 a pull request shows what moved.
@@ -41,14 +42,14 @@ a pull request shows what moved.
 | file | contents |
 |---|---|
 | **`data/agreement-level-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (its TYPE as printed is `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, identifiers, `geom_class`, `geometry_vintage`, `match_quality`, `review_reason`, geometry. The file the slicer consumes. |
-| **`data/partnerships.parquet`** | One row per partnership across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to, MOA archive status and which sources attest it. |
-| `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`partnership_id`, `succeeded_by`), first/last appearance and removal window. |
-| `data/intermediate/identity-agreements.parquet`, `data/intermediate/sheet-publications.parquet`, `data/intermediate/sheet-publication-files.parquet`, `data/intermediate/sheet-row-agreements.parquet`, `data/intermediate/identity-agency-spellings.parquet` | The identity layer: every distinct sheet ever published, every row of every sheet resolved to an agreement, and every spelling ICE printed for each partnership. |
-| `data/intermediate/historical-source-claims.csv`, `data/intermediate/historical-source-claims-unresolved.csv` | Every claim a non-sheet source (ICE's undated lists, ICE's MOA archive index, DHS OIG's Oct 2009 appendix, ICE press releases) makes about a partnership — listed, pending, signed, model, MOA file, rescinded — with the rule that resolved it; what no rule resolves is listed, never dropped. |
-| `data/intermediate/partnership-disagreements.csv` | Where a source and ICE differ: a signing date, a model, a state, or presence on the ICE publication nearest to the source's date. |
+| **`data/agencies.parquet`** | One row per agency across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to, MOA archive status and which sources attest it. |
+| `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window. |
+| `data/intermediate/identity-agreements.parquet`, `data/intermediate/sheet-publications.parquet`, `data/intermediate/sheet-publication-files.parquet`, `data/intermediate/sheet-row-agreements.parquet`, `data/intermediate/identity-agency-spellings.parquet` | The identity layer: every distinct sheet ever published, every row of every sheet resolved to an agreement, and every spelling ICE printed for each agency. |
+| `data/intermediate/historical-source-claims.csv`, `data/intermediate/historical-source-claims-unresolved.csv` | Every claim a non-sheet source (ICE's undated lists, ICE's MOA archive index, DHS OIG's Oct 2009 appendix, ICE press releases) makes about an agency — listed, pending, signed, model, MOA file, rescinded — with the rule that resolved it; what no rule resolves is listed, never dropped. |
+| `data/intermediate/agency-disagreements.csv` | Where a source and ICE differ: a signing date, a model, a state, or presence on the ICE publication nearest to the source's date. |
 | `data/intermediate/match-agency-identifiers.parquet` | Per-agreement roster matches: chosen `ORI9` + each roster's candidate ORI/county codes, match types and ambiguity. |
 | `data/intermediate/match-missing-identifiers.parquet` | Exception report: agreements still missing an ORI and/or the FIPS code their layer requires. |
-| `data/qa/` | Committed QA: `qa-summary.csv` (every invariant and count, `pass`/`fail`/`info`), `qa-match-types.csv`, `qa-review-reasons.csv`, `qa-acquisition.csv`, `identity-candidates.csv` (spellings the rules would not merge), `historical-summary.md` (per-source counts of partnerships attested, listed, dated and unresolved). A `fail` row fails CI. |
+| `data/qa/` | Committed QA: `qa-summary.csv` (every invariant and count, `pass`/`fail`/`info`), `qa-match-types.csv`, `qa-review-reasons.csv`, `qa-acquisition.csv`, `identity-candidates.csv` (spellings the rules would not merge), `historical-summary.md` (per-source counts of agencies attested, listed, dated and unresolved). A `fail` row fails CI. |
 | `data/intermediate/agency-roster-leaic-2012.parquet`, `data/intermediate/agency-roster-lear-2016.parquet`, `data/intermediate/agency-roster-cde-2025.parquet`, `data/intermediate/agency-roster-hifld.parquet` | The four agency rosters, normalized to a shared matching schema (LEAIC 2012, LEAR 2016, FBI Crime Data Explorer 2025, HIFLD police stations). |
 | `data/intermediate/facility-list-ice-detention.parquet`, `data/intermediate/facility-list-jails-prisons.parquet` | Detention-facility candidate tables (ICE facilities from ice-detention-facilities; HIFLD prisons + Census of Jails). |
 | `data/intermediate/match-*.parquet` (state, county, municipal, pa-constable, university, facility, non-facility) | Per-layer match results, EPSG:4326. |
@@ -106,7 +107,7 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   printed date, with the month and day falling in the 60 days before that list)
   takes the year of its first listing, unless the same date was already printed
   for a near-identical spelling.
-  **`2-make-identities.R`** resolves rows into agreements and partnerships:
+  **`2-make-identities.R`** resolves rows into agreements and agencies:
   exact keys, then a typo tier and a modifier tier that only merge when the
   windows and spellings make one agreement the only reading, a rename tier for
   two spellings ICE printed on adjacent lists linking the same MOA file, then the
@@ -125,11 +126,11 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   the undated agency lists of Sep 2007 and Mar 2008, the MOA archive index —
   and the DHS OIG appendix of Oct 2009, each registered in
   `inputs/historical/source-registry.csv` with its grade, rank and as-of date.
-  **`2-make-partnerships.R`** reduces them, and the press-release claims in
+  **`2-make-agencies.R`** reduces them, and the press-release claims in
   `inputs/historical/press-claims.csv`, to typed claims resolved to
-  partnerships by rule, then arbitrates one record per partnership with the
+  agencies by rule, then arbitrates one record per agency with the
   winning source beside each value and records every disagreement with ICE.
-  Only a press-release claim may add a partnership; every other source
+  Only a press-release claim may add an agency; every other source
   attests to existing ones.
 - **`3-match-*.R`** match agreements to geometry, one script per layer, in
   any order. Each emits `agreement_id`, `match_name` (the matched geometry's
@@ -190,11 +191,11 @@ QA diff.
   are listed in `inputs/manual-judicial-district-counties.csv`; and `Port` for
   an airport or seaport authority's police. The level comes from this file
   first, then from name rules (constable, campus, judicial, port and regional
-  words, each tested over every partnership with no false positive, and a
+  words, each tested over every agency with no false positive, and a
   sheriff or jail naming its own county), then from ICE's TYPE, and for the
   fact-sheet era, which printed no TYPE, from the name alone;
   `jurisdiction_level_source` says which, and `ice_type` carries ICE's TYPE as
-  printed. A partnership takes the level of its latest agreement.
+  printed. An agency takes the level of its latest agreement.
 - `inputs/manual-regional-municipalities.csv` — the member municipalities of
   regional police departments, one row per member with the source documenting
   the membership. A regional department gets one feature row per member and its
@@ -222,7 +223,7 @@ QA diff.
   machine-readable register, `press-claims.csv` the agreements ICE
   announced that reached no roster. `inputs/other_sources/` holds the
   secondary reports, panels, mirrors and the retired hand-built jurisdiction
-  crosswalk the pipeline does not read; none adds a partnership or date.
+  crosswalk the pipeline does not read; none adds an agency or date.
 
 Prefer extending these files over hand-editing outputs: the pipeline is fully
 regenerable.
@@ -259,7 +260,7 @@ regenerable.
 - The DHS OIG appendix is a PDF text layer; its model marks are placed by
   column position and its every row is checked against the 67 it states.
   ICE's own dates disagree with themselves in places (the archive index and
-  the sheet differ on 14 signing dates); `data/intermediate/partnership-disagreements.csv`
+  the sheet differ on 14 signing dates); `data/intermediate/agency-disagreements.csv`
   records each and `first_signed` takes the earliest.
 
 Corrections are welcome — please open an issue or pull request.

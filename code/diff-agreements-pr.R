@@ -35,7 +35,7 @@ read_clean <- function(path) {
 main_df <- read_clean(main_path)
 pr_df <- read_clean(pr_path)
 
-id_cols <- c("agreement_id", "partnership_id", "agreement_lineage_id", "succeeded_by", "sheet_row")
+id_cols <- c("agreement_id", "agency_id", "agreement_lineage_id", "succeeded_by", "sheet_row")
 
 make_key <- function(df) {
   base_key_cols <- intersect(

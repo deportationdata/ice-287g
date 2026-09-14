@@ -1,4 +1,4 @@
-source_id,partnership_id,resolution,state,agency_raw,field,value,value_date,as_of,evidence
+source_id,agency_id,resolution,state,agency_raw,field,value,value_date,as_of,evidence
 ice_archive_index,AL-department-of-public-safety,alias,Alabama,"Alabama, State of",moa_file,stateofalabamadepartmentofpublicsafety.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row1
 ice_archive_index,AL-etowah-county-sheriff-office,canonical,Alabama,Etowah County Sheriff's Office,moa_file,287gJEM_EtowahCoAl2016-06-18.pdf,,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row2
 ice_archive_index,AL-etowah-county-sheriff-office,canonical,Alabama,Etowah County Sheriff's Office,signed,2016-06-08,2016-06-08,2026-04-20,inputs/historical/ice_live_287gMOA_index_2026-04-20.tsv#row2

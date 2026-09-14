@@ -594,7 +594,7 @@ is_campus_agency <- function(agency) {
 }
 
 # name rules for the levels the hand list otherwise supplies, each tested over every
-# partnership on 2026-09-13 with no false positive: a body several jurisdictions formed, a
+# agency on 2026-09-13 with no false positive: a body several jurisdictions formed, a
 # state office serving a multi-county judicial district, an airport or port authority's police
 is_regional_agency <- function(agency) str_detect(str_to_lower(agency), "\\bregional\\b")
 is_judicial_district_agency <- function(agency) {
@@ -616,8 +616,8 @@ is_county_constable <- function(agency, state) {
   str_detect(str_to_lower(agency), "\\bconstable") & state != "Pennsylvania" & !is_constable_district(agency, state)
 }
 
-# the identity family's partnership key for any (state, agency) string
-partnership_key <- function(state, agency, state_abbr, aliases) {
+# the identity family's agency key for any (state, agency) string
+agency_id_of <- function(state, agency, state_abbr, aliases) {
   key <- canonical_agency(agency, coalesce(state_abbr, ""), coalesce(state, ""))
   same <- aliases |> filter(relation == "same") |> distinct(state_key, alias_key, target_key)
   target <- same$target_key[match(paste(norm_state(state), key), paste(same$state_key, same$alias_key))]

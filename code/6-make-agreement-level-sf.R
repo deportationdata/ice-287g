@@ -92,7 +92,7 @@ all_agreements_sf <-
     agreements |>
       select(
         agreement_id,
-        partnership_id,
+        agency_id,
         status,
         sheet_row,
         n_sheet_rows,
@@ -218,7 +218,7 @@ all_agreements_sf <- all_agreements_sf |>
   ) |>
   select(
     agreement_id,
-    partnership_id,
+    agency_id,
     status,
     sheet_row,
     state,
@@ -302,7 +302,7 @@ quality_order <- c("unmatched", "weak", "fuzzy", "exact_flagged", "manual", "exa
 agreement_level_sf <- all_agreements_sf |>
   group_by(
     agreement_id,
-    partnership_id,
+    agency_id,
     status,
     sheet_row,
     agency,
@@ -348,7 +348,7 @@ agreement_level_sf <- agreement_level_sf |>
   select(
     # the sheet's own order first, then derived and spatial fields
     agreement_id,
-    partnership_id,
+    agency_id,
     status,
     sheet_row,
     state,

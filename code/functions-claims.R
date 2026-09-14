@@ -1,8 +1,8 @@
 # Source claims: every non-sheet source is reduced to typed claims about a
-# partnership (listed, pending, signed, model, moa_file, rescinded), and each
-# claim resolves to a partnership by rule or is left visible as unresolved.
+# agency (listed, pending, signed, model, moa_file, rescinded), and each
+# claim resolves to an agency by rule or is left visible as unresolved.
 
-claim_columns <- c("source_id", "partnership_id", "resolution", "state", "agency_raw",
+claim_columns <- c("source_id", "agency_id", "resolution", "state", "agency_raw",
                    "field", "value", "value_date", "as_of", "evidence")
 
 read_sources <- function(path = "inputs/historical/source-registry.csv") {
@@ -60,27 +60,27 @@ validate_agency_shape <- function(agency) {
       str_count(a, "[A-Za-z]{2,}") < 1)
 }
 
-# the registry of keys that name a published partnership: its canonical spelling,
+# the registry of keys that name a published agency: its canonical spelling,
 # every spelling ICE printed for it, and every alias verdict
-partnership_registry <- function(partnerships, spellings, aliases) {
+agency_registry <- function(agencies, spellings, aliases) {
   bind_rows(
-    partnerships |> transmute(state_key, key = canonical_agency, partnership_id, tier = "canonical"),
-    spellings |> filter(n_partnerships == 1) |>
-      distinct(state_key, key = observed_agency, partnership_id) |> mutate(tier = "spelling"),
+    agencies |> transmute(state_key, key = canonical_agency, agency_id, tier = "canonical"),
+    spellings |> filter(n_agencies == 1) |>
+      distinct(state_key, key = observed_agency, agency_id) |> mutate(tier = "spelling"),
     aliases |> filter(relation == "same") |>
-      inner_join(partnerships |> select(state_key, target_key = canonical_agency, partnership_id),
+      inner_join(agencies |> select(state_key, target_key = canonical_agency, agency_id),
                         by = c("state_key", "target_key")) |>
-      distinct(state_key, key = alias_key, partnership_id) |> mutate(tier = "alias")
+      distinct(state_key, key = alias_key, agency_id) |> mutate(tier = "alias")
   ) |>
     arrange(state_key, key, match(tier, c("canonical", "alias", "spelling"))) |>
     distinct(state_key, key, .keep_all = TRUE)
 }
 
-# resolve (state, agency[, signed]) rows to partnership ids, one row in, one row
+# resolve (state, agency[, signed]) rows to agency ids, one row in, one row
 # out, by tiers: the registry within the state, a name that starts exactly one
-# partnership in the state, a name unique across the country, a signing date
-# unique in the state, and, for a source that may mint, a new partnership
-resolve_partnership <- function(state, agency, may_mint, registry, partnerships, identities, xwalk, aliases,
+# agency in the state, a name unique across the country, a signing date
+# unique in the state, and, for a source that may mint, a new agency
+resolve_agency <- function(state, agency, may_mint, registry, agencies, identities, xwalk, aliases,
                                 signed = as.Date(rep(NA, length(agency)))) {
   rows <- tibble(state, agency, may_mint, signed) |>
     mutate(.row = row_number(),
@@ -106,12 +106,12 @@ resolve_partnership <- function(state, agency, may_mint, registry, partnerships,
                   mintable = shape_ok & str_count(mint_key, "\\S+") >= 2) |>
     select(-target_key)
 
-  # a name that begins exactly one partnership's canonical name in the state, or
+  # a name that begins exactly one agency's canonical name in the state, or
   # failing that exactly one in the country
   prefix_all <- rows |>
-    filter(is.na(partnership_id), shape_ok, nchar(key) >= 4) |>
+    filter(is.na(agency_id), shape_ok, nchar(key) >= 4) |>
     select(.row, state_key, key) |>
-    cross_join(partnerships |> select(cand_state = state_key, cand_key = canonical_agency, cand_id = partnership_id)) |>
+    cross_join(agencies |> select(cand_state = state_key, cand_key = canonical_agency, cand_id = agency_id)) |>
     filter(str_starts(cand_key, paste0(key, "( |$)")))
   prefix_hits <- prefix_all |>
     summarise(
@@ -123,18 +123,18 @@ resolve_partnership <- function(state, agency, may_mint, registry, partnerships,
   # a name unique across every state, or a name and signing date unique across
   # every state: the source printed the wrong state
   national <- registry |>
-    distinct(key, partnership_id) |>
+    distinct(key, agency_id) |>
     add_count(key, name = "n_states") |>
     filter(n_states == 1) |>
-    select(key, national_id = partnership_id)
+    select(key, national_id = agency_id)
   national_dated <- identities |>
-    distinct(key = canonical_agency, signed, national_date_id = partnership_id) |>
+    distinct(key = canonical_agency, signed, national_date_id = agency_id) |>
     add_count(key, signed, name = "n") |>
     filter(n == 1) |>
     select(key, signed, national_date_id)
   # a signing date unique in the state
   dated <- identities |>
-    distinct(state_key, signed, date_id = partnership_id) |>
+    distinct(state_key, signed, date_id = agency_id) |>
     add_count(state_key, signed, name = "n_dated") |>
     filter(n_dated == 1) |>
     select(state_key, signed, date_id)
@@ -157,15 +157,15 @@ resolve_partnership <- function(state, agency, may_mint, registry, partnerships,
         mintable & may_mint ~ "minted",
         TRUE ~ "unresolved_absent"
       ),
-      partnership_id = case_when(
+      agency_id = case_when(
         resolution == "prefix_containment" ~ prefix_id,
         resolution == "name_national" ~ coalesce(national_id, prefix_national_id),
         resolution == "name_date_national" ~ national_date_id,
         resolution == "date_join" ~ date_id,
-        resolution == "minted" ~ partnership_key(state, agency_clean, state_abbr, aliases),
-        TRUE ~ partnership_id
+        resolution == "minted" ~ agency_id_of(state, agency_clean, state_abbr, aliases),
+        TRUE ~ agency_id
       )
     ) |>
     arrange(.row) |>
-    select(partnership_id, resolution, state, agency_clean)
+    select(agency_id, resolution, state, agency_clean)
 }

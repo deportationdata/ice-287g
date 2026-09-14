@@ -4,7 +4,7 @@ agreements active,all,2485,NA,info
 agreements removed,all,261,NA,info
 agreements superseded,all,175,NA,info
 agreements == identities,all,2921,2921,pass
-partnerships,all,2278,NA,info
+agencies,all,2278,NA,info
 identities folding more than one spelling,all,34,NA,info
 identities by resolution,alias,17,NA,info
 identities by resolution,date_corrected,62,NA,info
@@ -19,16 +19,16 @@ sheet publications out of date order,all,0,0,pass
 sheet publications with a date flag,online before its ICE filename date,1,NA,info
 agreements absent from a publication inside their listing window,all,6,NA,info
 identity candidates awaiting a verdict,all,61,NA,info
-partnerships across every era,all,2279,NA,info
-partnerships by jurisdiction level,Campus,21,NA,info
-partnerships by jurisdiction level,Constable District,47,NA,info
-partnerships by jurisdiction level,County,1031,NA,info
-partnerships by jurisdiction level,Judicial District,11,NA,info
-partnerships by jurisdiction level,Municipal,1058,NA,info
-partnerships by jurisdiction level,Port,4,NA,info
-partnerships by jurisdiction level,Regional,15,NA,info
-partnerships by jurisdiction level,State,92,NA,info
-partnerships added from ICE press releases,all,1,NA,info
+agencies across every era,all,2279,NA,info
+agencies by jurisdiction level,Campus,21,NA,info
+agencies by jurisdiction level,Constable District,47,NA,info
+agencies by jurisdiction level,County,1031,NA,info
+agencies by jurisdiction level,Judicial District,11,NA,info
+agencies by jurisdiction level,Municipal,1058,NA,info
+agencies by jurisdiction level,Port,4,NA,info
+agencies by jurisdiction level,Regional,15,NA,info
+agencies by jurisdiction level,State,92,NA,info
+agencies added from ICE press releases,all,1,NA,info
 source claims,all,516,NA,info
 source claims by resolution,alias,26,NA,info
 source claims by resolution,canonical,470,NA,info
@@ -38,10 +38,10 @@ source claims by resolution,prefix_containment,6,NA,info
 source claims by resolution,spelling,7,NA,info
 source claims by resolution,unresolved_absent,4,NA,info
 source claims left unresolved,all,0,NA,info
-partnership disagreements by kind,date,15,NA,info
-partnership disagreements by kind,model,1,NA,info
-partnership disagreements by kind,presence,19,NA,info
-partnership disagreements by kind,state,1,NA,info
+agency disagreements by kind,date,15,NA,info
+agency disagreements by kind,model,1,NA,info
+agency disagreements by kind,presence,19,NA,info
+agency disagreements by kind,state,1,NA,info
 active agreements == newest sheet rows,all,2485,2485,pass
 duplicate identity rows in agreements,all,0,0,pass
 distinct states in agreements,all,47,NA,info

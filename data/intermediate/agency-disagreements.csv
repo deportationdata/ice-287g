@@ -1,4 +1,4 @@
-kind,partnership_id,field,value_a,source_a,value_b,source_b,published_value,resolution_rule
+kind,agency_id,field,value_a,source_a,value_b,source_b,published_value,resolution_rule
 date,AR-benton-county-sheriff-office,signed,2007-09-20,ice_archive_index,2007-09-26,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,AR-washington-county-sheriff-office,signed,2009-10-07,ice_archive_index,2007-09-26,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,AZ-pinal-county-sheriff-office,signed,2009-10-15,ice_archive_index,2008-03-10,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed

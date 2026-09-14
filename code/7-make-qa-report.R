@@ -17,9 +17,9 @@ ids        <- arrow::read_parquet("data/intermediate/match-agency-identifiers.pa
 missing    <- arrow::read_parquet("data/intermediate/match-missing-identifiers.parquet")
 identities <- arrow::read_parquet("data/intermediate/identity-agreements.parquet")
 pubs       <- arrow::read_parquet("data/intermediate/sheet-publications.parquet")
-partnerships <- arrow::read_parquet("data/partnerships.parquet")
+agencies <- arrow::read_parquet("data/agencies.parquet")
 claims     <- read_csv("data/intermediate/historical-source-claims.csv", show_col_types = FALSE)
-disagree   <- read_csv("data/intermediate/partnership-disagreements.csv", show_col_types = FALSE)
+disagree   <- read_csv("data/intermediate/agency-disagreements.csv", show_col_types = FALSE)
 
 features <- all_sf |>
   mutate(empty = st_is_empty(geometry)) |>
@@ -59,7 +59,7 @@ summary <- bind_rows(
   check("agreements removed", sum(agreements$status == "removed")),
   check("agreements superseded", sum(agreements$status == "superseded")),
   check("agreements == identities", nrow(agreements), nrow(identities)),
-  check("partnerships", n_distinct(agreements$partnership_id)),
+  check("agencies", n_distinct(agreements$agency_id)),
   check("identities folding more than one spelling", sum(identities$n_spellings > 1)),
   identities |> count(identity_resolution, name = "n") |>
     pmap(\(identity_resolution, n) check("identities by resolution", n, scope = identity_resolution)) |> list_rbind(),
@@ -74,17 +74,17 @@ summary <- bind_rows(
   check("agreements absent from a publication inside their listing window",
         sum(identities$n_pub < identities$last_seq - identities$first_seq + 1)),
   check("identity candidates awaiting a verdict", nrow(read_csv("data/qa/identity-candidates.csv", show_col_types = FALSE))),
-  check("partnerships across every era", nrow(partnerships)),
-  partnerships |> count(jurisdiction_level, name = "n") |>
-    pmap(\(jurisdiction_level, n) check("partnerships by jurisdiction level", n, scope = coalesce(jurisdiction_level, "none"))) |> list_rbind(),
-  check("partnerships added from ICE press releases", sum(!partnerships$ice_published)),
+  check("agencies across every era", nrow(agencies)),
+  agencies |> count(jurisdiction_level, name = "n") |>
+    pmap(\(jurisdiction_level, n) check("agencies by jurisdiction level", n, scope = coalesce(jurisdiction_level, "none"))) |> list_rbind(),
+  check("agencies added from ICE press releases", sum(!agencies$ice_published)),
   check("source claims", nrow(claims)),
   claims |> count(resolution, name = "n") |>
     pmap(\(resolution, n) check("source claims by resolution", n, scope = resolution)) |> list_rbind(),
   check("source claims left unresolved",
         sum(str_starts(claims$resolution, "unresolved") & claims$field %in% c("listed", "signed"))),
   disagree |> count(kind, name = "n") |>
-    pmap(\(kind, n) check("partnership disagreements by kind", n, scope = kind)) |> list_rbind(),
+    pmap(\(kind, n) check("agency disagreements by kind", n, scope = kind)) |> list_rbind(),
   check("active agreements == newest sheet rows", sum(agreements$status == "active"), newest_rows),
   check("duplicate identity rows in agreements",
         sum(duplicated(agreements[c("state", "agency", "support_type", "signed")])), 0),

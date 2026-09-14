@@ -23,13 +23,13 @@ held_moas <- snapshot_manifests("agreements") |>
   distinct(url) |>
   mutate(file = basename(str_remove(url, "[?#].*$")))
 # the Census counties, for the county an agency names; the hand list of jurisdiction levels,
-# keyed to partnerships so an alias spelling reaches the same row
+# keyed to agencies so an alias spelling reaches the same row
 counties_ref <- arrow::read_parquet("data/intermediate/reference-counties.parquet")
 aliases <- read_agency_aliases(state_xwalk)
 level_manual <- read_csv("inputs/manual-jurisdiction-levels.csv", col_types = cols(.default = "c")) |>
   left_join(state_xwalk |> select(state = state_full, state_abbr), by = "state") |>
-  transmute(partnership_id = partnership_key(state, agency, state_abbr, aliases), manual_level = jurisdiction_level) |>
-  distinct(partnership_id, .keep_all = TRUE)
+  transmute(agency_id = agency_id_of(state, agency, state_abbr, aliases), manual_level = jurisdiction_level) |>
+  distinct(agency_id, .keep_all = TRUE)
 stopifnot("every level in inputs/manual-jurisdiction-levels.csv is one of the eight" =
             all(level_manual$manual_level %in% JURISDICTION_LEVELS))
 
@@ -185,8 +185,8 @@ agreements <- agreements |>
                     sum(d$county_from_name), sum(!is.na(d$type_from_name))))
     d
   })() |>
-  left_join(identities |> select(agreement_id, partnership_id), by = "agreement_id", relationship = "one-to-one") |>
-  left_join(level_manual, by = "partnership_id") |>
+  left_join(identities |> select(agreement_id, agency_id), by = "agreement_id", relationship = "one-to-one") |>
+  left_join(level_manual, by = "agency_id") |>
   mutate(
     type_level = case_when(
       type_clean %in% c("state agency", "state") ~ "State",
@@ -195,7 +195,7 @@ agreements <- agreements |>
       TRUE ~ NA_character_
     ),
     # what the agency covers, one of eight levels: the hand list, then the name rules (each
-    # tested over every partnership with no false positive), then ICE's TYPE, then, for the
+    # tested over every agency with no false positive), then ICE's TYPE, then, for the
     # rosters that carried no TYPE, the name alone
     name_level = case_when(
       is_constable_district(agency, state) ~ "Constable District",
@@ -248,7 +248,7 @@ agreements <- agreements |>
     agreement_id, status, state, county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, signed,
     moa, addendum, geom_class, needs_review,
     first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source, removal_flag,
-    partnership_id, agreement_lineage_id, succeeded_by, sheet_row, n_sheet_rows,
+    agency_id, agreement_lineage_id, succeeded_by, sheet_row, n_sheet_rows,
     identity_resolution
   ) |>
   arrange(sheet_row, first_appeared, agreement_id)
@@ -258,7 +258,7 @@ stopifnot(
     all(is.na(agreements$jurisdiction_level) | agreements$jurisdiction_level %in% JURISDICTION_LEVELS),
   "the agreements dataset and the identity table must hold the same agreements" =
     setequal(agreements$agreement_id, identities$agreement_id) && !anyDuplicated(agreements$agreement_id),
-  "every agreement carries a partnership_id" = !anyNA(agreements$partnership_id),
+  "every agreement carries an agency_id" = !anyNA(agreements$agency_id),
   "active agreements must be exactly the current publication's signed identities" =
     sum(agreements$status == "active") ==
       n_distinct(observation_ids$agreement_id[observation_ids$publication_id == current_id & !is.na(observation_ids$agreement_id)])

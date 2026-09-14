@@ -23,11 +23,11 @@ run 2-make-identities.R
 run 2-make-agreements.R
 
 # ICE's other records (undated lists, MOA archive index, press releases) and the
-# OIG roster, resolved to partnerships and arbitrated against ICE's own record
+# OIG roster, resolved to agencies and arbitrated against ICE's own record
 run 1-read-historical-ice-lists.R
 run 1-read-historical-oig-2009.R
 run 1-read-historical-ice-archive-index.R
-run 2-make-partnerships.R
+run 2-make-agencies.R
 
 # one script per geometry class; these read only 1-read outputs, so any order
 run 3-match-state.R

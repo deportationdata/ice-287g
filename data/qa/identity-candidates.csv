@@ -1,4 +1,7 @@
 kind,state_key,support_key,signed,left_agency,right_agency,distance,pub_ratio,windows_overlap,left_n_pub,right_n_pub,suggested_relation
+agency_rename,arizona,TASK FORCE MODEL,2025-08-28,pinal county sheriff office,pinal county attorneys office,8,NA,FALSE,5,NA,same
+agency_rename,florida,TASK FORCE MODEL,2025-04-15,university of west florida board of trustees,university of west florida police department,14,NA,FALSE,6,NA,same
+agency_rename,oklahoma,TASK FORCE MODEL,2026-03-28,haskell police department,haskell county sheriff office,18,NA,FALSE,5,NA,same
 identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,baker county sheriff office,bay county sheriff office,3,1,TRUE,381,381,distinct
 identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,baker county sheriff office,lake county sheriff office,2,1,TRUE,381,381,same
 identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,bay county sheriff office,lake county sheriff office,3,1,TRUE,381,381,distinct
@@ -57,6 +60,3 @@ lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2013-06-27,UT-weber-county-sheriff-
 lineage_unlinked,virginia,TASK FORCE MODEL,2008-06-25,VA-loudoun-county-sheriff-office#TFM#2008-06-25,VA-loudoun-county-sheriff-office#WSO#2025-03-26,214,NA,FALSE,16,220,NA
 lineage_unlinked,virginia,JAIL ENFORCEMENT MODEL,2013-06-28,VA-shenandoah-county-sheriff-office#JEM#2013-06-28,VA-shenandoah-county-sheriff-office#TFM#2025-04-14,218,NA,FALSE,3,211,NA
 lineage_unlinked,wisconsin,WARRANT SERVICE OFFICER,2025-06-12,WI-walworth-county-sheriff-office#WSO#2025-06-12,WI-walworth-county-sheriff-office#WSO#2026-02-17,112,NA,FALSE,11,72,NA
-partnership_rename,arizona,TASK FORCE MODEL,2025-08-28,pinal county sheriff office,pinal county attorneys office,8,NA,FALSE,5,NA,same
-partnership_rename,florida,TASK FORCE MODEL,2025-04-15,university of west florida board of trustees,university of west florida police department,14,NA,FALSE,6,NA,same
-partnership_rename,oklahoma,TASK FORCE MODEL,2026-03-28,haskell police department,haskell county sheriff office,18,NA,FALSE,5,NA,same

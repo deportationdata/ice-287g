@@ -44,7 +44,7 @@ ICE's 29 Oct 2010 fact sheet, so nothing independent is lost.
 
 MPI's *A Program in Flux* and the NCLR brief centre each state label
 vertically within a block the text layer cannot delimit, so their state column
-is treated as a hint, never a claim: rows resolve to partnerships by a
+is treated as a hint, never a claim: rows resolve to agencies by a
 nationally unique name, or a name and signing date, and only then within the
 hinted state. Rows still in negotiation ("--", "IN NEGOTIATION") are `pending`
 claims, outside the stated totals.
@@ -81,8 +81,8 @@ This strengthens the earlier finding: ICE's own roster series, which begins Octo
 
 Parsed by `code/1-read-historical-ice-removals.R` into `data/pre2018-ice-removals-long.csv` (73 agencies × 8 fiscal years, 383 agency-years attesting activity, every state resolved) and folded into the reconciliation, where it:
 
-- pushes **23 partnerships' active windows before GAO's September 2007 census**, six of them to FY2006 — Arizona DOC, Los Angeles County, Riverside County, San Bernardino County, Collier County FL and Mecklenburg County NC;
-- promotes **12 partnerships from `medium` to `high` confidence**;
+- pushes **23 agencies' active windows before GAO's September 2007 census**, six of them to FY2006 — Arizona DOC, Los Angeles County, Riverside County, San Bernardino County, Collier County FL and Mecklenburg County NC;
+- promotes **12 agencies from `medium` to `high` confidence**;
 - supplies the only evidence for **Brevard and Manatee County, FL**, which appear on no roster capture we hold, and a third independent attestation for **Hudson, NH** and **Cumberland County, NC**.
 
 It is explicitly *not* a census — an agency reporting no activity is simply absent — so it does not appear in the completeness ledger.

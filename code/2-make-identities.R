@@ -1,8 +1,8 @@
-# Resolve every sheet observation to an agreement identity and a partnership.
+# Resolve every sheet observation to an agreement identity and an agency.
 # Automatic tiers first (exact key, typo, modifier, closed under union), the
 # committed alias table for the tail, and a candidate report for what is left;
 # the pipeline never waits on a manual check.
-# -> data/intermediate/identity-agreements.parquet, data/intermediate/identity-partnerships.parquet,
+# -> data/intermediate/identity-agreements.parquet, data/intermediate/identity-agencies.parquet,
 #    data/intermediate/identity-agency-spellings.parquet, data/intermediate/sheet-row-agreements.parquet,
 #    data/qa/identity-candidates.csv, data/qa/identity-summary.csv
 library(tidyverse)
@@ -285,8 +285,8 @@ identities <- obs_ids |>
     .groups = "drop"
   ) |>
   mutate(
-    partnership_id = paste0(coalesce(state_abbr, "XX"), "-", slug(canonical_agency)),
-    agreement_id = paste0(partnership_id, "#", support_abbr(support_key), "#", signed)
+    agency_id = paste0(coalesce(state_abbr, "XX"), "-", slug(canonical_agency)),
+    agreement_id = paste0(agency_id, "#", support_abbr(support_key), "#", signed)
   ) |>
   left_join(pub_dates |> select(first_seq = pub_seq, first_appeared = published_on,
                                 first_appeared_source = published_on_source), by = "first_seq") |>
@@ -296,14 +296,14 @@ identities <- obs_ids |>
                                    removed_by_source = published_on_source), by = "last_seq")
 
 # lineage: a successor first seen in the very next publication after the
-# predecessor's last, with nothing else in the partnership straddling the handover
-windows <- identities |> select(partnership_id, agreement_id, support_key, signed, first_seq, last_seq, n_pub)
+# predecessor's last, with nothing else in the agency straddling the handover
+windows <- identities |> select(agency_id, agreement_id, support_key, signed, first_seq, last_seq, n_pub)
 edges <- windows |>
   filter(last_seq < current_seq) |>
-  inner_join(windows, by = "partnership_id", suffix = c("", "_s"), relationship = "many-to-many") |>
+  inner_join(windows, by = "agency_id", suffix = c("", "_s"), relationship = "many-to-many") |>
   filter(agreement_id != agreement_id_s, first_seq_s == last_seq + 1L) |>
-  left_join(windows |> select(partnership_id, x_id = agreement_id, x_first = first_seq, x_last = last_seq),
-            by = "partnership_id", relationship = "many-to-many") |>
+  left_join(windows |> select(agency_id, x_id = agreement_id, x_first = first_seq, x_last = last_seq),
+            by = "agency_id", relationship = "many-to-many") |>
   group_by(agreement_id, agreement_id_s, support_key, support_key_s, signed_s, first_seq_s, last_seq) |>
   summarise(straddled = any(x_id != agreement_id & x_id != agreement_id_s &
                               x_first <= last_seq & x_last >= first_seq_s), .groups = "drop") |>
@@ -333,29 +333,29 @@ repeat {
 identities$agreement_lineage_id <- unname(root[identities$agreement_id])
 
 id_lookup <- identities |>
-  select(state_key, support_key, signed, component, agreement_id, partnership_id)
+  select(state_key, support_key, signed, component, agreement_id, agency_id)
 
-partnership_state <- identities |>
+agency_state <- identities |>
   summarise(has_active = any(status == "active"),
-            active_supports = list(unique(support_key[status == "active"])), .by = partnership_id)
+            active_supports = list(unique(support_key[status == "active"])), .by = agency_id)
 identities <- identities |>
-  left_join(partnership_state, by = "partnership_id") |>
+  left_join(agency_state, by = "agency_id") |>
   mutate(removal_flag = case_when(
     status != "removed" ~ NA_character_,
     map2_lgl(support_key, active_supports, \(s, a) s %in% a) ~ "possible_resign",
     has_active ~ "model_switch",
     TRUE ~ NA_character_
   )) |>
-  select(agreement_id, partnership_id, agreement_lineage_id, state, state_abbr, state_key,
+  select(agreement_id, agency_id, agreement_lineage_id, state, state_abbr, state_key,
          canonical_agency, support_key, signed, status, succeeded_by,
          first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source,
          removal_flag, first_seq, last_seq, n_pub,
          sheet_row, n_sheet_rows, identity_resolution, n_spellings,
          starts_with("raw_"))
 
-partnerships <- identities |>
+agencies <- identities |>
   arrange(last_seq) |>
-  group_by(partnership_id, state, state_abbr, state_key, canonical_agency) |>
+  group_by(agency_id, state, state_abbr, state_key, canonical_agency) |>
   summarise(display_agency = last(raw_agency_last),
             n_agreements = n(), n_active = sum(status == "active"),
             first_seen = min(first_appeared), last_seen = max(last_appeared),
@@ -367,18 +367,18 @@ observation_ids <- obs_ids |>
   left_join(id_lookup, by = c("state_key", "support_key", "signed", "component"),
             relationship = "many-to-one")
 
-# every spelling ICE ever printed, mapped to the partnership it resolved to
+# every spelling ICE ever printed, mapped to the agency it resolved to
 spellings <- obs_ids |>
   distinct(state_key, state_abbr, observed_agency, raw_agency, chosen_agency) |>
-  mutate(partnership_id = paste0(coalesce(state_abbr, "XX"), "-", slug(chosen_agency)),
-         n_partnerships = n_distinct(partnership_id), .by = c(state_key, observed_agency)) |>
-  select(state_key, state_abbr, observed_agency, raw_agency, partnership_id, n_partnerships) |>
+  mutate(agency_id = paste0(coalesce(state_abbr, "XX"), "-", slug(chosen_agency)),
+         n_agencies = n_distinct(agency_id), .by = c(state_key, observed_agency)) |>
+  select(state_key, state_abbr, observed_agency, raw_agency, agency_id, n_agencies) |>
   arrange(state_key, observed_agency, raw_agency)
 
 stopifnot(
   "exactly one publication may be current" = length(current_seq) == 1L,
   "agreement_id must be unique across identities" = !anyDuplicated(identities$agreement_id),
-  "every identity must resolve to a partnership" = all(identities$partnership_id %in% partnerships$partnership_id),
+  "every identity must resolve to an agency" = all(identities$agency_id %in% agencies$agency_id),
   "active identities must be exactly the current publication's signed rows" =
     setequal(identities$agreement_id[identities$status == "active"],
              observation_ids$agreement_id[observation_ids$is_current]),
@@ -412,25 +412,25 @@ generic <- c("county", "parish", "borough", "city", "town", "township", "village
 name_tokens <- \(x) map(str_split(x, " "), setdiff, generic)
 gone <- identities |> filter(status == "removed")
 renames <- gone |>
-  inner_join(identities |> select(state_key, partnership_id_s = partnership_id, agency_s = canonical_agency,
+  inner_join(identities |> select(state_key, agency_id_s = agency_id, agency_s = canonical_agency,
                                   first_seq_s = first_seq, support_key_s = support_key),
              by = "state_key", relationship = "many-to-many") |>
-  filter(partnership_id != partnership_id_s, first_seq_s == last_seq + 1L) |>
+  filter(agency_id != agency_id_s, first_seq_s == last_seq + 1L) |>
   mutate(ta = name_tokens(canonical_agency), tb = name_tokens(agency_s),
          jaccard = map2_dbl(ta, tb, \(x, y) length(intersect(x, y)) / max(1L, length(union(x, y)))),
          contained = str_detect(agency_s, fixed(canonical_agency)) | str_detect(canonical_agency, fixed(agency_s))) |>
   filter(jaccard >= 0.5 | contained) |>
-  transmute(kind = "partnership_rename", state_key, support_key, signed,
+  transmute(kind = "agency_rename", state_key, support_key, signed,
             left_agency = canonical_agency, right_agency = agency_s,
             distance = stringdist(canonical_agency, agency_s, method = "osa"),
             pub_ratio = NA_real_, windows_overlap = FALSE,
             left_n_pub = n_pub, right_n_pub = NA_integer_, suggested_relation = "same") |>
   distinct()
 
-# a later agreement of the same partnership that the adjacency rule could not link
+# a later agreement of the same agency that the adjacency rule could not link
 unlinked <- gone |>
-  inner_join(windows |> select(partnership_id, successor = agreement_id, first_seq_s = first_seq, n_pub_s = n_pub),
-             by = "partnership_id", relationship = "many-to-many") |>
+  inner_join(windows |> select(agency_id, successor = agreement_id, first_seq_s = first_seq, n_pub_s = n_pub),
+             by = "agency_id", relationship = "many-to-many") |>
   filter(first_seq_s > last_seq + 1L) |>
   slice_min(first_seq_s, n = 1, by = agreement_id, with_ties = FALSE) |>
   transmute(kind = "lineage_unlinked", state_key, support_key, signed,
@@ -452,7 +452,7 @@ resolution_n <- table(identities$identity_resolution)
 summary_row <- tibble(
   run_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
   publications = nrow(pubs), observations = nrow(obs), unsigned_observations = sum(is.na(obs$signed)),
-  identities = nrow(identities), partnerships = nrow(partnerships),
+  identities = nrow(identities), agencies = nrow(agencies),
   active = sum(status_n["active"], na.rm = TRUE), superseded = sum(status_n["superseded"], na.rm = TRUE),
   removed = sum(status_n["removed"], na.rm = TRUE),
   merged_by_alias = sum(resolution_n["alias"], na.rm = TRUE),
@@ -462,12 +462,12 @@ summary_row <- tibble(
   candidates = nrow(candidates)
 )
 write_csv(summary_row, "data/qa/identity-summary.csv")
-message(sprintf("identities: %d (%d active, %d superseded, %d removed); partnerships %d; candidates %d",
+message(sprintf("identities: %d (%d active, %d superseded, %d removed); agencies %d; candidates %d",
                 nrow(identities), summary_row$active, summary_row$superseded, summary_row$removed,
-                nrow(partnerships), nrow(candidates)))
+                nrow(agencies), nrow(candidates)))
 
 arrow::write_parquet(identities, "data/intermediate/identity-agreements.parquet")
-arrow::write_parquet(partnerships, "data/intermediate/identity-partnerships.parquet")
+arrow::write_parquet(agencies, "data/intermediate/identity-agencies.parquet")
 arrow::write_parquet(spellings, "data/intermediate/identity-agency-spellings.parquet")
-arrow::write_parquet(observation_ids |> select(publication_id, sheet_row, agreement_id, partnership_id),
+arrow::write_parquet(observation_ids |> select(publication_id, sheet_row, agreement_id, agency_id),
                      "data/intermediate/sheet-row-agreements.parquet")

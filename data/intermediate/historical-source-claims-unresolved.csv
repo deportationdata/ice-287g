@@ -1,4 +1,4 @@
-source_id,state,agency_raw,resolution,partnership_id
+source_id,state,agency_raw,resolution,agency_id
 ice_press,Massachusetts,Massachusetts State Police,minted,MA-state-police
 ice_archive_index,Illinois,Cook County State's Attorney's Office,unresolved_absent,
 ice_archive_index,New Jersey,"Morristown, NJ",unresolved_absent,

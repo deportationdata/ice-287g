@@ -6,7 +6,7 @@ counted against stated roster totals. It was then retired from the pipeline,
 and the files moved from `inputs/historical/` to this folder, after a check
 showed that none of it is load-bearing:
 
-- **No partnership.** Every agency any of these sources names is on an ICE
+- **No agency.** Every agency any of these sources names is on an ICE
   roster capture we hold (`sheets/`), in ICE's own undated lists of Sep 2007
   and Mar 2008, in the DHS OIG appendix of Oct 2009, or in ICE's MOA archive
   index.
@@ -20,8 +20,8 @@ showed that none of it is load-bearing:
 
 What the sources did carry was the count machinery itself — stated totals,
 tolerances, source counts and a `confidence` grade — which went with them.
-The pipeline now records presence (is a partnership on a given ICE or OIG
-list or not) and conflicts (`data/intermediate/partnership-disagreements.csv`), nothing
+The pipeline now records presence (is an agency on a given ICE or OIG
+list or not) and conflicts (`data/intermediate/agency-disagreements.csv`), nothing
 else. Citations for every file remain in `inputs/historical/SOURCES.csv`.
 
 ## What is here
@@ -64,7 +64,7 @@ were pulled, and three claims in them are wrong:
   Joel Capellan, Rowan University (capellan@rowan.edu).
 - **ICE's removal counts** (`gapfill/ICE287g-removals/`) are a descriptive
   dataset of identifications and removals by agency and fiscal year. They
-  name no partnership and no date the rosters lack.
+  name no agency and no date the rosters lack.
 
 **Added 13 September 2026:** `ice_agency_to_county.csv`, the hand-built crosswalk
 of 105 ICE agency names to a county FIPS or "statewide". An audit found that every
