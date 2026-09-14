@@ -1,7 +1,4 @@
 kind,state_key,support_key,signed,left_agency,right_agency,distance,pub_ratio,windows_overlap,left_n_pub,right_n_pub,suggested_relation
-agency_rename,arizona,TASK FORCE MODEL,2025-08-28,pinal county sheriff office,pinal county attorneys office,8,NA,FALSE,5,NA,same
-agency_rename,florida,TASK FORCE MODEL,2025-04-15,university of west florida board of trustees,university of west florida police department,14,NA,FALSE,6,NA,same
-agency_rename,oklahoma,TASK FORCE MODEL,2026-03-28,haskell police department,haskell county sheriff office,18,NA,FALSE,5,NA,same
 identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,baker county sheriff office,bay county sheriff office,3,1,TRUE,381,381,distinct
 identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,baker county sheriff office,lake county sheriff office,2,1,TRUE,381,381,same
 identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,bay county sheriff office,lake county sheriff office,3,1,TRUE,381,381,distinct
@@ -22,7 +19,6 @@ identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-08-28,ector county sheriff 
 identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-05-07,hill county sheriff office,polk county sheriff office,3,0.2727272727272727,TRUE,209,57,distinct
 identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-07-07,scurry county sheriff office,terry county sheriff office,3,0.15846994535519127,TRUE,29,183,distinct
 lineage_unlinked,alabama,TASK FORCE MODEL,2025-03-25,AL-franklin-county-sheriff-office#TFM#2025-03-25,AL-franklin-county-sheriff-office#TFM#2025-11-06,42,NA,FALSE,58,123,NA
-lineage_unlinked,alabama,WARRANT SERVICE OFFICER,2025-05-20,AL-lawrence-county-sheriff-office#WSO#2025-05-20,AL-lawrence-county-sheriff-office#JEM#2025-06-30,19,NA,FALSE,33,10,NA
 lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2026-04-05,AR-clark-county-sheriff-office#JEM#2026-04-05,AR-clark-county-sheriff-office#TFM#2026-08-24,1,NA,FALSE,50,6,NA
 lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2025-07-07,AR-little-river-county-sheriff-office#JEM#2025-07-07,AR-little-river-county-sheriff-office#TFM#2026-07-09,19,NA,FALSE,150,14,NA
 lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2026-03-31,AR-marion-county-sheriff-office#JEM#2026-03-31,AR-marion-county-sheriff-office#WSO#2026-05-09,6,NA,FALSE,11,41,NA

@@ -22,6 +22,11 @@ renewal_date_fixes <- read_csv("inputs/renewal-date-fixes.csv", col_types = "ccc
 # and applied here so the corrected rows join the agreement they belong to
 signed_date_fixes <- read_csv("inputs/signed-date-fixes.csv", col_types = "cccDDc") |>
   transmute(state, agency, support_key = canonical_support(support_type), signed, signed_fixed)
+# ICE has printed an agreement under the wrong model for a list or two (Morehouse Parish's task
+# force as a jail agreement); keyed the same way, and applied before the date fixes and the
+# identity rules so the corrected rows join the agreement they belong to
+support_type_fixes <- read_csv("inputs/support-type-fixes.csv", col_types = "cccDcc") |>
+  transmute(state, agency, support_key = canonical_support(support_type), signed, support_type_fixed)
 
 # ICE's workbooks, and the roster table of every archived page that carries one
 # (the pages before April 2008 describe the program in prose and yield nothing)
@@ -122,6 +127,11 @@ observations <- observations |>
   ) |>
   left_join(state_fixes, by = c("state", "agency", "support_key", "signed")) |>
   mutate(state = coalesce(state_fixed, state), state_fixed = !is.na(state_fixed)) |>
+  left_join(support_type_fixes, by = c("state", "agency", "support_key", "signed")) |>
+  mutate(support_fixed = !is.na(support_type_fixed),
+         raw_support = coalesce(support_type_fixed, raw_support),
+         support_key = canonical_support(raw_support)) |>
+  select(-support_type_fixed) |>
   left_join(signed_date_fixes, by = c("state", "agency", "support_key", "signed")) |>
   mutate(signed_date_fixed = !is.na(signed_fixed), signed = coalesce(signed_fixed, signed)) |>
   select(-signed_fixed)
@@ -190,6 +200,20 @@ if (nrow(unmatched_date_fixes)) {
   message(nrow(unmatched_date_fixes), " signing-date fix(es) in inputs/signed-date-fixes.csv match no sheet row; kept as the record")
 }
 message(sprintf("signing-date fixes: %d sheet rows re-dated by %d fixes", sum(observations$signed_date_fixed), nrow(signed_date_fixes) - nrow(unmatched_date_fixes)))
+unmatched_support_fixes <- support_type_fixes |>
+  anti_join(observations |> filter(support_fixed) |> distinct(state, support_key, signed) |> rename(support_key_fixed = support_key),
+            by = join_by(state, signed)) |>
+  bind_rows(support_type_fixes |>
+              mutate(support_key_fixed = canonical_support(support_type_fixed)) |>
+              anti_join(observations |> filter(support_fixed) |> distinct(state, support_key_fixed = support_key, signed),
+                        by = c("state", "support_key_fixed", "signed")) |>
+              select(-support_key_fixed)) |>
+  distinct(state, agency, support_key, signed, .keep_all = TRUE)
+if (nrow(unmatched_support_fixes)) {
+  message(nrow(unmatched_support_fixes), " model fix(es) in inputs/support-type-fixes.csv match no sheet row; kept as the record")
+}
+message(sprintf("model fixes: %d sheet rows given another model by %d fixes", sum(observations$support_fixed),
+                nrow(support_type_fixes) - nrow(unmatched_support_fixes)))
 
 stopifnot(
   "every publication must have at least one row" =

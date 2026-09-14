@@ -84,6 +84,15 @@ pairs <- variants |>
 # such handovers, every one the same agreement
 moa_file_key <- \(u) str_to_lower(str_remove_all(basename(coalesce(u, "")), "[^A-Za-z0-9]"))
 href <- \(x) if_else(str_detect(coalesce(x, ""), "^https?://"), x, NA_character_)
+# an MOA cell links an MOA when it is ICE's hyperlinked "Link" (with or without "| Addendum"), a
+# url, or an anchor to a real file; "Link Pending", a blank cell, a stray word ICE left in the
+# column ("Cons", "#note") and an anchor to ICE's placeholder xxx.pdf do not
+linked <- \(cell) {
+  cell <- str_to_lower(str_squish(coalesce(cell, "")))
+  str_detect(cell, "^https?://") | str_detect(cell, "^link( \\| addendum)?$") |
+    (str_detect(cell, "href=") & !str_detect(cell, "/xxx\\.pdf"))
+}
+no_link <- \(cell) !linked(cell)
 # the MOA hyperlink behind given rows: from the workbook for xlsx lists, the cell's href otherwise
 row_moa_links <- function(rows) {
   need <- rows |> distinct(publication_id, sheet_row) |> inner_join(pub_files, by = "publication_id")
@@ -130,6 +139,54 @@ if (nrow(adjacent)) {
   pairs$merge <- pairs$merge | pairs$t3b
 }
 
+# T3c: a relabel. While an MOA is still pending, ICE can list the agreement under the wrong
+# agency and then print it under the right one (Pinal County Sheriff's Office for the Pinal
+# County Attorney's Office, Haskell Police Department for Haskell County Sheriff's Office): a
+# spelling that never linked an MOA ends on one list, and on the very next list another spelling
+# first appears with the same state, model and signing date. It is judged on whole agreements,
+# after the tiers above have joined each agency's spellings, so a short-lived typo of one agency
+# never pairs with another agency's spelling (Greene and South Pymatuning Township constables,
+# both signed 2025-07-15). Only one agreement may begin there, and a "distinct" row in the alias
+# table keeps two names apart. Tested 2026-09-13 over every list: four such handovers, each
+# confirmed by the MOA the later agency posted
+component_of <- function(from, to, n) {
+  parent <- seq_len(n)
+  find_root <- function(i) { while (parent[i] != i) { parent[i] <<- parent[parent[i]]; i <- parent[i] }; i }
+  for (k in seq_along(from)) {
+    ra <- find_root(from[k]); rb <- find_root(to[k])
+    if (ra != rb) parent[max(ra, rb)] <- min(ra, rb)
+  }
+  vapply(seq_len(n), find_root, integer(1))
+}
+so_far <- tibble(variant_id = variants$variant_id,
+                 component = component_of(pairs$variant_id_a[pairs$merge], pairs$variant_id_b[pairs$merge], nrow(variants)))
+held_apart <- variants |>
+  semi_join(distinct_verdicts, by = c("state_key", "canonical_agency" = "alias_key")) |>
+  inner_join(so_far, by = "variant_id") |>
+  distinct(component)
+agreements_so_far <- variants |>
+  inner_join(so_far, by = "variant_id") |>
+  arrange(desc(n_pub)) |>
+  summarise(first_seq = min(first_seq), last_seq = max(last_seq), rep_id = min(variant_id),
+            spelling = first(canonical_agency), .by = c(state_key, support_key, signed, component)) |>
+  left_join(variant_rows |> inner_join(so_far, by = "variant_id") |>
+              summarise(never_linked = all(no_link(raw_moa)), .by = component), by = "component") |>
+  anti_join(held_apart, by = "component")
+relabels <- agreements_so_far |>
+  filter(never_linked, last_seq < current_seq) |>
+  inner_join(agreements_so_far |> select(state_key, support_key, signed, component_new = component, first_seq_new = first_seq,
+                                         rep_new = rep_id, spelling_new = spelling),
+             by = c("state_key", "support_key", "signed"), relationship = "many-to-many") |>
+  filter(component_new != component, first_seq_new == last_seq + 1L) |>
+  filter(n() == 1, .by = component) |>
+  mutate(old_agency = spelling, new_agency = spelling_new,
+         variant_id_a = pmin(rep_id, rep_new), variant_id_b = pmax(rep_id, rep_new))
+pairs$t3c <- FALSE
+pairs$t3c[match(paste(relabels$variant_id_a, relabels$variant_id_b), paste(pairs$variant_id_a, pairs$variant_id_b))] <- TRUE
+pairs$merge <- pairs$merge | pairs$t3c
+relabelled_variants <- so_far$variant_id[so_far$component %in% c(relabels$component, relabels$component_new)]
+message(sprintf("relabels: %d pending listings joined to the agency ICE printed on the next list", nrow(relabels)))
+
 # union-find closure over the merge edges
 parent <- seq_len(nrow(variants))
 find_root <- function(i) { while (parent[i] != i) { parent[i] <<- parent[parent[i]]; i <- parent[i] }; i }
@@ -149,6 +206,7 @@ variants <- variants |> left_join(chosen, by = "component")
 merged_t3 <- unique(c(pairs$variant_id_a[pairs$t3], pairs$variant_id_b[pairs$t3]))
 merged_t2 <- unique(c(pairs$variant_id_a[pairs$t2], pairs$variant_id_b[pairs$t2]))
 merged_t3b <- unique(c(pairs$variant_id_a[pairs$t3b], pairs$variant_id_b[pairs$t3b]))
+merged_t3c <- relabelled_variants
 
 obs_ids <- signed_obs |>
   left_join(variants |> select(state_key, support_key, signed, canonical_agency, variant_id, component, chosen_agency),
@@ -161,8 +219,8 @@ obs_ids <- signed_obs |>
 # the earlier listing never linked an MOA (its cell said "link pending", or was blank, as
 # ICE's first sheets of March 2025 left it) and the later one posts the MOA (ICE prints the
 # MOA's own date once it has it: 06-12 became 06-11 for dozens of agencies in June 2025),
-# or both link the same MOA file within 30 days
-no_link <- \(cell) str_to_lower(str_squish(coalesce(cell, ""))) %in% c("", "link pending")
+# or both link the same MOA file within 30 days, or the earlier listing's last cell shows no link
+# and the new date is within three months
 listings <- obs_ids |>
   arrange(pub_seq, sheet_row) |>
   summarise(component = first(component), first_seq = min(pub_seq), last_seq = max(pub_seq), n_pub = n_distinct(pub_seq),
@@ -214,6 +272,11 @@ corrections <- handovers |>
            # one PDF under two dates within a month, or exactly a year apart (a year typo)
            !is.na(link_a) & !is.na(link_b) & moa_file_key(link_a) == moa_file_key(link_b) &
              (abs(as.numeric(signed_s - signed)) <= 30 | abs(as.numeric(signed_s - signed)) %in% c(365, 366)) ~ "same_moa_file",
+           # re-dated within three months while the last cell showed no link: a pending date replaced
+           # by the MOA's own (Lawrence County AL, 05-20 to 06-30), or a link that fell back to "Link
+           # Pending" before a one-day re-date (Orange County TX, 05-07 to 05-06). Tested 2026-09-13:
+           # seven such handovers; the next closest pair is 109 days apart and a real addendum
+           no_link(last_moa) & abs(as.numeric(signed_s - signed)) <= 90 ~ "unlinked_redated",
            TRUE ~ NA_character_)) |>
   filter(!is.na(rule)) |>
   slice_min(first_seq_s, n = 1, by = c(state_key, support_key, chosen_agency, signed), with_ties = FALSE)
@@ -270,6 +333,7 @@ identities <- obs_ids |>
     identity_resolution = case_when(
       any(aliased) ~ "alias",
       any(variant_id %in% merged_t3b) ~ "rename",
+      any(variant_id %in% merged_t3c) ~ "relabel",
       any(variant_id %in% merged_t3) ~ "modifier",
       any(variant_id %in% merged_t2) ~ "typo",
       any(date_corrected) ~ "date_corrected",
@@ -446,6 +510,11 @@ target |>
   transmute(state_key, support_key, agency = chosen_agency, signed_printed = signed, signed = to_signed, rule) |>
   arrange(state_key, agency, support_key, signed_printed) |>
   write_csv("data/qa/signing-date-corrections.csv")
+# every pending listing joined to the agency ICE printed on the next list, for review
+relabels |>
+  transmute(state_key, support_key, signed, printed_agency = old_agency, agency = new_agency) |>
+  arrange(state_key, printed_agency) |>
+  write_csv("data/qa/identity-relabels.csv")
 
 status_n <- table(identities$status)
 resolution_n <- table(identities$identity_resolution)

@@ -49,7 +49,7 @@ a pull request shows what moved.
 | `data/intermediate/agency-disagreements.csv` | Where a source and ICE differ: a signing date, a model, a state, or presence on the ICE publication nearest to the source's date. |
 | `data/intermediate/match-agency-identifiers.parquet` | Per-agreement roster matches: chosen `ORI9` + each roster's candidate ORI/county codes, match types and ambiguity. |
 | `data/intermediate/match-missing-identifiers.parquet` | Exception report: agreements still missing an ORI and/or the FIPS code their layer requires. |
-| `data/qa/` | Committed QA: `qa-summary.csv` (every invariant and count, `pass`/`fail`/`info`), `qa-match-types.csv`, `qa-review-reasons.csv`, `qa-acquisition.csv`, `identity-candidates.csv` (spellings the rules would not merge), `historical-summary.md` (per-source counts of agencies attested, listed, dated and unresolved). A `fail` row fails CI. |
+| `data/qa/` | Committed QA: `qa-summary.csv` (every invariant and count, `pass`/`fail`/`info`), `qa-match-types.csv`, `qa-review-reasons.csv`, `qa-acquisition.csv`, `identity-candidates.csv` (spellings the rules would not merge), `identity-relabels.csv` and `signing-date-corrections.csv` (listings the rules did merge), `historical-summary.md` (per-source counts of agencies attested, listed, dated and unresolved). A `fail` row fails CI. |
 | `data/intermediate/agency-roster-leaic-2012.parquet`, `data/intermediate/agency-roster-lear-2016.parquet`, `data/intermediate/agency-roster-cde-2025.parquet`, `data/intermediate/agency-roster-hifld.parquet` | The four agency rosters, normalized to a shared matching schema (LEAIC 2012, LEAR 2016, FBI Crime Data Explorer 2025, HIFLD police stations). |
 | `data/intermediate/facility-list-ice-detention.parquet`, `data/intermediate/facility-list-jails-prisons.parquet` | Detention-facility candidate tables (ICE facilities from ice-detention-facilities; HIFLD prisons + Census of Jails). |
 | `data/intermediate/match-*.parquet` (state, county, municipal, pa-constable, university, facility, non-facility) | Per-layer match results, EPSG:4326. |
@@ -110,12 +110,19 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   **`2-make-identities.R`** resolves rows into agreements and agencies:
   exact keys, then a typo tier and a modifier tier that only merge when the
   windows and spellings make one agreement the only reading, a rename tier for
-  two spellings ICE printed on adjacent lists linking the same MOA file, then the
+  two spellings ICE printed on adjacent lists linking the same MOA file, a
+  relabel tier for a listing that never linked an MOA and is replaced on the
+  very next list by another agency with the same state, model and signing date
+  (Pinal County Sheriff's Office for the Pinal County Attorney's Office), then the
   committed alias table. A signing date ICE corrects between consecutive sheets
-  (a listing with no MOA link, "link pending" or a blank cell, re-dated, whether or not its MOA has posted, or one
-  MOA re-dated within 30 days or by exactly a year) stays one agreement, as does a
-  pending listing's date ICE printed for a stretch and then reverted; each is logged in
-  `data/qa/signing-date-corrections.csv`. What it declines to merge is proposed in
+  stays one agreement: a listing that never linked an MOA, re-dated whether or
+  not its MOA has posted; one MOA re-dated within 30 days or by exactly a year;
+  a listing whose last MOA cell showed no link, re-dated within 90 days; and a
+  pending listing's date ICE printed for a stretch and then reverted. An MOA
+  cell counts as linked only when it is ICE's hyperlinked "Link" or a url, never
+  "link pending", a blank cell or a stray word. Each date correction is logged in
+  `data/qa/signing-date-corrections.csv` and each relabel in
+  `data/qa/identity-relabels.csv`. What it declines to merge is proposed in
   `data/qa/identity-candidates.csv`. **`2-make-agreements.R`** cleans the
   current sheet into `agreements.parquet`: county and TYPE fixes, the county an
   agency's own name states, an MOA ICE has posted but not yet linked (found
@@ -202,7 +209,8 @@ QA diff.
   agreement-level geometry is their union.
 - `inputs/county-name-fixes.csv`, `inputs/signed-date-fixes.csv`,
   `inputs/agency-name-fixes.csv`, `inputs/state-fixes.csv`,
-  `inputs/agency-type-fixes.csv` — county, date, agency-name, state and TYPE
+  `inputs/support-type-fixes.csv`, `inputs/agency-type-fixes.csv` — county,
+  date, agency-name, state, model and TYPE
   fixes for the ICE sheet, keyed on the erroneous value so a row does nothing once ICE
   corrects it. A county fix with an `agency` applies to that agency only (a real
   county ICE assigned to the wrong place); without one it fixes a misspelled
