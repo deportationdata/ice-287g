@@ -4,7 +4,7 @@ county,county_name,TRUE,2
 county,judicial_district_member_county,FALSE,37
 facility,doc_exact_state_prison_source,FALSE,1372
 facility,doc_manual_state_facility,FALSE,12
-facility,exact_county_pattern_all_facilities,FALSE,1315
+facility,exact_county_pattern_all_facilities,FALSE,1314
 facility,exact_county_pattern_all_facilities,TRUE,2
 facility,exact_municipal_pattern_facility,FALSE,7
 facility,exact_operator_facility,FALSE,230
@@ -16,10 +16,10 @@ facility,hifld_law_enforcement_location,TRUE,26
 facility,manual,FALSE,7
 facility,manual_facility_match,FALSE,2
 facility,unmatched_facility,TRUE,9
-municipal,cousub_name,FALSE,61
+municipal,cousub_name,FALSE,60
 municipal,cousub_name,TRUE,7
 municipal,manual_override,FALSE,3
-municipal,place_name,FALSE,925
+municipal,place_name,FALSE,924
 municipal,place_name,TRUE,34
 municipal,regional_member_municipality,FALSE,38
 municipal,regional_member_municipality,TRUE,17

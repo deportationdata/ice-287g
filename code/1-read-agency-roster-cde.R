@@ -75,7 +75,10 @@ crime <- read_parquet(crime_cache_path) |>
   filter(!is.na(ori), ori != "") |>
   mutate(
     state_key = norm_state(state),
-    county_key = norm_ori_county(county),
+    # one key per county CDE names, ";"-separated
+    county_key = county |>
+      str_split(",") |>
+      map_chr(\(parts) paste(unique(norm_ori_county(parts)), collapse = ";")),
     agency_key = norm_ori_agency(name),
     fullname_key = norm_ori_fullname(name)
   )

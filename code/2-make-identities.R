@@ -359,22 +359,24 @@ identities <- obs_ids |>
   left_join(pub_dates |> transmute(last_seq = pub_seq - 1L, removed_by = published_on,
                                    removed_by_source = published_on_source), by = "last_seq")
 
-# lineage: a successor first seen in the very next publication after the
-# predecessor's last, with nothing else in the agency straddling the handover
-windows <- identities |> select(agency_id, agreement_id, support_key, signed, first_seq, last_seq, n_pub)
+# lineage: same model or same-date relabel, next list or within 60 days, no same-model straddler
+windows <- identities |>
+  select(agency_id, agreement_id, support_key, signed, first_seq, last_seq, n_pub, first_appeared, last_appeared)
 edges <- windows |>
   filter(last_seq < current_seq) |>
   inner_join(windows, by = "agency_id", suffix = c("", "_s"), relationship = "many-to-many") |>
-  filter(agreement_id != agreement_id_s, first_seq_s == last_seq + 1L) |>
-  left_join(windows |> select(agency_id, x_id = agreement_id, x_first = first_seq, x_last = last_seq),
+  filter(agreement_id != agreement_id_s, support_key_s == support_key | signed_s == signed,
+         first_seq_s > last_seq,
+         first_seq_s == last_seq + 1L | as.numeric(first_appeared_s - last_appeared) <= 60) |>
+  left_join(windows |> select(agency_id, x_support = support_key, x_id = agreement_id, x_first = first_seq, x_last = last_seq),
             by = "agency_id", relationship = "many-to-many") |>
   group_by(agreement_id, agreement_id_s, support_key, support_key_s, signed_s, first_seq_s, last_seq) |>
-  summarise(straddled = any(x_id != agreement_id & x_id != agreement_id_s &
+  summarise(straddled = any(x_support %in% c(support_key, support_key_s) & x_id != agreement_id & x_id != agreement_id_s &
                               x_first <= last_seq & x_last >= first_seq_s), .groups = "drop") |>
   filter(!straddled) |>
-  mutate(support_changed = support_key != support_key_s) |>
-  slice_min(order_by = tibble(first_seq_s, support_changed, signed_s), n = 1,
-            by = agreement_id, with_ties = FALSE) |>
+  slice_min(order_by = tibble(first_seq_s, support_key_s != support_key, signed_s), n = 1, by = agreement_id, with_ties = FALSE) |>
+  # one predecessor per successor
+  slice_max(last_seq, n = 1, by = agreement_id_s, with_ties = FALSE) |>
   select(agreement_id, succeeded_by = agreement_id_s)
 
 identities <- identities |>
@@ -400,14 +402,21 @@ id_lookup <- identities |>
   select(state_key, support_key, signed, component, agreement_id, agency_id)
 
 agency_state <- identities |>
-  summarise(has_active = any(status == "active"),
-            active_supports = list(unique(support_key[status == "active"])), .by = agency_id)
+  summarise(active_supports = list(unique(support_key[status == "active"])), .by = agency_id)
+# a model switch: another model, signed another day, first listed in the lineage window
+switched <- windows |>
+  inner_join(windows, by = "agency_id", suffix = c("", "_n"), relationship = "many-to-many") |>
+  filter(support_key_n != support_key, signed_n != signed, first_seq_n > last_seq,
+         first_seq_n == last_seq + 1L | as.numeric(first_appeared_n - last_appeared) <= 60) |>
+  distinct(agreement_id) |>
+  mutate(switched = TRUE)
 identities <- identities |>
   left_join(agency_state, by = "agency_id") |>
+  left_join(switched, by = "agreement_id") |>
   mutate(removal_flag = case_when(
     status != "removed" ~ NA_character_,
     map2_lgl(support_key, active_supports, \(s, a) s %in% a) ~ "possible_resign",
-    has_active ~ "model_switch",
+    coalesce(switched, FALSE) ~ "model_switch",
     TRUE ~ NA_character_
   )) |>
   select(agreement_id, agency_id, agreement_lineage_id, state, state_abbr, state_key,

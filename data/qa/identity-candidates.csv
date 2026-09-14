@@ -27,12 +27,9 @@ lineage_unlinked,california,JAIL ENFORCEMENT MODEL,2005-11-19,CA-san-bernardino-
 lineage_unlinked,florida,TASK FORCE MODEL,2008-06-15,FL-bay-county-sheriff-office#TFM#2008-06-15,FL-bay-county-sheriff-office#WSO#2019-10-15,53,NA,FALSE,16,381,NA
 lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2008-08-13,FL-brevard-county-sheriff-office#JEM#2008-08-13,FL-brevard-county-sheriff-office#WSO#2019-05-06,54,NA,FALSE,5,391,NA
 lineage_unlinked,florida,TASK FORCE MODEL,2002-07-02,FL-department-of-law-enforcement#TFM#2002-07-02,FL-department-of-law-enforcement#TFM#2025-02-14,205,NA,FALSE,18,229,NA
-lineage_unlinked,florida,TASK FORCE MODEL,2025-02-28,FL-fort-walton-beach-police-department#TFM#2025-02-28,FL-fort-walton-beach-police-department#TFM#2025-08-04,2,NA,FALSE,61,165,NA
-lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2018-02-27,FL-hernando-county-sheriff-office#JEM#2018-02-27,FL-hernando-county-sheriff-office#TFM#2025-02-26,148,NA,FALSE,28,229,NA
 lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2008-07-08,FL-manatee-county-sheriff-office#JEM#2008-07-08,FL-manatee-county-sheriff-office#WSO#2019-05-06,54,NA,FALSE,5,391,NA
 lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2020-06-10,FL-pasco-county-sheriff-office#JEM#2020-06-10,FL-pasco-county-sheriff-office#TFM#2025-02-26,76,NA,FALSE,74,228,NA
 lineage_unlinked,georgia,TASK FORCE MODEL,2007-07-27,GA-department-of-public-safety#TFM#2007-07-27,GA-department-of-public-safety#TFM#2025-03-10,209,NA,FALSE,18,225,NA
-lineage_unlinked,kansas,WARRANT SERVICE OFFICER,2025-07-31,KS-rooks-county-sheriff-office#WSO#2025-07-31,KS-rooks-county-sheriff-office#WSO#2025-09-09,2,NA,FALSE,14,150,NA
 lineage_unlinked,louisiana,JAIL ENFORCEMENT MODEL,2020-06-08,LA-ouachita-parish-sheriff-office#JEM#2020-06-08,LA-ouachita-parish-sheriff-office#WSO#2025-07-02,122,NA,FALSE,69,186,NA
 lineage_unlinked,massachusetts,JAIL ENFORCEMENT MODEL,2007-08-25,MA-barnstable-county-sheriff-office#JEM#2007-08-25,MA-barnstable-county-sheriff-office#JEM#2018-01-25,40,NA,FALSE,6,28,NA
 lineage_unlinked,massachusetts,JAIL ENFORCEMENT MODEL,2014-05-21,MA-department-of-correction#JEM#2014-05-21,MA-department-of-correction#JEM#2014-04-22,2,NA,FALSE,1,7,NA
@@ -43,11 +40,9 @@ lineage_unlinked,northcarolina,JAIL ENFORCEMENT MODEL,2007-01-10,NC-alamance-cou
 lineage_unlinked,northcarolina,JAIL ENFORCEMENT MODEL,2026-02-10,NC-person-county-sheriff-office#JEM#2026-02-10,NC-person-county-sheriff-office#WSO#2026-04-13,1,NA,FALSE,20,54,NA
 lineage_unlinked,ohio,JAIL ENFORCEMENT MODEL,2020-06-09,OH-butler-county-sheriff-office#JEM#2020-06-09,OH-butler-county-sheriff-office#JEM#2025-02-24,94,NA,FALSE,54,229,NA
 lineage_unlinked,pennsylvania,WARRANT SERVICE OFFICER,2025-05-22,PA-butler-county-sheriff-office#WSO#2025-05-22,PA-butler-county-sheriff-office#TFM#2025-06-12,3,NA,FALSE,6,195,NA
-lineage_unlinked,pennsylvania,TASK FORCE MODEL,2025-11-18,PA-stowe-township-police-department#TFM#2025-11-18,PA-stowe-township-police-department#TFM#2025-12-11,5,NA,FALSE,11,99,NA
 lineage_unlinked,southcarolina,TASK FORCE MODEL,2008-06-25,SC-beaufort-county-sheriff-office#TFM#2008-06-25,SC-beaufort-county-sheriff-office#TFM#2025-07-31,268,NA,FALSE,16,166,NA
 lineage_unlinked,southcarolina,JAIL ENFORCEMENT MODEL,2020-06-09,SC-charleston-county-sheriff-office#JEM#2020-06-09,SC-charleston-county-sheriff-office#WSO#2025-03-10,146,NA,FALSE,6,225,NA
 lineage_unlinked,southcarolina,TASK FORCE MODEL,2026-03-11,SC-jamestown-police-department#TFM#2026-03-11,SC-jamestown-police-department#TFM#2026-07-22,26,NA,FALSE,31,9,NA
-lineage_unlinked,tennessee,JAIL ENFORCEMENT MODEL,2025-06-03,TN-bradley-county-sheriff-office#JEM#2025-06-03,TN-bradley-county-sheriff-office#WSO#2025-10-17,3,NA,FALSE,58,107,NA
 lineage_unlinked,texas,JAIL ENFORCEMENT MODEL,2025-09-09,TX-henderson-county-sheriff-office#JEM#2025-09-09,TX-henderson-county-sheriff-office#TFM#2026-07-20,117,NA,FALSE,23,10,NA
 lineage_unlinked,texas,JAIL ENFORCEMENT MODEL,2020-05-04,TX-williamson-county-sheriff-office#JEM#2020-05-04,TX-williamson-county-sheriff-office#WSO#2025-09-22,225,NA,FALSE,7,146,NA
 lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2025-06-11,UT-sanpete-county-sheriff-office#JEM#2025-06-11,UT-sanpete-county-sheriff-office#WSO#2025-11-20,4,NA,FALSE,75,116,NA

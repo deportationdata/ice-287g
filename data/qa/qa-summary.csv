@@ -1,14 +1,14 @@
 check,scope,value,expected,status
-agreements rows,all,2907,NA,info
+agreements rows,all,2904,NA,info
 agreements active,all,2485,NA,info
 agreements removed,all,254,NA,info
-agreements superseded,all,168,NA,info
-agreements == identities,all,2907,2907,pass
+agreements superseded,all,165,NA,info
+agreements == identities,all,2904,2904,pass
 agencies,all,2275,NA,info
 identities folding more than one spelling,all,37,NA,info
 identities by resolution,alias,17,NA,info
 identities by resolution,date_corrected,70,NA,info
-identities by resolution,exact,2784,NA,info
+identities by resolution,exact,2781,NA,info
 identities by resolution,modifier,4,NA,info
 identities by resolution,relabel,4,NA,info
 identities by resolution,typo,28,NA,info
@@ -18,8 +18,8 @@ sheet publications dated by ICE's filename,all,229,NA,info
 sheet publications dated by an archive capture,all,223,NA,info
 sheet publications out of date order,all,0,0,pass
 sheet publications with a date flag,online before its ICE filename date,1,NA,info
-agreements absent from a publication inside their listing window,all,6,NA,info
-identity candidates awaiting a verdict,all,57,NA,info
+agreements absent from a publication inside their listing window,all,9,NA,info
+identity candidates awaiting a verdict,all,52,NA,info
 agencies across every era,all,2276,NA,info
 agencies by jurisdiction level,Campus,20,NA,info
 agencies by jurisdiction level,Constable District,47,NA,info
@@ -46,12 +46,12 @@ agency disagreements by kind,state,1,NA,info
 active agreements == newest sheet rows,all,2485,2485,pass
 duplicate identity rows in agreements,all,0,0,pass
 distinct states in agreements,all,47,NA,info
-feature rows,all,4965,NA,info
-agreement-level rows == agreements rows,all,2907,2907,pass
+feature rows,all,4962,NA,info
+agreement-level rows == agreements rows,all,2904,2904,pass
 agreements with no feature row,all,0,0,pass
 feature rows by layer,county,675,NA,info
-feature rows by layer,facility,3042,NA,info
-feature rows by layer,municipal,1089,NA,info
+feature rows by layer,facility,3041,NA,info
+feature rows by layer,municipal,1087,NA,info
 feature rows by layer,pa_constable,23,NA,info
 feature rows by layer,precinct,47,NA,info
 feature rows by layer,state,69,NA,info
@@ -73,13 +73,13 @@ active features with a pending MOA,all,558,NA,info
 active features with an addendum,all,93,NA,info
 county geoids outside the census county list,all,0,NA,info
 DOC agreements fanned out to state prisons,all,37,NA,info
-agreement-identifiers rows == agreements rows,all,2907,2907,pass
-active agreements with an ORI9,all,2361,NA,info
-ORI9 by source,crime,2492,NA,info
-ORI9 by source,leaic,64,NA,info
-ORI9 by source,lear,136,NA,info
-ORI9 by source,manual,59,NA,info
-ORI9 by source,none,156,NA,info
+agreement-identifiers rows == agreements rows,all,2904,2904,pass
+active agreements with an ORI9,all,2367,NA,info
+ORI9 by source,crime,2536,NA,info
+ORI9 by source,leaic,58,NA,info
+ORI9 by source,lear,99,NA,info
+ORI9 by source,manual,62,NA,info
+ORI9 by source,none,149,NA,info
 malformed ORI9 values,all,0,0,pass
 ORI9 sentinel -1 shipped,all,0,0,pass
 ori_conflict flagged,all,24,NA,info
@@ -87,13 +87,13 @@ county_fips malformed or outside its state,all,0,0,pass
 Connecticut features carrying a legacy county fips,all,1,NA,info
 Connecticut features carrying a planning-region fips,all,0,0,pass
 placed features by geometry vintage,2021,2,NA,info
-placed features by geometry vintage,2024,1848,NA,info
+placed features by geometry vintage,2024,1846,NA,info
 placed features by geometry vintage,2026,18,NA,info
-placed features by geometry vintage,NA,3033,NA,info
+placed features by geometry vintage,NA,3032,NA,info
 missing identifiers by type,missing_both,8,NA,info
 missing identifiers by type,missing_fips,43,NA,info
-missing identifiers by type,missing_ori,116,NA,info
-distinct MOA urls on the sheet,all,2516,NA,info
+missing identifiers by type,missing_ori,110,NA,info
+distinct MOA urls on the sheet,all,2515,NA,info
 distinct MOA urls in agreements manifests,all,2951,NA,info
 agreements folders with outstanding failed downloads,all,0,0,pass
 MOA urls the sheet links that the origin reports gone and no archive holds,all,0,NA,info

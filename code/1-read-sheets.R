@@ -133,7 +133,7 @@ observations <- observations |>
          support_key = canonical_support(raw_support)) |>
   select(-support_type_fixed) |>
   left_join(signed_date_fixes, by = c("state", "agency", "support_key", "signed")) |>
-  mutate(signed_date_fixed = !is.na(signed_fixed), signed = coalesce(signed_fixed, signed)) |>
+  mutate(signed_date_fixed = !is.na(signed_fixed), signed_printed = signed, signed = coalesce(signed_fixed, signed)) |>
   select(-signed_fixed)
 
 # ICE has printed an agreement under the wrong state for a stretch (Burnet County TX under
@@ -243,9 +243,11 @@ if (nrow(within_folds)) {
 # cannot predate the newest signing it prints; a list online before its filename date
 # takes that capture's date instead. Lists sharing a date keep ICE's am/mid/pm order,
 # then capture order (ICE has re-posted a file under the same name)
+# printed dates: a date fix can postdate lists that carried the agreement
 newest_signed <- observations |>
-  filter(!is.na(signed)) |>
-  summarise(newest_signed = max(signed), .by = publication_id)
+  filter(!is.na(signed_printed)) |>
+  summarise(newest_signed = max(signed_printed), .by = publication_id)
+observations <- observations |> select(-signed_printed)
 publications <- publications |>
   left_join(newest_signed, by = "publication_id") |>
   mutate(

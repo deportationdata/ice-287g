@@ -25,7 +25,18 @@ repositories, built with the same approach.
   several — a re-signing supersedes its predecessor, and a sheriff may run jail,
   task-force and warrant-service agreements at once. `status` is `active`
   (on the current sheet), `superseded` (a later agreement of the same
-  agency took over) or `removed`.
+  agency and model took over, first listed in the next publication or within
+  60 days) or `removed`. ICE's lists never say which, so timing decides:
+  - an agreement first listed while the agency's other agreement is still
+    listed is an **addition**, and nothing is superseded;
+  - a same-model agreement first listed after the old one's last listing is a
+    **renewal**, and the old one is `superseded`, as is ICE's 2011–13 relabel
+    of one MOA under a new model (same signing date);
+  - a different-model agreement signed on another day and first listed after
+    the old one's last listing is a **switch**: the old one is `removed` with
+    `removal_flag` `model_switch`;
+  - otherwise the old one is simply `removed` (`possible_resign` when a
+    same-model agreement is active but could not be linked).
 
 Both ids are content-derived and stable across runs; an id changes only when
 the canonical name it is built from changes, which is exactly when the diff
