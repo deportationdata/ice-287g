@@ -1,0 +1,44 @@
+state,alias_agency,canonical_agency,relation,scope,evidence,note
+Arkansas,Arkansas State Police,Arkansas State Police Department,same,identity,reviewed:2026-09-12,one agency; ICE dropped the last word for one publication
+Idaho,Idaho State Police,Idaho State Police Department,same,identity,reviewed:2026-09-12,one agency; spelling alternated
+New Hampshire,New Hampshire State Police,New Hampshire State Police Department,same,identity,reviewed:2026-09-12,one agency; spelling alternated
+Florida,Boca Raton Police Department,Boca Raton Police Services Department,same,identity,reviewed:2026-09-12,the city's police agency is named Police Services Department
+Florida,"Criminal Investigation Division, Department of Financial Services","Florida Department of Financial Services, Criminal Investigation Division",same,identity,reviewed:2026-09-12,word order only
+Florida,Florida Department of Environmental Protection,"Florida Department of Environmental Protection, Division of Law Enforcement",same,identity,reviewed:2026-09-12,ICE later named the division; same signing date
+Florida,Escambia County Board of County Commissioners,Escambia County Board of County Commissioners/ Department of Corrections,same,identity,reviewed:2026-09-12,ICE later named the department; same signing date; never printed together
+Florida,Gulf County Board of County Commissioners,Gulf County Board of County Commissioners /Detention Facility,same,identity,reviewed:2026-09-12,ICE later named the facility; same signing date; never printed together
+Florida,Okaloosa County Board of County Commissioners,Okaloosa County Board of County Commissioners/ Department of Corrections,same,identity,reviewed:2026-09-12,ICE later named the department; same signing date; never printed together
+Florida,Okaloosa County Department of Corrections,Okaloosa County Board of County Commissioners/ Department of Corrections,same,identity,reviewed:2026-09-12,same WSO agreement printed under the department alone for nine publications
+Florida,Okaloosa County Corrections,Okaloosa County Board of County Commissioners/ Department of Corrections,same,identity,reviewed:2026-09-12,truncated spelling of the row above
+Florida,Pasco County Board of County Commissioners,Pasco County Board of County Commissioners/ Pasco County Corrections,same,identity,reviewed:2026-09-12,ICE later named the department; same signing date; never printed together
+North Carolina,Albermarle District Jail,Albemarle District Jail,same,identity,typo,
+Pennsylvania,Quarryville Police Department,Quarryville Borough Police Department,same,identity,abbrev,
+Tennessee,Tennessee Department of Safety and Homeland Security / THP,Tennessee Department of Safety and Homeland Security,same,identity,reviewed:2026-09-12,THP is the department's patrol division; same signing date
+Virginia,Prince William-Manassas Regional Jail,Prince William-Manassas Regional Adult Detention Center,same,agency,ice_rename,the jail was renamed; one agreement throughout
+Wyoming,Wyoming Highway State Patrol,Wyoming State Highway Patrol,same,identity,typo,
+Arizona,Pima County Sheriff's Office,Pinal County Sheriff's Office,distinct,identity,reviewed:2026-09-12,two counties; both listed for years with the same signing date
+Florida,Melbourne Beach Police Department,Melbourne Police Department,distinct,identity,reviewed:2026-09-12,two cities; printed side by side
+Florida,University of Florida Police Department,University of West Florida Police Department,distinct,identity,reviewed:2026-09-12,two universities
+Florida,"Florida Department of Environmental Protection, Division of Law Enforcement",Florida Department of Law Enforcement,distinct,identity,reviewed:2026-09-12,FDLE is a separate agency
+North Carolina,Gatson County Sheriff's Office,Gaston County Sheriff's Office,same,identity,typo,CRS 2007 spelling. Inactive: the source that printed this spelling was retired to inputs/other_sources on 2026-09-12 (audit 2026-09-13)
+North Carolina,Cabbarus County Sheriff's Office,Cabarrus County Sheriff's Office,same,identity,typo,ICE archive index spelling
+New Hampshire,Hudson Police Department,Hudson City Police Department,same,identity,abbrev,"GAO and the ICE archive index drop ""City"""
+Virginia,Prince William-Manassas Regional ADC,Prince William-Manassas Regional Adult Detention Center,same,agency,abbrev,ICE archive index spelling
+Virginia,Prince William-Manassas Detention Center,Prince William-Manassas Regional Adult Detention Center,same,agency,abbrev,CRS 2007 spelling. Inactive: the source that printed this spelling was retired to inputs/other_sources on 2026-09-12 (audit 2026-09-13)
+Alabama,"Alabama, State of",Alabama Department of Public Safety,same,agency,reviewed:2026-09-12,the ICE archive index files the 2003 state MOA under the state's name
+Georgia,"Georgia, State of",Georgia Department of Public Safety,same,agency,reviewed:2026-09-12,the ICE archive index files the 2007 state MOA under the state's name
+Colorado,Colorado DPS / Colorado State Patrol,Colorado Department of Public Safety,same,agency,abbrev,ICE archive index spelling
+Colorado,Colorado Department of Public Safety/State Patrol,Colorado Department of Public Safety,same,agency,abbrev,GAO spelling. Inactive: the source that printed this spelling was retired to inputs/other_sources on 2026-09-12 (audit 2026-09-13)
+Florida,Jacksonville County Sheriff's Office,Jacksonville Sheriff's Office,same,agency,reviewed:2026-09-12,ICE archive index spelling; Jacksonville is a consolidated city-county
+Tennessee,Nashville & Davidson County,Davidson County Sheriff's Office,same,agency,reviewed:2026-09-12,Yale FOIA labels the consolidated jurisdiction. Inactive: the source that printed this spelling was retired to inputs/other_sources on 2026-09-12 (audit 2026-09-13)
+Arkansas,Springdale Arkansas Police Department,Springdale Police Department,same,agency,abbrev,ICE archive index spelling
+California,Los Angeles County Board of Supervisors,Los Angeles County Sheriff's Office,same,agency,reviewed:2026-09-12,the ICE archive index files the county MOA under its board
+Georgia,Cobb County SO and Board of Commissioners,Cobb County Sheriff's Office,same,agency,reviewed:2026-09-12,the ICE archive index files the county MOA under sheriff and board
+Tennessee,Davidson County (Metro) Sheriff's Office,Davidson County Sheriff's Office,same,agency,abbrev,ICE archive index spelling
+Colorado,Colorado State Patrol,Colorado Department of Public Safety,same,agency,reviewed:2026-09-12,the patrol is the department's 287(g) unit; CRS 2007 names it. Inactive: the source that printed this spelling was retired to inputs/other_sources on 2026-09-12 (audit 2026-09-13)
+New Jersey,Morristown,Morristown Police Department,same,agency,reviewed:2026-09-12,"the ICE archive index files the 2009 Morristown MOA under the town's name. Inactive: the archived file is the town's 2007 application letter, not an MOA, and no ICE list names a Morristown agency, so the target agency does not exist (audit 2026-09-13)"
+Virginia,Prince William Police Department,Prince William County Police Department,same,agency,ice_lists,"ICE's March 2008 agency list drops ""County"""
+Virginia,Prince William Sheriff's Office,Prince William County Sheriff's Office,same,agency,ice_lists,"ICE's March 2008 agency list drops ""County"""
+Alabama,Alabama State Police,Alabama Department of Public Safety,same,identity,reviewed:2026-09-12,"one agreement (task force; signed 2003-09-10) throughout; ICE printed ""AL State Police"" through Aug 2009 and the department's name from Apr 2010"
+Florida,Pasco County BOCC,Pasco County Board of County Commissioners/ Pasco County Corrections,same,identity,reviewed:2026-09-13,"one agency: ICE printed BOCC while the WSO signed 2025-02-26 was link pending (Feb 27-Mar 7 2025), then spelled it out when the MOA pascoCoBOCC_WSO_MOA_02.20.2025.pdf posted"
+Florida,Indian River Shores DPS,Indian River Shores Department of Public Safety,same,identity,reviewed:2026-09-13,"one agency: DPS abbreviated for one pending listing (2025-03-07), spelled out from 2025-03-17"

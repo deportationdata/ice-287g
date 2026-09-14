@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
-# Diff two all_agreements_sf.parquet files (main vs PR) and emit a markdown
-# summary suitable for a PR comment. Geometry is dropped so location changes
-# surface through the non-geometry columns that feed the output.
+# Diff two match-all-features.parquet files (main vs PR) into a markdown comment
 
 suppressMessages({
   library(arrow)
@@ -17,14 +15,14 @@ MARKER <- "<!-- pr-diff-bot -->"
 MAX_ROWS <- 100
 
 cat(MARKER, "\n", sep = "")
-cat("## `all_agreements_sf.parquet` diff vs `main`\n\n")
+cat("## `match-all-features.parquet` diff vs `main`\n\n")
 
 if (!file.exists(main_path) || file.size(main_path) == 0) {
-  cat("_No `all_agreements_sf.parquet` on `main` - skipping diff._\n")
+  cat("_No `match-all-features.parquet` on `main` - skipping diff._\n")
   quit(status = 0)
 }
 if (!file.exists(pr_path) || file.size(pr_path) == 0) {
-  cat("_No `all_agreements_sf.parquet` on this branch - nothing to diff._\n")
+  cat("_No `match-all-features.parquet` on this branch - nothing to diff._\n")
   quit(status = 0)
 }
 
@@ -37,6 +35,8 @@ read_clean <- function(path) {
 main_df <- read_clean(main_path)
 pr_df <- read_clean(pr_path)
 
+id_cols <- c("agreement_id", "agency_id", "agreement_lineage_id", "succeeded_by", "sheet_row")
+
 make_key <- function(df) {
   base_key_cols <- intersect(
     c(
@@ -44,19 +44,23 @@ make_key <- function(df) {
       "county",
       "agency",
       "support_type",
-      "agency_level",
+      "jurisdiction_level",
       "geom_class",
       "match_layer",
-      "facility_name",
+      "match_name",
       "facility_city",
       "facility_state",
+      # either branch's schema is accepted; intersect() drops absent columns
+      "facility_name",
       "county_match",
       "municipality_match",
       "university_name"
     ),
     names(df)
   )
-  sort_cols <- setdiff(names(df), "geometry")
+  # ids must not drive pairing (a new id would read as add+remove) and must not
+  # be diffed as cells (one id change would report on every row)
+  sort_cols <- setdiff(names(df), c("geometry", id_cols))
 
   df |>
     mutate(.base_key = do.call(paste, c(across(all_of(base_key_cols)), sep = " | "))) |>
@@ -74,7 +78,7 @@ added <- pr_df |> anti_join(main_df, by = ".key")
 removed <- main_df |> anti_join(pr_df, by = ".key")
 common <- intersect(main_df$.key, pr_df$.key)
 
-data_cols <- setdiff(intersect(names(main_df), names(pr_df)), ".key")
+data_cols <- setdiff(intersect(names(main_df), names(pr_df)), c(".key", id_cols))
 
 to_char_long <- function(df) {
   df |>
@@ -94,7 +98,8 @@ changes <- inner_join(
       (!is.na(main) & !is.na(pr) & main != pr)
   ) |>
   left_join(
-    pr_df |> distinct(.key, agency, state, county),
+    pr_df |>
+      distinct(across(any_of(c(".key", "agency", "state", "county")))),
     by = ".key"
   )
 
@@ -131,7 +136,16 @@ cat(sprintf(
   n_distinct(changes$.key)
 ))
 
-summary_cols <- c("state", "county", "agency", "support_type", "agency_level", "match_layer")
+# ids are excluded from pairing and cells above, so an id migration reads as one line
+churn <- inner_join(main_df |> select(.key, any_of("agreement_id")),
+                    pr_df |> select(.key, any_of("agreement_id")),
+                    by = ".key", suffix = c("_main", "_pr"))
+if (all(c("agreement_id_main", "agreement_id_pr") %in% names(churn))) {
+  cat(sprintf("- **Identity churn:** %d row(s) changed `agreement_id`\n\n",
+              sum(as.character(churn$agreement_id_main) != as.character(churn$agreement_id_pr), na.rm = TRUE)))
+}
+
+summary_cols <- c("state", "county", "agency", "support_type", "jurisdiction_level", "match_layer")
 
 cat("### Added\n\n")
 cat(md_table(added, summary_cols))

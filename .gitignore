@@ -50,3 +50,9 @@ rsconnect/
 
 # Ignore locally-generated scrape outputs
 .vscode/
+
+.DS_Store
+**/.DS_Store
+
+# rebuilt from sheets/ by 1-read-sheets.R; the ids table beside it is committed
+data/intermediate/sheet-rows.parquet

@@ -1,4 +1,7 @@
 agency,state,county,manual_match_layer,manual_match_name,manual_reason,manual_note
-Saint Francois County Sheriff's Office,Missouri,Saint Francois County,county,St. Francois County,county_name_fix,
-Custer County Sheriff's Office,Oklahoma,Custer Countey,county,Custer County,county_typo,
-Hopewell County Sheriff's Office,Virginia,Hopewell County,county,Hopewell City,independent_city_fix,
+Hopewell County Sheriff's Office,Virginia,Hopewell County,county,Hopewell City,independent_city_fix,"Inactive: county-name-fixes.csv rewrites Hopewell County to Hopewell City before this key is read, and the agreement matches the city by name (audit 2026-09-13)"
+Pittsburgh Police Department,New Hampshire,,municipal,Pittsburg,agency_name_typo,ICE sheet misspells the NH town of Pittsburg
+Sunny Isles Police Department,Florida,,municipal,Sunny Isles Beach,agency_name_shortened,ICE sheet drops Beach from the city of Sunny Isles Beach
+Luka Police Department,Mississippi,Tishomingo County,municipal,Iuka,agency_name_typo,"ICE sheet reads the capital I of Iuka (the county seat) as an L. Inactive: agency-name-fixes.csv corrects Luka to Iuka before this key is read, and Iuka matches by name (audit 2026-09-13)"
+Florida Atlantic Police Department,Florida,Broward County,university,Florida Atlantic University,university_name_shortened,Agency is the FAU police department but the name omits University so it is not classed as a campus
+Center Line Division of Public Safety and Security,Michigan,Macomb County,municipal,Center Line,agency_name_suffix,"The city of Center Line's department; the name guess stops at Public Safety and keeps ""Division of"""

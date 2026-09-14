@@ -1,0 +1,38 @@
+kind,agency_id,field,value_a,source_a,value_b,source_b,published_value,resolution_rule
+date,AR-benton-county-sheriff-office,signed,2007-09-20,ice_archive_index,2007-09-26,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,AR-washington-county-sheriff-office,signed,2009-10-07,ice_archive_index,2007-09-26,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,AZ-pinal-county-sheriff-office,signed,2009-10-15,ice_archive_index,2008-03-10,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,AZ-yavapai-county-sheriff-office,signed,2009-10-15,ice_archive_index,2008-03-10,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,CA-san-bernardino-county-sheriff-office,signed,2005-10-19,oig_2009,2005-11-19,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,GA-cobb-county-sheriff-office,signed,2007-01-31,ice_archive_index,2007-02-13,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,GA-hall-county-sheriff-office,signed,2009-10-15,ice_archive_index,2008-02-29,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,MA-bristol-county-sheriff-office,signed,2017-02-08,ice_archive_index,2017-01-18,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,MD-frederick-county-sheriff-office,signed,2008-02-01,ice_archive_index,2008-02-06,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,NC-cabarrus-county-sheriff-office,signed,2007-07-10,ice_archive_index,2007-08-02,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,NJ-cape-may-county-sheriff-office,signed,2017-10-04,ice_archive_index,2017-04-10,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,NY-rensselaer-county-sheriff-office,signed,2018-02-09,ice_archive_index,2018-01-30,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,OK-tulsa-county-sheriff-office,signed,2009-10-05,ice_archive_index,2007-08-06,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,SC-york-county-sheriff-office,signed,2009-10-15,ice_archive_index,2007-10-16,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,VA-prince-william-manassas-regional-adult-detention-center,signed,2009-10-15,ice_archive_index,2007-07-09,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,WI-waukesha-county-sheriff-office,signed,2018-02-22,ice_archive_index,2018-02-08,ice_sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+model,AZ-mesa-police-department,model,Task Force,oig_2009,JTF; JEM,ice_sheet,JTF; JEM,models are ICE's; a source's differing model is recorded only
+presence,AZ-florence-police-department,listed,listed,oig_2009,absent,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,CA-los-angeles-county-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,CA-orange-county-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,CA-riverside-county-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,CA-san-bernardino-county-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,CT-danbury-police-department,listed,listed,oig_2009,absent,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,DE-department-of-correction,listed,listed,oig_2009,absent,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,FL-brevard-county-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,FL-jacksonville-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,FL-manatee-county-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,GA-gwinnett-county-sheriff-office,listed,listed,oig_2009,absent,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,MA-department-of-correction,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,MA-framingham-police-department,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,NC-cumberland-county-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,NC-guilford-county-sheriff-office,listed,listed,oig_2009,absent,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,NJ-monmouth-county-sheriff-office,listed,listed,oig_2009,absent,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,NM-department-of-correction,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,RI-state-police,listed,listed,oig_2009,absent,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+presence,TX-harris-county-sheriff-office,listed,absent,oig_2009,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
+state,GA-whitfield-county-sheriff-office,state,Texas,ice_archive_index,Georgia,registry,Georgia,state comes from the registry; the source printed another

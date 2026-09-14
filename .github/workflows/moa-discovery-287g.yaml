@@ -1,0 +1,81 @@
+name: "Discover unlinked 287(g) MOAs"
+
+on:
+  schedule:
+    # weekly: ICE usually links an MOA within a month, so only agreements pending
+    # three weeks or more are probed; Monday 06:43 UTC keeps clear of the hourly
+    # scraper's minute 17
+    - cron: '43 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# share the scraper's group so the two never hit ice.gov at the same time
+concurrency:
+  group: 287g-acquire
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: [self-hosted]
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: true
+          lfs: true
+          fetch-depth: 0
+
+      - name: Ensure clean working tree
+        run: |
+          git lfs pull
+          git checkout -- .
+          git clean -fd agreements/ inputs/
+
+      - name: Install R packages
+        run: |
+          Rscript --vanilla -e '
+            pkgs <- c("arrow", "digest", "dplyr", "fs", "httr", "jsonlite", "pdftools",
+                      "purrr", "readr", "stringi", "stringr", "tidyr", "xml2")
+            missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
+            if (length(missing) > 0) {
+              install.packages(missing, repos = "https://cloud.r-project.org")
+            }
+          '
+
+      - name: Check ICE's MOA archive page
+        env:
+          MOA_REPORT: ${{ runner.temp }}/moa-discovery.md
+        run: Rscript --vanilla code/0-acquire-archive-index.R
+
+      - name: Probe ice.gov for MOAs the sheet still shows pending
+        env:
+          MOA_REPORT: ${{ runner.temp }}/moa-discovery.md
+        run: Rscript --vanilla code/0-acquire-moa-probe.R
+
+      - name: Open a pull request with anything found
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add agreements/ inputs/
+          if git diff --cached --quiet; then
+            echo "Nothing new."
+            exit 0
+          fi
+          branch="moa-discovery-$(date -u +%Y-%m-%d)"
+          git checkout -b "$branch"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "Add MOAs ICE posted but has not linked [skip ci]"
+          git push --set-upstream origin "$branch"
+          touch "${{ runner.temp }}/moa-discovery.md"
+          gh pr create --base main \
+            --title "Unlinked 287(g) MOAs found $(date -u +%Y-%m-%d)" \
+            --body-file "${{ runner.temp }}/moa-discovery.md"
+
+      - name: Clean up
+        if: always()
+        run: rm -f "${{ runner.temp }}/moa-discovery.md"
