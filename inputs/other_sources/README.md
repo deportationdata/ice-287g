@@ -6,7 +6,7 @@ counted against stated roster totals. It was then retired from the pipeline,
 and the files moved from `inputs/historical/` to this folder, after a check
 showed that none of it is load-bearing:
 
-- **No agency.** Every agency any of these sources names is on an ICE
+- **No missing agency.** Every agency any of these sources names is on an ICE
   roster capture we hold (`sheets/`), in ICE's own undated lists of Sep 2007
   and Mar 2008, in the DHS OIG appendix of Oct 2009, or in ICE's MOA archive
   index.
