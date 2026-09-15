@@ -265,10 +265,18 @@ jobs:
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           brew install gdal
           echo "$HOMEBREW_PREFIX/bin" >> "$GITHUB_PATH"
-          echo "PKG_CONFIG_PATH=$HOMEBREW_PREFIX/lib/pkgconfig" >> "$GITHUB_ENV"
-          # R packages compiled here find Homebrew's libraries at run time
-          mkdir -p ~/.R
-          echo "LDFLAGS += -Wl,-rpath,$HOMEBREW_PREFIX/lib" >> ~/.R/Makevars
+          {
+            # every compile in this job finds Homebrew's headers and libraries
+            # (LIBRARY_PATH and CPATH), resolves what those libraries themselves
+            # need (LD_RUN_PATH, which the linker searches for a library's
+            # dependencies and records as the run-time search path), and links
+            # the arrow package to Homebrew's libarrow, the copy GDAL uses
+            echo "PKG_CONFIG_PATH=$HOMEBREW_PREFIX/lib/pkgconfig"
+            echo "LIBRARY_PATH=$HOMEBREW_PREFIX/lib"
+            echo "LD_RUN_PATH=$HOMEBREW_PREFIX/lib"
+            echo "CPATH=$HOMEBREW_PREFIX/include"
+            echo "ARROW_USE_PKG_CONFIG=true"
+          } >> "$GITHUB_ENV"
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -300,14 +308,11 @@ jobs:
             any::xml2
 
       - name: Build sf and arrow against Homebrew
-        env:
-          # link the arrow package to Homebrew's libarrow, the copy GDAL uses,
-          # rather than bundling a second one
-          ARROW_USE_PKG_CONFIG: "true"
         run: |
-          # the binary sf is linked to Ubuntu's GDAL, which has no Parquet
-          # driver; rebuild sf and arrow from source unless the cached library
-          # already has a Parquet-capable sf
+          # a binary sf is linked to Ubuntu's GDAL, which has no Parquet driver;
+          # rebuild sf and arrow from source unless the library already has a
+          # Parquet-capable sf (from the cache, or because pak built it from
+          # source above)
           if Rscript -e 'quit(status = !("Parquet" %in% rownames(sf::st_drivers())))'; then
             echo "sf already reads Parquet"
           else
