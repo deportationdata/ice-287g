@@ -36,6 +36,9 @@ main_df <- read_clean(main_path)
 pr_df <- read_clean(pr_path)
 
 id_cols <- c("agreement_id", "agency_id", "agreement_lineage_id", "succeeded_by", "sheet_row")
+# the roster end date moves on every active row whenever ICE posts a new sheet;
+# it is reported as one line, not counted as a modified cell
+roster_cols <- c("last_appeared")
 
 make_key <- function(df) {
   base_key_cols <- intersect(
@@ -103,6 +106,9 @@ changes <- inner_join(
     by = ".key"
   )
 
+roster <- changes |> filter(column %in% roster_cols)
+changes <- changes |> filter(!column %in% roster_cols)
+
 md_escape <- function(x) {
   x <- replace_na(as.character(x), "")
   x <- str_replace_all(x, "\\|", "\\\\|")
@@ -135,6 +141,16 @@ cat(sprintf(
   nrow(changes),
   n_distinct(changes$.key)
 ))
+
+if (nrow(roster) > 0) {
+  moves <- roster |>
+    count(column, main, pr, name = "n") |>
+    arrange(desc(n)) |>
+    mutate(text = sprintf("%s to %s on %d row(s)", replace_na(main, "blank"), replace_na(pr, "blank"), n))
+  cat(sprintf("- **Roster end date:** `%s` moved %s\n\n",
+              paste(unique(moves$column), collapse = "`, `"),
+              paste(head(moves$text, 5), collapse = "; ")))
+}
 
 # ids are excluded from pairing and cells above, so an id migration reads as one line
 churn <- inner_join(main_df |> select(.key, any_of("agreement_id")),
