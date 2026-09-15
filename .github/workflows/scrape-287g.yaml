@@ -227,34 +227,96 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP"/sheet-check.xlsx "$RUNNER_TEMP"/287g-changes.txt "$RUNNER_TEMP"/pr-body*.txt
 
-  # The data build runs against the pushed acquisition; its failure costs one
-  # build, never a snapshot.
+  # The data build runs against the pushed acquisition on a GitHub-hosted
+  # runner; its failure costs one build, never a snapshot. Ubuntu's GDAL has no
+  # Parquet driver, so the build installs Homebrew's GDAL (built with Arrow, the
+  # same build as on a Mac) and compiles sf and arrow against it.
   build:
     needs: acquire
     if: needs.acquire.outputs.changed == 'true'
-    runs-on: [self-hosted]
-    timeout-minutes: 90
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
 
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.acquire.outputs.branch }}
-          clean: true
-          lfs: true
-          fetch-depth: 0
+          lfs: false
 
-      - name: Install R packages
+      # the build reads the sheets, the inputs and the agreement manifests; the
+      # MOA pdfs (12 GB) stay as pointers. The inputs rarely change, so their
+      # LFS objects are cached rather than downloaded on every build
+      - uses: actions/cache@v4
+        with:
+          path: .git/lfs/objects
+          key: lfs-inputs-${{ hashFiles('inputs/**') }}
+          restore-keys: lfs-inputs-
+
+      - name: Pull the LFS files the build reads
         run: |
-          Rscript --vanilla -e '
-            pkgs <- c(
-              "arrow", "digest", "dplyr", "fs", "haven", "httr", "httr2", "openxlsx",
-              "readr", "readxl", "rvest", "sf", "stringi", "stringdist",
-              "stringr", "tidygeocoder", "tigris", "tidyr", "tidyverse", "xml2"
-            )
-            missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
-            if (length(missing) > 0) {
-              install.packages(missing, repos = "https://cloud.r-project.org")
-            }
+          git lfs install --local
+          git lfs pull --include="sheets/**,inputs/**"
+
+      - name: Install Homebrew GDAL
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install gdal
+          echo "$HOMEBREW_PREFIX/bin" >> "$GITHUB_PATH"
+          echo "PKG_CONFIG_PATH=$HOMEBREW_PREFIX/lib/pkgconfig" >> "$GITHUB_ENV"
+          # R packages compiled here find Homebrew's libraries at run time
+          mkdir -p ~/.R
+          echo "LDFLAGS += -Wl,-rpath,$HOMEBREW_PREFIX/lib" >> ~/.R/Makevars
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::arrow
+            any::digest
+            any::dplyr
+            any::fs
+            any::haven
+            any::httr
+            any::httr2
+            any::openxlsx
+            any::readr
+            any::readxl
+            any::rvest
+            any::sf
+            any::stringi
+            any::stringdist
+            any::stringr
+            any::tidygeocoder
+            any::tigris
+            any::tidyr
+            any::tidyverse
+            any::xml2
+
+      - name: Build sf and arrow against Homebrew
+        env:
+          # link the arrow package to Homebrew's libarrow, the copy GDAL uses,
+          # rather than bundling a second one
+          ARROW_USE_PKG_CONFIG: "true"
+        run: |
+          # the binary sf is linked to Ubuntu's GDAL, which has no Parquet
+          # driver; rebuild sf and arrow from source unless the cached library
+          # already has a Parquet-capable sf
+          if Rscript -e 'quit(status = !("Parquet" %in% rownames(sf::st_drivers())))'; then
+            echo "sf already reads Parquet"
+          else
+            Rscript -e 'install.packages(c("sf", "arrow"), type = "source", repos = "https://cloud.r-project.org")'
+          fi
+          Rscript -e '
+            stopifnot("Parquet" %in% rownames(sf::st_drivers()))
+            print(sf::sf_extSoftVersion())
+            cat("arrow", as.character(packageVersion("arrow")), "\n")
           '
 
       - name: Build the datasets
