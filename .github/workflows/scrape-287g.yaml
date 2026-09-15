@@ -242,6 +242,10 @@ jobs:
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
       HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      # packages compile from CRAN source against Homebrew's libraries; Posit's
+      # Ubuntu binaries would link Ubuntu's GDAL (no Parquet driver) instead
+      RENV_CONFIG_PPM_ENABLED: "FALSE"
+      RENV_CONFIG_REPOS_OVERRIDE: "https://cloud.r-project.org"
 
     steps:
       - uses: actions/checkout@v4
@@ -264,10 +268,15 @@ jobs:
           git lfs pull --include="sheets/**,inputs/**"
 
       - name: Install Homebrew GDAL and R
+        id: brew
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install gdal r
+          # udunits (units) and libuv (fs) are the only system libraries
+          # renv.lock's packages need that GDAL and R don't already bring
+          brew install gdal r udunits libuv
           echo "$HOMEBREW_PREFIX/bin" >> "$GITHUB_PATH"
+          # the package cache is keyed on these, so a GDAL or R upgrade recompiles
+          echo "versions=$(brew list --versions r gdal apache-arrow | tr ' \n' '-_')" >> "$GITHUB_OUTPUT"
           {
             # every compile in this job finds Homebrew's headers and libraries
             # (LIBRARY_PATH and CPATH), resolves what those libraries themselves
@@ -279,56 +288,24 @@ jobs:
             echo "LD_RUN_PATH=$HOMEBREW_PREFIX/lib"
             echo "CPATH=$HOMEBREW_PREFIX/include"
             echo "ARROW_USE_PKG_CONFIG=true"
-            # R_LIBS_USER is where setup-r-dependencies installs and caches
-            echo "R_LIBS_USER=$RUNNER_TEMP/Library"
+            echo "MAKEFLAGS=-j$(nproc)"
           } >> "$GITHUB_ENV"
-          mkdir -p "$RUNNER_TEMP/Library"
-          Rscript -e 'cat(R.version.string, "\n"); print(Sys.which(c("gcc", "gdal-config")))'
+          Rscript --vanilla -e 'cat(R.version.string, "\n"); print(Sys.which(c("gcc", "gdal-config")))'
 
-      # no binaries exist for Homebrew's R, so every package compiles from
-      # source on the first run; the library is cached for the runs after
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      # renv::restore() from renv.lock, cached. No binaries exist for Homebrew's
+      # R, so the first run after a cache miss compiles every package (~15 min)
+      - uses: r-lib/actions/setup-renv@v2
         with:
-          packages: |
-            any::arrow
-            any::digest
-            any::dplyr
-            any::fs
-            any::haven
-            any::httr
-            any::httr2
-            any::openxlsx
-            any::readr
-            any::readxl
-            any::rvest
-            any::sf
-            any::stringi
-            any::stringdist
-            any::stringr
-            any::tidygeocoder
-            any::tigris
-            any::tidyr
-            any::tidyverse
-            any::xml2
+          cache-version: ${{ steps.brew.outputs.versions }}
 
-      - name: Check sf and arrow link Homebrew
+      - name: Check sf reads Parquet and arrow links Homebrew
         run: |
-          # rebuild sf and arrow from source if the cached sf predates a
-          # Homebrew GDAL upgrade and no longer loads or reads Parquet
-          if Rscript -e 'quit(status = !("Parquet" %in% rownames(sf::st_drivers())))'; then
-            echo "sf already reads Parquet"
-          else
-            Rscript -e 'install.packages(c("sf", "arrow"), type = "source", repos = "https://cloud.r-project.org")'
-          fi
           Rscript -e '
             stopifnot("Parquet" %in% rownames(sf::st_drivers()))
             print(sf::sf_extSoftVersion())
             cat("arrow", as.character(packageVersion("arrow")), "\n")
           '
-          # which libarrow each links: one shared Homebrew copy is the goal
-          for pkg in sf arrow; do
-            echo "== $pkg"; ldd "$(Rscript -e "cat(system.file('libs', '$pkg.so', package = '$pkg'))")" | grep -iE 'gdal|arrow|parquet' || true
-          done
+          ldd "$(Rscript -e 'cat(system.file("libs", "arrow.so", package = "arrow"))')" | grep -i arrow
 
       - name: Build the datasets
         env:

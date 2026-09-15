@@ -73,7 +73,7 @@ Geometry files are Parquet with the native GEOMETRY type, written by GDAL throug
 CRS (EPSG:4326) travels in the type, not in GeoParquet `geo` metadata. The pipeline
 reads them with `sf::st_read()` (GDAL ≥ 3.12); `arrow::read_parquet()` plus
 `sf::st_as_sfc(<WKB column>, crs = 4326)` or DuckDB ≥ 1.4 also work.
-`.Rprofile` (and `code/run_ci.sh`) set `ARROW_DEFAULT_MEMORY_POOL=system`: R arrow
+`.Rprofile` sets `ARROW_DEFAULT_MEMORY_POOL=system`: R arrow
 and sf's GDAL each carry their own libarrow, and one system allocator keeps the
 two copies from freeing each other's memory, which corrupts a GDAL Parquet write.
 Unmatched agreements are never dropped: they ride along with empty geometries

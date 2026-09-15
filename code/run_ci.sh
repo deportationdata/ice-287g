@@ -1,11 +1,8 @@
 #!/bin/bash
 set -e
 
-# separate entrypoint so CI can diverge without changing local usage
-export R_PROFILE_USER=/dev/null
+# separate entrypoint so CI can diverge without changing local usage; .Rprofile
+# still runs, so renv and the allocator setting apply as they do locally
 export R_ENVIRON_USER=/dev/null
-export RENV_CONFIG_AUTOLOADER_ENABLED=FALSE
-# .Rprofile is skipped here, so repeat its allocator setting (see README)
-export ARROW_DEFAULT_MEMORY_POOL=system
 
 bash code/run_all.sh
