@@ -18,11 +18,20 @@ dedupe_scope_key <- function(base_path, file_path, file_hash) {
   parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
   # parts[1] is the snapshot folder; scope is STATE/AGENCY for agreements
   scope <- parts[-c(1, length(parts))]
-  # a sheet's scope is its scrape date, else ICE's filename date: identical content
-  # on different days is two observations, not a duplicate
+  # a sheet's scope is the day it was observed: the scrape folder's date, ICE's
+  # filename date (pending lists carry it in the same forms as participating
+  # ones), or the Wayback capture timestamp that names an archived page (the
+  # digits 1-read-sheets.R dates a capture by). Identical content on different
+  # days is two observations, not a duplicate; a sheet with no date of its own
+  # is never a duplicate of another file
   if (basename(base_path) == "sheets") {
-    scope <- format(coalesce(as.Date(str_match(file_path, "sheets_(\\d{8})_\\d{6}")[, 2], format = "%Y%m%d"),
-                             ice_filename_date(file_path)), "%Y-%m-%d")
+    name <- basename(file_path)
+    day <- coalesce(
+      as.Date(str_match(file_path, "sheets_(\\d{8})_\\d{6}")[, 2], format = "%Y%m%d"),
+      ice_filename_date(str_replace(name, regex("^pendingAgencies", ignore_case = TRUE), "participatingAgencies")),
+      as.Date(str_sub(str_match(name, "^(?:ice_287g_)?(?:pre\\d{4}_)?(\\d{14})")[, 2], 1, 8), format = "%Y%m%d")
+    )
+    scope <- if (is.na(day)) rel_path else format(day, "%Y-%m-%d")
   }
   paste(c(scope, file_hash), collapse = "/")
 }
