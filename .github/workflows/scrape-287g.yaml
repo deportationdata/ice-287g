@@ -283,7 +283,13 @@ jobs:
           r-version: release
           use-public-rspm: true
 
+      # R already holds Ubuntu's copies of libraries GDAL also needs (libtiff,
+      # pcre2, libjpeg) by the time sf loads, and a newer Homebrew copy cannot
+      # replace one already loaded under the same name. So every step that runs
+      # R has it load Homebrew's copies first; they are newer, and satisfy R too
       - uses: r-lib/actions/setup-r-dependencies@v2
+        env:
+          LD_LIBRARY_PATH: /home/linuxbrew/.linuxbrew/lib
         with:
           packages: |
             any::arrow
@@ -308,6 +314,8 @@ jobs:
             any::xml2
 
       - name: Build sf and arrow against Homebrew
+        env:
+          LD_LIBRARY_PATH: /home/linuxbrew/.linuxbrew/lib
         run: |
           # a binary sf is linked to Ubuntu's GDAL, which has no Parquet driver;
           # rebuild sf and arrow from source unless the library already has a
@@ -326,6 +334,7 @@ jobs:
 
       - name: Build the datasets
         env:
+          LD_LIBRARY_PATH: /home/linuxbrew/.linuxbrew/lib
           # a tripped invariant fails this job, and only this job
           QA_STRICT: "1"
         run: |
