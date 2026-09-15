@@ -229,8 +229,11 @@ jobs:
 
   # The data build runs against the pushed acquisition on a GitHub-hosted
   # runner; its failure costs one build, never a snapshot. Ubuntu's GDAL has no
-  # Parquet driver, so the build installs Homebrew's GDAL (built with Arrow, the
-  # same build as on a Mac) and compiles sf and arrow against it.
+  # Parquet driver, so the build uses Homebrew's GDAL (built with Arrow, the
+  # same build as on a Mac). R comes from Homebrew too: a system R already
+  # holds Ubuntu's copies of libraries GDAL needs newer versions of (libtiff,
+  # pcre2, libjpeg), and the loader will not load a second copy under the same
+  # name, so R, GDAL and every compiled package must share one set of libraries.
   build:
     needs: acquire
     if: needs.acquire.outputs.changed == 'true'
@@ -260,10 +263,10 @@ jobs:
           git lfs install --local
           git lfs pull --include="sheets/**,inputs/**"
 
-      - name: Install Homebrew GDAL
+      - name: Install Homebrew GDAL and R
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install gdal
+          brew install gdal r
           echo "$HOMEBREW_PREFIX/bin" >> "$GITHUB_PATH"
           {
             # every compile in this job finds Homebrew's headers and libraries
@@ -276,20 +279,15 @@ jobs:
             echo "LD_RUN_PATH=$HOMEBREW_PREFIX/lib"
             echo "CPATH=$HOMEBREW_PREFIX/include"
             echo "ARROW_USE_PKG_CONFIG=true"
+            # R_LIBS_USER is where setup-r-dependencies installs and caches
+            echo "R_LIBS_USER=$RUNNER_TEMP/Library"
           } >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/Library"
+          Rscript -e 'cat(R.version.string, "\n"); print(Sys.which(c("gcc", "gdal-config")))'
 
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: release
-          use-public-rspm: true
-
-      # R already holds Ubuntu's copies of libraries GDAL also needs (libtiff,
-      # pcre2, libjpeg) by the time sf loads, and a newer Homebrew copy cannot
-      # replace one already loaded under the same name. So every step that runs
-      # R has it load Homebrew's copies first; they are newer, and satisfy R too
+      # no binaries exist for Homebrew's R, so every package compiles from
+      # source on the first run; the library is cached for the runs after
       - uses: r-lib/actions/setup-r-dependencies@v2
-        env:
-          LD_LIBRARY_PATH: /home/linuxbrew/.linuxbrew/lib
         with:
           packages: |
             any::arrow
@@ -313,14 +311,10 @@ jobs:
             any::tidyverse
             any::xml2
 
-      - name: Build sf and arrow against Homebrew
-        env:
-          LD_LIBRARY_PATH: /home/linuxbrew/.linuxbrew/lib
+      - name: Check sf and arrow link Homebrew
         run: |
-          # a binary sf is linked to Ubuntu's GDAL, which has no Parquet driver;
-          # rebuild sf and arrow from source unless the library already has a
-          # Parquet-capable sf (from the cache, or because pak built it from
-          # source above)
+          # rebuild sf and arrow from source if the cached sf predates a
+          # Homebrew GDAL upgrade and no longer loads or reads Parquet
           if Rscript -e 'quit(status = !("Parquet" %in% rownames(sf::st_drivers())))'; then
             echo "sf already reads Parquet"
           else
@@ -331,18 +325,20 @@ jobs:
             print(sf::sf_extSoftVersion())
             cat("arrow", as.character(packageVersion("arrow")), "\n")
           '
+          # which libarrow each links: one shared Homebrew copy is the goal
+          for pkg in sf arrow; do
+            echo "== $pkg"; ldd "$(Rscript -e "cat(system.file('libs', '$pkg.so', package = '$pkg'))")" | grep -iE 'gdal|arrow|parquet' || true
+          done
 
       - name: Build the datasets
         env:
-          LD_LIBRARY_PATH: /home/linuxbrew/.linuxbrew/lib
           # a tripped invariant fails this job, and only this job
           QA_STRICT: "1"
-        run: |
-          bash code/run_ci.sh
-          git add data/
+        run: bash code/run_ci.sh
 
       - name: Commit and push the datasets
         run: |
+          git add data/
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           if git diff --cached --quiet; then
