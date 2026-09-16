@@ -42,7 +42,7 @@ newest_dir <- list.files("sheets", "^sheets_2", full.names = TRUE) |>
   last()
 newest_sheet <- list.files(
   newest_dir,
-  "^participatingAgencies.*\\.xlsx$",
+  "^(287g)?participatingAgencies.*\\.xlsx$",
   full.names = TRUE,
   ignore.case = TRUE
 ) |>

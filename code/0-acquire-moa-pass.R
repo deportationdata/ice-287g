@@ -11,7 +11,7 @@ source("code/functions.R")
 Sys.setlocale("LC_TIME", "C")
 
 newest_dir <- list.files("sheets", "^sheets_2", full.names = TRUE) |> sort() |> last()
-sheet <- list.files(newest_dir, "^participatingAgencies.*\\.xlsx$",
+sheet <- list.files(newest_dir, "^(287g)?participatingAgencies.*\\.xlsx$",
                     full.names = TRUE, ignore.case = TRUE)[1]
 stopifnot("no participating-agencies workbook in the newest sheets folder" = !is.na(sheet))
 sheet_hash <- digest(file = sheet, algo = "sha256")

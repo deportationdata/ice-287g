@@ -1,13 +1,15 @@
 # Dates of archived sheets.
 
-# ICE's own date for a sheet, from its filename (participatingAgenciesMMDDYYYY, or
-# participatingAgencies_YYYYMMDD); ICE typos years ("...03113025am" is year 3025),
-# and an impossible date is no date
+# ICE's own date for a sheet, from its filename (participatingAgenciesMMDDYYYY,
+# participatingAgencies_YYYYMMDD, or since 2026-09-15 287gParticipatingAgenciesMMDDYY);
+# ICE typos years ("...03113025am" is year 3025), and an impossible date is no date
 ice_filename_date <- function(paths) {
   name <- basename(paths)
-  mdy <- str_match(name, regex("^participatingAgencies(\\d{2})(\\d{2})(\\d{4})", ignore_case = TRUE))
-  iso <- str_match(name, regex("^participatingAgencies_(\\d{4})(\\d{2})(\\d{2})", ignore_case = TRUE))
-  out <- coalesce(as.Date(paste(mdy[, 4], mdy[, 2], mdy[, 3], sep = "-"), format = "%Y-%m-%d"),
+  mdy <- str_match(name, regex("^(?:287g)?participatingAgencies(\\d{2})(\\d{2})(\\d{4}|\\d{2})(?!\\d)", ignore_case = TRUE))
+  iso <- str_match(name, regex("^(?:287g)?participatingAgencies_(\\d{4})(\\d{2})(\\d{2})", ignore_case = TRUE))
+  # a two-digit year ("287gParticipatingAgencies091526pm", first seen 2026-09-15) is 20yy
+  year <- if_else(nchar(mdy[, 4]) == 2, paste0("20", mdy[, 4]), mdy[, 4])
+  out <- coalesce(as.Date(paste(year, mdy[, 2], mdy[, 3], sep = "-"), format = "%Y-%m-%d"),
                   as.Date(paste(iso[, 2], iso[, 3], iso[, 4], sep = "-"), format = "%Y-%m-%d"))
   out[!is.na(out) & (out > Sys.Date() + 30 | out < as.Date("2005-01-01"))] <- NA
   out
@@ -15,7 +17,7 @@ ice_filename_date <- function(paths) {
 
 # the part of day ICE appends when it posts more than one list on a date
 ice_filename_part <- function(paths) {
-  str_to_lower(str_match(basename(paths), regex("^participatingAgencies\\d{8}(am|mid|pm)", ignore_case = TRUE))[, 2])
+  str_to_lower(str_match(basename(paths), regex("^(?:287g)?participatingAgencies(?:\\d{8}|\\d{6})(am|mid|pm)", ignore_case = TRUE))[, 2])
 }
 
 # SIGNED arrives as raw text because ICE mixes native dates, text dates and

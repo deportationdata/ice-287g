@@ -66,11 +66,14 @@ jobs:
       - name: Check whether the ICE sheet changed (quick check)
         id: sheet_check
         run: |
+          # ICE links the workbook either by its doclib name or through a
+          # file-download id (the 08/25, 08/28 and 09/04 2026 lists); the same
+          # two forms 0-acquire-scraper.R accepts
           # Fetch just the participating-agencies sheet and compare its hash to
           # the archive. Any failure falls through to a full scrape.
           ua="Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36"
           url=$(curl -sL --retry 3 -A "$ua" "https://www.ice.gov/identify-and-arrest/287g" \
-            | grep -oiE 'href="[^"]*participatingAgencies[^"]*\.xlsx[^"]*"' \
+            | grep -oiE 'href="[^"]*(participatingAgencies[^"]*\.xlsx|file-download/download/public/[0-9]+)[^"]*"' \
             | head -1 | sed 's/^href="//; s/"$//' || true)
           case "$url" in
             //*) url="https:$url" ;;
