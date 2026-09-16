@@ -5,7 +5,8 @@
 # ICE typos years ("...03113025am" is year 3025), and an impossible date is no date
 ice_filename_date <- function(paths) {
   name <- basename(paths)
-  mdy <- str_match(name, regex("^(?:287g)?participatingAgencies(\\d{2})(\\d{2})(\\d{4}|\\d{2})(?!\\d)", ignore_case = TRUE))
+  # a four-digit year may run into a typo'd suffix ("...041720263pm"); a two-digit year may not
+  mdy <- str_match(name, regex("^(?:287g)?participatingAgencies(\\d{2})(\\d{2})(\\d{4}|\\d{2}(?!\\d))", ignore_case = TRUE))
   iso <- str_match(name, regex("^(?:287g)?participatingAgencies_(\\d{4})(\\d{2})(\\d{2})", ignore_case = TRUE))
   # a two-digit year ("287gParticipatingAgencies091526pm", first seen 2026-09-15) is 20yy
   year <- if_else(nchar(mdy[, 4]) == 2, paste0("20", mdy[, 4]), mdy[, 4])
