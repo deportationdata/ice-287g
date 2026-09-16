@@ -22,7 +22,8 @@ jobs:
   diff:
     runs-on: ubuntu-latest
     env:
-      RENV_PATHS_ROOT: ${{ runner.temp }}/renv
+      # the runner context is not available in a job-level env; the workspace is
+      RENV_PATHS_ROOT: ${{ github.workspace }}/.renv-root
 
     steps:
       - name: Resolve PR ref

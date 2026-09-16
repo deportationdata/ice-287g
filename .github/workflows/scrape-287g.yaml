@@ -2,11 +2,14 @@ name: "Scrape 287(g) agreements"
 
 on:
   schedule:
-    # hourly: ICE sometimes replaces the sheet more than once a day (the
-    # archive holds am/pm pairs). The sheet check keeps unchanged runs to two small
-    # requests plus a sharded revalidation of the MOA pdfs.
+    # hourly through the US working day: ICE sometimes replaces the sheet more
+    # than once a day (the archive holds am/pm pairs), and every "as of" time it
+    # has stamped on a list falls between 9 am and 7 pm Eastern. Cron is UTC and
+    # ignores daylight saving, so the window is 10:00 to 01:00 UTC: 6 am to 9 pm
+    # Eastern in summer, 5 am to 8 pm in winter. The sheet check keeps unchanged
+    # runs to two small requests plus a sharded revalidation of the MOA pdfs.
     # minute 17 avoids the top-of-the-hour scheduling pile-up
-    - cron: '17 * * * *'
+    - cron: '17 10-23,0-1 * * *'
   workflow_dispatch:
     inputs:
       full_pass:
@@ -160,7 +163,7 @@ jobs:
       - name: Revalidate MOA documents
         env:
           # every url when the sheet changed or failures are outstanding; one shard
-          # of six otherwise, so every url is revalidated every six hours
+          # of six otherwise (hour mod 6), so the 16 daily runs still cover every url
           MOA_FULL: ${{ (steps.sheet_check.outputs.changed == 'true' || inputs.full_pass == true) && '1' || '' }}
         run: |
           export MOA_SHARD=$(( 10#$(date -u +%H) % 6 ))
