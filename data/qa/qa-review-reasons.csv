@@ -1,6 +1,6 @@
 match_layer,flag,n
 county,duplicate_sheet_row,1
-county,moa_pending,115
+county,moa_pending,117
 county,ori_conflict,1
 facility,fuzzy_match,7
 facility,geometry_unmatched,1
@@ -11,7 +11,7 @@ facility,weak_match,11
 municipal,ambiguous_candidates,7
 municipal,duplicate_sheet_row,3
 municipal,geometry_unmatched,3
-municipal,moa_pending,183
+municipal,moa_pending,187
 municipal,ori_conflict,12
 municipal,roster_county_disagrees,34
 municipal,type_mismatch,1
