@@ -21,6 +21,8 @@ permissions:
 jobs:
   diff:
     runs-on: ubuntu-latest
+    env:
+      RENV_PATHS_ROOT: ${{ runner.temp }}/renv
 
     steps:
       - name: Resolve PR ref
@@ -47,6 +49,10 @@ jobs:
             code/diff-agreements-pr.R
             data/intermediate/match-all-features.parquet
             data/qa/qa-summary.csv
+            renv.lock
+            renv/activate.R
+            renv/settings.json
+            .Rprofile
           sparse-checkout-cone-mode: false
 
       - name: Checkout main into _main/
@@ -66,25 +72,29 @@ jobs:
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
-          r-version: '4.5.3'
+          r-version: '4.6.0'
           use-public-rspm: true
 
-      - name: Install minimal R deps
-        run: |
-          Rscript --vanilla -e '
-            install.packages(
-              c("arrow", "dplyr", "tidyr", "stringr"),
-              dependencies = c("Depends", "Imports", "LinkingTo"),
-              repos = "https://cloud.r-project.org"
-            )
-          '
+      # only the four packages the diff needs; the rest of renv.lock wants GDAL
+      - name: Cache the renv library
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.RENV_PATHS_ROOT }}
+            renv/library
+          key: diff-renv-${{ runner.os }}-R4.6.0-${{ hashFiles('renv.lock') }}
+
+      - name: Restore the diff script's packages from renv.lock
+        env:
+          RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/latest
+        run: Rscript -e 'renv::restore(packages = c("arrow", "dplyr", "tidyr", "stringr"))'
 
       - name: Run diff script
         run: |
           main_sf=_main/data/intermediate/match-all-features.parquet
           [ -f "$main_sf" ] || main_sf=_main/data/intermediate/all_agreements_sf.parquet
           [ -f "$main_sf" ] || main_sf=_main/data/all_agreements_sf.parquet
-          Rscript --vanilla code/diff-agreements-pr.R \
+          Rscript code/diff-agreements-pr.R \
             "$main_sf" \
             data/intermediate/match-all-features.parquet \
             > /tmp/pr-diff-comment.md
