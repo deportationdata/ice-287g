@@ -37,16 +37,7 @@ features <- all_sf |>
 active_features <- features |> filter(status == "active")
 
 # the newest participating sheet is the ground truth for the active count
-newest_dir <- list.files("sheets", "^sheets_2", full.names = TRUE) |>
-  sort() |>
-  last()
-newest_sheet <- list.files(
-  newest_dir,
-  "^(287g)?participatingAgenc(y|ies).*\\.xlsx$",
-  full.names = TRUE,
-  ignore.case = TRUE
-) |>
-  first()
+newest_sheet <- newest_sheet_snapshot()
 newest_rows <- readxl::read_excel(newest_sheet, col_types = "text") |>
   filter(if_any(1:2, ~ !is.na(.x) & .x != "")) |>
   nrow()
@@ -113,6 +104,15 @@ summary <- bind_rows(
   check(
     "sheet publications dated by ICE's filename",
     sum(pubs$published_on_source == "ice_filename")
+  ),
+  check(
+    "sheet publications dated by ICE's Last-Modified",
+    sum(pubs$published_on_source == "ice_last_modified")
+  ),
+  # 1 when ICE has changed its filename again
+  check(
+    "newest ICE sheet without a filename date",
+    sum(is.na(ice_filename_date(newest_sheet)))
   ),
   check(
     "sheet publications dated by an archive capture",

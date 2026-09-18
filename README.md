@@ -269,8 +269,9 @@ regenerable.
   then LEAR, then LEAIC, then manual); an exact match that could not tell two
   ORIs apart yields to another roster's unique full-name match.
 - Every list since March 2025 is dated by ICE's own filename date, lists sharing
-  a date in ICE's am/mid/pm order; earlier lists (archived ICE pages, which carry
-  no date) by the Eastern date of their earliest archive capture.
+  a date in ICE's am/mid/pm order; a list with no filename date by ice.gov's
+  Last-Modified; earlier lists (archived ICE pages, which carry no date) by the
+  Eastern date of their earliest archive capture.
   `first_appeared_source`, `removed_by_source` and `ice_listed_from_source` say
   which. Capture times only order lists that share a date and catch a filename
   date the file was online before (`date_flag` in

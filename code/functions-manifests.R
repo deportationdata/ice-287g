@@ -84,6 +84,27 @@ snapshot_manifests <- function(root = "agreements") {
     )
 }
 
+# The newest participating-agencies workbook, by the manifest's note, else by its header
+# row (only participating lists have SIGNED); never by filename, which ICE changes
+newest_sheet_snapshot <- function(root = "sheets") {
+  has_roster_header <- function(path) {
+    hdr <- tryCatch(names(readxl::read_excel(path, n_max = 0)), error = function(e) character())
+    all(c("STATE", "LAW ENFORCEMENT AGENCY", "SIGNED") %in% toupper(str_squish(hdr)))
+  }
+  for (folder in rev(sort(list.files(root, "^sheets_2", full.names = TRUE)))) {
+    workbooks <- list.files(folder, "\\.xlsx$", full.names = TRUE, ignore.case = TRUE)
+    if (length(workbooks) == 0) next
+    noted <- character()
+    if (file.exists(file.path(folder, "manifest.csv"))) {
+      rows <- read_manifest(file.path(folder, "manifest.csv"))
+      noted <- file.path(folder, basename(rows$saved_path[str_detect(coalesce(rows$note, ""), "^participating")]))
+    }
+    sheet <- c(intersect(noted, workbooks), keep(workbooks, has_roster_header))[1]
+    if (!is.na(sheet)) return(sheet)
+  }
+  stop("no participating-agencies workbook in any sheets snapshot")
+}
+
 # url -> the bytes we hold for it, their validators, and where one copy still lives;
 # derived from the manifests every run, so it can never disagree with the files
 moa_validator_map <- function(m = snapshot_manifests("agreements")) {

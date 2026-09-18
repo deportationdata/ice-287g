@@ -38,7 +38,7 @@ page_tables <- set_names(map(pages, read_roster_html), pages) |> compact()
 files <- c(workbooks, names(page_tables))
 
 manifests <- snapshot_manifests("sheets") |>
-  select(folder, path_now, url, note, retrieved_at, capture_time)
+  select(folder, path_now, url, note, retrieved_at, capture_time, last_modified)
 
 # a workbook is one publication per distinct bytes; a page is one per distinct
 # table per capture day, so a table that returns after a different one (a row
@@ -51,7 +51,8 @@ hash_of <- \(p) {
 }
 
 # a publication is dated by ICE's own filename date wherever a file carries one (every
-# list since March 2025), else by the Eastern date of its earliest archive capture;
+# list since March 2025), else by ice.gov's Last-Modified, else by the Eastern date of
+# its earliest archive capture;
 # capture times are kept only as evidence, to order lists that share a date and to
 # catch a filename date the file was online before (dated once its rows are read)
 stamp <- \(x) as.POSIXct(x, format = "%Y%m%d%H%M%S", tz = "UTC")
@@ -64,6 +65,8 @@ file_meta <- tibble(path = files) |>
   mutate(
     ice_date = ice_filename_date(path),
     ice_part = ice_filename_part(path),
+    modified_on = as.Date(format(as.POSIXct(last_modified, format = "%a, %d %b %Y %H:%M:%S", tz = "UTC"),
+                                 tz = "America/New_York")),
     # when the file was demonstrably online: a Wayback capture, our scraper's run folder,
     # a logged download, or the once-a-day snapshot folder of a mirror
     captured_at = coalesce(
@@ -90,6 +93,7 @@ publications <- file_meta |>
     n_files = n(),
     ice_date = if (all(is.na(ice_date))) as.Date(NA) else min(ice_date, na.rm = TRUE),
     ice_part = first(na.omit(ice_part)),
+    modified_on = if (all(is.na(modified_on))) as.Date(NA) else min(modified_on, na.rm = TRUE),
     captured_at = if (all(is.na(captured_at))) as.POSIXct(NA, tz = "UTC") else min(captured_at, na.rm = TRUE),
     source_kind = first(source_kind),
     has_live = any(source_kind == "live"),
@@ -259,8 +263,16 @@ publications <- publications |>
       coalesce(captured_on < ice_date - 1, FALSE) ~ "online before its ICE filename date",
       TRUE ~ NA_character_
     ),
-    published_on = if_else(!is.na(ice_date) & !(date_flag %in% "online before its ICE filename date"), ice_date, captured_on),
-    published_on_source = if_else(coalesce(published_on == ice_date, FALSE), "ice_filename", "archive_capture")
+    published_on = case_when(
+      !is.na(ice_date) & !(date_flag %in% "online before its ICE filename date") ~ ice_date,
+      is.na(ice_date) & !is.na(modified_on) ~ modified_on,
+      TRUE ~ captured_on
+    ),
+    published_on_source = case_when(
+      coalesce(published_on == ice_date, FALSE) ~ "ice_filename",
+      is.na(ice_date) & !is.na(modified_on) ~ "ice_last_modified",
+      TRUE ~ "archive_capture"
+    )
   ) |>
   arrange(published_on, case_when(ice_part == "am" ~ 1L, ice_part == "pm" ~ 3L, TRUE ~ 2L), captured_at, file_hash) |>
   mutate(pub_seq = row_number(), prev_publication_id = lag(publication_id), is_current = pub_seq == max(pub_seq))
@@ -331,8 +343,9 @@ publications <- publications |>
   select(publication_id, file_hash, n_files, published_on, published_on_source, ice_date, ice_part, captured_at,
          date_flag, source_kind, n_rows, n_unsigned, is_current, pub_seq, prev_publication_id)
 
-message(sprintf("sheets: %d files -> %d publications (%d dated by ICE's filename, %d by archive capture, %d date flags; current: %s); %d observation rows, %d unsigned",
+message(sprintf("sheets: %d files -> %d publications (%d dated by ICE's filename, %d by ICE's Last-Modified, %d by archive capture, %d date flags; current: %s); %d observation rows, %d unsigned",
                 nrow(file_meta), nrow(publications), sum(publications$published_on_source == "ice_filename"),
+                sum(publications$published_on_source == "ice_last_modified"),
                 sum(publications$published_on_source == "archive_capture"), sum(!is.na(publications$date_flag)),
                 publications$publication_id[publications$is_current],
                 nrow(observations), sum(is.na(observations$signed))))
