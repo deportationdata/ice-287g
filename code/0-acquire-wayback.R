@@ -174,7 +174,7 @@ run_backfill <- function(out_dir, queries, extra_stamps) {
 
     links <- html |> html_elements("a") |> html_attr("href")
     links <- links[!is.na(links)]
-    xl <- links[str_detect(links, regex("participatingAgencies[^\"]*\\.xlsx|file-download/download/public/\\d+",
+    xl <- links[str_detect(links, regex("participatingAgenc(?:y|ies)[^\"]*\\.xlsx|file-download/download/public/\\d+",
                                         ignore_case = TRUE))]
     if (length(xl) > 0) {
       xl_url <- xl[1]

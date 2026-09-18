@@ -76,7 +76,7 @@ jobs:
           # the archive. Any failure falls through to a full scrape.
           ua="Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36"
           url=$(curl -sL --retry 3 -A "$ua" "https://www.ice.gov/identify-and-arrest/287g" \
-            | grep -oiE 'href="[^"]*(participatingAgencies[^"]*\.xlsx|file-download/download/public/[0-9]+)[^"]*"' \
+            | grep -oiE 'href="[^"]*(participatingAgenc(y|ies)[^"]*\.xlsx|file-download/download/public/[0-9]+)[^"]*"' \
             | head -1 | sed 's/^href="//; s/"$//' || true)
           case "$url" in
             //*) url="https:$url" ;;

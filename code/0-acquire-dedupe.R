@@ -28,7 +28,7 @@ dedupe_scope_key <- function(base_path, file_path, file_hash) {
     name <- basename(file_path)
     day <- coalesce(
       as.Date(str_match(file_path, "sheets_(\\d{8})_\\d{6}")[, 2], format = "%Y%m%d"),
-      ice_filename_date(str_replace(name, regex("^(?:287g)?pendingAgencies", ignore_case = TRUE), "participatingAgencies")),
+      ice_filename_date(str_replace(name, regex("^(?:287g)?pendingAgenc(?:y|ies)", ignore_case = TRUE), "participatingAgencies")),
       as.Date(str_sub(str_match(name, "^(?:ice_287g_)?(?:pre\\d{4}_)?(\\d{14})")[, 2], 1, 8), format = "%Y%m%d")
     )
     scope <- if (is.na(day)) rel_path else format(day, "%Y-%m-%d")
