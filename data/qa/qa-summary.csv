@@ -1,33 +1,33 @@
 check,scope,value,expected,status
-agreements rows,all,2931,NA,info
-agreements active,all,2510,NA,info
-agreements removed,all,256,NA,info
+agreements rows,all,2961,NA,info
+agreements active,all,2539,NA,info
+agreements removed,all,257,NA,info
 agreements superseded,all,165,NA,info
-agreements == identities,all,2931,2931,pass
-agencies,all,2294,NA,info
-identities folding more than one spelling,all,37,NA,info
+agreements == identities,all,2961,2961,pass
+agencies,all,2317,NA,info
+identities folding more than one spelling,all,38,NA,info
 identities by resolution,alias,17,NA,info
 identities by resolution,date_corrected,70,NA,info
-identities by resolution,exact,2808,NA,info
-identities by resolution,modifier,4,NA,info
+identities by resolution,exact,2837,NA,info
+identities by resolution,modifier,5,NA,info
 identities by resolution,relabel,4,NA,info
 identities by resolution,typo,28,NA,info
 superseded agreements name a successor,all,0,0,pass
-sheet publications,all,454,NA,info
-sheet publications dated by ICE's filename,all,231,NA,info
+sheet publications,all,455,NA,info
+sheet publications dated by ICE's filename,all,232,NA,info
 sheet publications dated by an archive capture,all,223,NA,info
 sheet publications out of date order,all,0,0,pass
 sheet publications with a date flag,online before its ICE filename date,1,NA,info
 agreements absent from a publication inside their listing window,all,9,NA,info
 identity candidates awaiting a verdict,all,53,NA,info
-agencies across every era,all,2295,NA,info
+agencies across every era,all,2318,NA,info
 agencies by jurisdiction level,Campus,20,NA,info
 agencies by jurisdiction level,Constable District,48,NA,info
-agencies by jurisdiction level,County,1037,NA,info
+agencies by jurisdiction level,County,1050,NA,info
 agencies by jurisdiction level,Judicial District,11,NA,info
-agencies by jurisdiction level,Municipal,1068,NA,info
+agencies by jurisdiction level,Municipal,1077,NA,info
 agencies by jurisdiction level,Port,4,NA,info
-agencies by jurisdiction level,Regional,15,NA,info
+agencies by jurisdiction level,Regional,16,NA,info
 agencies by jurisdiction level,State,92,NA,info
 agencies added from ICE press releases,all,1,NA,info
 source claims,all,516,NA,info
@@ -43,43 +43,43 @@ agency disagreements by kind,date,16,NA,info
 agency disagreements by kind,model,1,NA,info
 agency disagreements by kind,presence,19,NA,info
 agency disagreements by kind,state,1,NA,info
-active agreements == newest sheet rows,all,2510,2510,pass
+active agreements == newest sheet rows,all,2539,2539,pass
 duplicate identity rows in agreements,all,0,0,pass
 distinct states in agreements,all,47,NA,info
-feature rows,all,4989,NA,info
-agreement-level rows == agreements rows,all,2931,2931,pass
+feature rows,all,5019,NA,info
+agreement-level rows == agreements rows,all,2961,2961,pass
 agreements with no feature row,all,0,0,pass
-feature rows by layer,county,686,NA,info
-feature rows by layer,facility,3045,NA,info
-feature rows by layer,municipal,1098,NA,info
+feature rows by layer,county,696,NA,info
+feature rows by layer,facility,3055,NA,info
+feature rows by layer,municipal,1108,NA,info
 feature rows by layer,pa_constable,23,NA,info
 feature rows by layer,precinct,48,NA,info
 feature rows by layer,state,69,NA,info
 feature rows by layer,university,20,NA,info
 empty-geometry features by layer,facility,9,NA,info
-empty-geometry features by layer,municipal,4,NA,info
+empty-geometry features by layer,municipal,6,NA,info
 empty-geometry features by layer,pa_constable,3,NA,info
 empty-geometry features by layer,precinct,48,NA,info
 empty-geometry features by layer,university,1,NA,info
-active features flagged needs_review,all,130,NA,info
-active features by match quality,exact,3698,NA,info
+active features flagged needs_review,all,132,NA,info
+active features by match quality,exact,3725,NA,info
 active features by match quality,exact_flagged,42,NA,info
 active features by match quality,fuzzy,7,NA,info
 active features by match quality,manual,99,NA,info
-active features by match quality,unmatched,52,NA,info
+active features by match quality,unmatched,54,NA,info
 active features by match quality,weak,11,NA,info
-active agreements flagged needs_review,all,114,NA,info
-active features with a pending MOA,all,585,NA,info
+active agreements flagged needs_review,all,116,NA,info
+active features with a pending MOA,all,614,NA,info
 active features with an addendum,all,93,NA,info
 county geoids outside the census county list,all,0,NA,info
 DOC agreements fanned out to state prisons,all,37,NA,info
-agreement-identifiers rows == agreements rows,all,2931,2931,pass
-active agreements with an ORI9,all,2392,NA,info
-ORI9 by source,crime,2562,NA,info
+agreement-identifiers rows == agreements rows,all,2961,2961,pass
+active agreements with an ORI9,all,2421,NA,info
+ORI9 by source,crime,2589,NA,info
 ORI9 by source,leaic,58,NA,info
-ORI9 by source,lear,100,NA,info
+ORI9 by source,lear,102,NA,info
 ORI9 by source,manual,62,NA,info
-ORI9 by source,none,149,NA,info
+ORI9 by source,none,150,NA,info
 malformed ORI9 values,all,0,0,pass
 ORI9 sentinel -1 shipped,all,0,0,pass
 ori_conflict flagged,all,24,NA,info
@@ -87,12 +87,12 @@ county_fips malformed or outside its state,all,0,0,pass
 Connecticut features carrying a legacy county fips,all,1,NA,info
 Connecticut features carrying a planning-region fips,all,0,0,pass
 placed features by geometry vintage,2021,2,NA,info
-placed features by geometry vintage,2024,1868,NA,info
+placed features by geometry vintage,2024,1886,NA,info
 placed features by geometry vintage,2026,18,NA,info
-placed features by geometry vintage,NA,3036,NA,info
-missing identifiers by type,missing_both,8,NA,info
-missing identifiers by type,missing_fips,44,NA,info
-missing identifiers by type,missing_ori,110,NA,info
+placed features by geometry vintage,NA,3046,NA,info
+missing identifiers by type,missing_both,9,NA,info
+missing identifiers by type,missing_fips,45,NA,info
+missing identifiers by type,missing_ori,109,NA,info
 distinct MOA urls on the sheet,all,2515,NA,info
 distinct MOA urls in agreements manifests,all,2951,NA,info
 agreements folders with outstanding failed downloads,all,0,0,pass

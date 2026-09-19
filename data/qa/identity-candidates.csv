@@ -1,54 +1,54 @@
 kind,state_key,support_key,signed,left_agency,right_agency,distance,pub_ratio,windows_overlap,left_n_pub,right_n_pub,suggested_relation
-identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,baker county sheriff office,bay county sheriff office,3,1,TRUE,383,383,distinct
-identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,baker county sheriff office,lake county sheriff office,2,1,TRUE,383,383,same
-identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,bay county sheriff office,lake county sheriff office,3,1,TRUE,383,383,distinct
-identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,columbia county sheriff office,volusia county sheriff office,3,1,TRUE,231,231,distinct
-identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,glades county sheriff office,lake county sheriff office,3,0.9956709956709957,TRUE,231,230,distinct
-identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,gulf county sheriff office,polk county sheriff office,3,1,TRUE,231,231,distinct
-identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,jackson county sheriff office,madison county sheriff office,3,1,TRUE,230,230,distinct
-identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,lake county sheriff office,leon county sheriff office,3,1,TRUE,383,383,distinct
-identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,leon county sheriff office,union county sheriff office,3,0.9956709956709957,TRUE,230,231,distinct
-identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,marion county sheriff office,union county sheriff office,3,0.9956709956709957,TRUE,230,231,distinct
-identity_near_dup,tennessee,TASK FORCE MODEL,2026-09-11,knox county sheriff office,union county sheriff office,3,1,TRUE,2,2,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-07-31,bailey county sheriff office,gaines county sheriff office,3,1,TRUE,168,168,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-08-28,bell county sheriff office,lee county sheriff office,3,1,TRUE,157,157,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-10-17,bexar county sheriff office,lamar county sheriff office,3,1,TRUE,140,140,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-10-17,comal county sheriff office,lamar county sheriff office,3,1,TRUE,140,140,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-10-17,comal county sheriff office,nolan county sheriff office,3,1,TRUE,140,140,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-08-28,ector county sheriff office,pecos county sheriff office,3,1,TRUE,157,157,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-08-28,ector county sheriff office,upton county sheriff office,3,1,TRUE,157,157,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-05-07,hill county sheriff office,polk county sheriff office,3,0.27014218009478674,TRUE,211,57,distinct
-identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-07-07,scurry county sheriff office,terry county sheriff office,3,0.15675675675675677,TRUE,29,185,distinct
-lineage_unlinked,alabama,TASK FORCE MODEL,2025-03-25,AL-franklin-county-sheriff-office#TFM#2025-03-25,AL-franklin-county-sheriff-office#TFM#2025-11-06,42,NA,FALSE,58,125,NA
-lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2026-04-05,AR-clark-county-sheriff-office#JEM#2026-04-05,AR-clark-county-sheriff-office#TFM#2026-08-24,1,NA,FALSE,50,8,NA
-lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2025-07-07,AR-little-river-county-sheriff-office#JEM#2025-07-07,AR-little-river-county-sheriff-office#TFM#2026-07-09,19,NA,FALSE,150,16,NA
-lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2026-03-31,AR-marion-county-sheriff-office#JEM#2026-03-31,AR-marion-county-sheriff-office#WSO#2026-05-09,6,NA,FALSE,11,43,NA
-lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2016-06-23,AR-washington-county-sheriff-office#JEM#2016-06-23,AR-washington-county-sheriff-office#WSO#2025-07-29,209,NA,FALSE,42,170,NA
+identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,baker county sheriff office,bay county sheriff office,3,1,TRUE,384,384,distinct
+identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,baker county sheriff office,lake county sheriff office,2,1,TRUE,384,384,same
+identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,bay county sheriff office,lake county sheriff office,3,1,TRUE,384,384,distinct
+identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,columbia county sheriff office,volusia county sheriff office,3,1,TRUE,232,232,distinct
+identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,glades county sheriff office,lake county sheriff office,3,0.9956896551724138,TRUE,232,231,distinct
+identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,gulf county sheriff office,polk county sheriff office,3,1,TRUE,232,232,distinct
+identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,jackson county sheriff office,madison county sheriff office,3,1,TRUE,231,231,distinct
+identity_near_dup,florida,WARRANT SERVICE OFFICER,2019-10-15,lake county sheriff office,leon county sheriff office,3,1,TRUE,384,384,distinct
+identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,leon county sheriff office,union county sheriff office,3,0.9956896551724138,TRUE,231,232,distinct
+identity_near_dup,florida,TASK FORCE MODEL,2025-02-26,marion county sheriff office,union county sheriff office,3,0.9956896551724138,TRUE,231,232,distinct
+identity_near_dup,tennessee,TASK FORCE MODEL,2026-09-11,knox county sheriff office,union county sheriff office,3,1,TRUE,3,3,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-07-31,bailey county sheriff office,gaines county sheriff office,3,1,TRUE,169,169,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-08-28,bell county sheriff office,lee county sheriff office,3,1,TRUE,158,158,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-10-17,bexar county sheriff office,lamar county sheriff office,3,1,TRUE,141,141,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-10-17,comal county sheriff office,lamar county sheriff office,3,1,TRUE,141,141,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-10-17,comal county sheriff office,nolan county sheriff office,3,1,TRUE,141,141,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-08-28,ector county sheriff office,pecos county sheriff office,3,1,TRUE,158,158,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-08-28,ector county sheriff office,upton county sheriff office,3,1,TRUE,158,158,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-05-07,hill county sheriff office,polk county sheriff office,3,0.2688679245283019,TRUE,212,57,distinct
+identity_near_dup,texas,WARRANT SERVICE OFFICER,2025-07-07,scurry county sheriff office,terry county sheriff office,3,0.15591397849462366,TRUE,29,186,distinct
+lineage_unlinked,alabama,TASK FORCE MODEL,2025-03-25,AL-franklin-county-sheriff-office#TFM#2025-03-25,AL-franklin-county-sheriff-office#TFM#2025-11-06,42,NA,FALSE,58,126,NA
+lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2026-04-05,AR-clark-county-sheriff-office#JEM#2026-04-05,AR-clark-county-sheriff-office#TFM#2026-08-24,1,NA,FALSE,50,9,NA
+lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2025-07-07,AR-little-river-county-sheriff-office#JEM#2025-07-07,AR-little-river-county-sheriff-office#TFM#2026-07-09,19,NA,FALSE,150,17,NA
+lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2026-03-31,AR-marion-county-sheriff-office#JEM#2026-03-31,AR-marion-county-sheriff-office#WSO#2026-05-09,6,NA,FALSE,11,44,NA
+lineage_unlinked,arkansas,JAIL ENFORCEMENT MODEL,2016-06-23,AR-washington-county-sheriff-office#JEM#2016-06-23,AR-washington-county-sheriff-office#WSO#2025-07-29,209,NA,FALSE,42,171,NA
 lineage_unlinked,california,JAIL ENFORCEMENT MODEL,2005-11-19,CA-san-bernardino-county-sheriff-office#JEM#2005-11-19,CA-san-bernardino-county-sheriff-office#JEM#2013-10-11,2,NA,FALSE,20,1,NA
-lineage_unlinked,florida,TASK FORCE MODEL,2008-06-15,FL-bay-county-sheriff-office#TFM#2008-06-15,FL-bay-county-sheriff-office#WSO#2019-10-15,53,NA,FALSE,16,383,NA
-lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2008-08-13,FL-brevard-county-sheriff-office#JEM#2008-08-13,FL-brevard-county-sheriff-office#WSO#2019-05-06,54,NA,FALSE,5,393,NA
-lineage_unlinked,florida,TASK FORCE MODEL,2002-07-02,FL-department-of-law-enforcement#TFM#2002-07-02,FL-department-of-law-enforcement#TFM#2025-02-14,205,NA,FALSE,18,231,NA
-lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2008-07-08,FL-manatee-county-sheriff-office#JEM#2008-07-08,FL-manatee-county-sheriff-office#WSO#2019-05-06,54,NA,FALSE,5,393,NA
-lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2020-06-10,FL-pasco-county-sheriff-office#JEM#2020-06-10,FL-pasco-county-sheriff-office#TFM#2025-02-26,76,NA,FALSE,74,230,NA
-lineage_unlinked,georgia,TASK FORCE MODEL,2007-07-27,GA-department-of-public-safety#TFM#2007-07-27,GA-department-of-public-safety#TFM#2025-03-10,209,NA,FALSE,18,227,NA
-lineage_unlinked,louisiana,JAIL ENFORCEMENT MODEL,2020-06-08,LA-ouachita-parish-sheriff-office#JEM#2020-06-08,LA-ouachita-parish-sheriff-office#WSO#2025-07-02,122,NA,FALSE,69,188,NA
+lineage_unlinked,florida,TASK FORCE MODEL,2008-06-15,FL-bay-county-sheriff-office#TFM#2008-06-15,FL-bay-county-sheriff-office#WSO#2019-10-15,53,NA,FALSE,16,384,NA
+lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2008-08-13,FL-brevard-county-sheriff-office#JEM#2008-08-13,FL-brevard-county-sheriff-office#WSO#2019-05-06,54,NA,FALSE,5,394,NA
+lineage_unlinked,florida,TASK FORCE MODEL,2002-07-02,FL-department-of-law-enforcement#TFM#2002-07-02,FL-department-of-law-enforcement#TFM#2025-02-14,205,NA,FALSE,18,232,NA
+lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2008-07-08,FL-manatee-county-sheriff-office#JEM#2008-07-08,FL-manatee-county-sheriff-office#WSO#2019-05-06,54,NA,FALSE,5,394,NA
+lineage_unlinked,florida,JAIL ENFORCEMENT MODEL,2020-06-10,FL-pasco-county-sheriff-office#JEM#2020-06-10,FL-pasco-county-sheriff-office#TFM#2025-02-26,76,NA,FALSE,74,231,NA
+lineage_unlinked,georgia,TASK FORCE MODEL,2007-07-27,GA-department-of-public-safety#TFM#2007-07-27,GA-department-of-public-safety#TFM#2025-03-10,209,NA,FALSE,18,228,NA
+lineage_unlinked,louisiana,JAIL ENFORCEMENT MODEL,2020-06-08,LA-ouachita-parish-sheriff-office#JEM#2020-06-08,LA-ouachita-parish-sheriff-office#WSO#2025-07-02,122,NA,FALSE,69,189,NA
 lineage_unlinked,massachusetts,JAIL ENFORCEMENT MODEL,2007-08-25,MA-barnstable-county-sheriff-office#JEM#2007-08-25,MA-barnstable-county-sheriff-office#JEM#2018-01-25,40,NA,FALSE,6,28,NA
 lineage_unlinked,massachusetts,JAIL ENFORCEMENT MODEL,2014-05-21,MA-department-of-correction#JEM#2014-05-21,MA-department-of-correction#JEM#2014-04-22,2,NA,FALSE,1,7,NA
-lineage_unlinked,missouri,JAIL ENFORCEMENT MODEL,2025-12-02,MO-callaway-county-sheriff-office#JEM#2025-12-02,MO-callaway-county-sheriff-office#TFM#2026-06-23,2,NA,FALSE,89,21,NA
-lineage_unlinked,nevada,JAIL ENFORCEMENT MODEL,2019-06-03,NV-las-vegas-metropolitan-police-department#JEM#2019-06-03,NV-las-vegas-metropolitan-police-department#WSO#2025-06-16,183,NA,FALSE,10,196,NA
-lineage_unlinked,nevada,JAIL ENFORCEMENT MODEL,2018-05-04,NV-lyon-county-sheriff-office#JEM#2018-05-04,NV-lyon-county-sheriff-office#JEM#2025-06-03,178,NA,FALSE,26,201,NA
-lineage_unlinked,northcarolina,JAIL ENFORCEMENT MODEL,2007-01-10,NC-alamance-county-sheriff-office#JEM#2007-01-10,NC-alamance-county-sheriff-office#WSO#2020-05-21,56,NA,FALSE,17,381,NA
-lineage_unlinked,northcarolina,JAIL ENFORCEMENT MODEL,2026-02-10,NC-person-county-sheriff-office#JEM#2026-02-10,NC-person-county-sheriff-office#WSO#2026-04-13,1,NA,FALSE,20,56,NA
-lineage_unlinked,ohio,JAIL ENFORCEMENT MODEL,2020-06-09,OH-butler-county-sheriff-office#JEM#2020-06-09,OH-butler-county-sheriff-office#JEM#2025-02-24,94,NA,FALSE,54,231,NA
-lineage_unlinked,pennsylvania,WARRANT SERVICE OFFICER,2025-05-22,PA-butler-county-sheriff-office#WSO#2025-05-22,PA-butler-county-sheriff-office#TFM#2025-06-12,3,NA,FALSE,6,197,NA
-lineage_unlinked,southcarolina,TASK FORCE MODEL,2008-06-25,SC-beaufort-county-sheriff-office#TFM#2008-06-25,SC-beaufort-county-sheriff-office#TFM#2025-07-31,268,NA,FALSE,16,168,NA
-lineage_unlinked,southcarolina,JAIL ENFORCEMENT MODEL,2020-06-09,SC-charleston-county-sheriff-office#JEM#2020-06-09,SC-charleston-county-sheriff-office#WSO#2025-03-10,146,NA,FALSE,6,227,NA
-lineage_unlinked,southcarolina,TASK FORCE MODEL,2026-03-11,SC-jamestown-police-department#TFM#2026-03-11,SC-jamestown-police-department#TFM#2026-07-22,26,NA,FALSE,31,11,NA
-lineage_unlinked,texas,JAIL ENFORCEMENT MODEL,2025-09-09,TX-henderson-county-sheriff-office#JEM#2025-09-09,TX-henderson-county-sheriff-office#TFM#2026-07-20,117,NA,FALSE,23,12,NA
-lineage_unlinked,texas,JAIL ENFORCEMENT MODEL,2020-05-04,TX-williamson-county-sheriff-office#JEM#2020-05-04,TX-williamson-county-sheriff-office#WSO#2025-09-22,225,NA,FALSE,7,148,NA
-lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2025-06-11,UT-sanpete-county-sheriff-office#JEM#2025-06-11,UT-sanpete-county-sheriff-office#WSO#2025-11-20,4,NA,FALSE,75,118,NA
-lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2008-09-22,UT-washington-county-sheriff-office#JEM#2008-09-22,UT-washington-county-sheriff-office#JEM#2025-03-21,211,NA,FALSE,14,225,NA
-lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2013-06-27,UT-weber-county-sheriff-office#JEM#2013-06-27,UT-weber-county-sheriff-office#TFM#2025-07-02,242,NA,FALSE,4,188,NA
-lineage_unlinked,virginia,TASK FORCE MODEL,2008-06-25,VA-loudoun-county-sheriff-office#TFM#2008-06-25,VA-loudoun-county-sheriff-office#WSO#2025-03-26,214,NA,FALSE,16,222,NA
-lineage_unlinked,virginia,JAIL ENFORCEMENT MODEL,2013-06-28,VA-shenandoah-county-sheriff-office#JEM#2013-06-28,VA-shenandoah-county-sheriff-office#TFM#2025-04-14,218,NA,FALSE,3,213,NA
-lineage_unlinked,wisconsin,WARRANT SERVICE OFFICER,2025-06-12,WI-walworth-county-sheriff-office#WSO#2025-06-12,WI-walworth-county-sheriff-office#WSO#2026-02-17,112,NA,FALSE,11,74,NA
+lineage_unlinked,missouri,JAIL ENFORCEMENT MODEL,2025-12-02,MO-callaway-county-sheriff-office#JEM#2025-12-02,MO-callaway-county-sheriff-office#TFM#2026-06-23,2,NA,FALSE,89,22,NA
+lineage_unlinked,nevada,JAIL ENFORCEMENT MODEL,2019-06-03,NV-las-vegas-metropolitan-police-department#JEM#2019-06-03,NV-las-vegas-metropolitan-police-department#WSO#2025-06-16,183,NA,FALSE,10,197,NA
+lineage_unlinked,nevada,JAIL ENFORCEMENT MODEL,2018-05-04,NV-lyon-county-sheriff-office#JEM#2018-05-04,NV-lyon-county-sheriff-office#JEM#2025-06-03,178,NA,FALSE,26,202,NA
+lineage_unlinked,northcarolina,JAIL ENFORCEMENT MODEL,2007-01-10,NC-alamance-county-sheriff-office#JEM#2007-01-10,NC-alamance-county-sheriff-office#WSO#2020-05-21,56,NA,FALSE,17,382,NA
+lineage_unlinked,northcarolina,JAIL ENFORCEMENT MODEL,2026-02-10,NC-person-county-sheriff-office#JEM#2026-02-10,NC-person-county-sheriff-office#WSO#2026-04-13,1,NA,FALSE,20,57,NA
+lineage_unlinked,ohio,JAIL ENFORCEMENT MODEL,2020-06-09,OH-butler-county-sheriff-office#JEM#2020-06-09,OH-butler-county-sheriff-office#JEM#2025-02-24,94,NA,FALSE,54,232,NA
+lineage_unlinked,pennsylvania,WARRANT SERVICE OFFICER,2025-05-22,PA-butler-county-sheriff-office#WSO#2025-05-22,PA-butler-county-sheriff-office#TFM#2025-06-12,3,NA,FALSE,6,198,NA
+lineage_unlinked,southcarolina,TASK FORCE MODEL,2008-06-25,SC-beaufort-county-sheriff-office#TFM#2008-06-25,SC-beaufort-county-sheriff-office#TFM#2025-07-31,268,NA,FALSE,16,169,NA
+lineage_unlinked,southcarolina,JAIL ENFORCEMENT MODEL,2020-06-09,SC-charleston-county-sheriff-office#JEM#2020-06-09,SC-charleston-county-sheriff-office#WSO#2025-03-10,146,NA,FALSE,6,228,NA
+lineage_unlinked,southcarolina,TASK FORCE MODEL,2026-03-11,SC-jamestown-police-department#TFM#2026-03-11,SC-jamestown-police-department#TFM#2026-07-22,26,NA,FALSE,31,12,NA
+lineage_unlinked,texas,JAIL ENFORCEMENT MODEL,2025-09-09,TX-henderson-county-sheriff-office#JEM#2025-09-09,TX-henderson-county-sheriff-office#TFM#2026-07-20,117,NA,FALSE,23,13,NA
+lineage_unlinked,texas,JAIL ENFORCEMENT MODEL,2020-05-04,TX-williamson-county-sheriff-office#JEM#2020-05-04,TX-williamson-county-sheriff-office#WSO#2025-09-22,225,NA,FALSE,7,149,NA
+lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2025-06-11,UT-sanpete-county-sheriff-office#JEM#2025-06-11,UT-sanpete-county-sheriff-office#WSO#2025-11-20,4,NA,FALSE,75,119,NA
+lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2008-09-22,UT-washington-county-sheriff-office#JEM#2008-09-22,UT-washington-county-sheriff-office#JEM#2025-03-21,211,NA,FALSE,14,226,NA
+lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2013-06-27,UT-weber-county-sheriff-office#JEM#2013-06-27,UT-weber-county-sheriff-office#TFM#2025-07-02,242,NA,FALSE,4,189,NA
+lineage_unlinked,virginia,TASK FORCE MODEL,2008-06-25,VA-loudoun-county-sheriff-office#TFM#2008-06-25,VA-loudoun-county-sheriff-office#WSO#2025-03-26,214,NA,FALSE,16,223,NA
+lineage_unlinked,virginia,JAIL ENFORCEMENT MODEL,2013-06-28,VA-shenandoah-county-sheriff-office#JEM#2013-06-28,VA-shenandoah-county-sheriff-office#TFM#2025-04-14,218,NA,FALSE,3,214,NA
+lineage_unlinked,wisconsin,WARRANT SERVICE OFFICER,2025-06-12,WI-walworth-county-sheriff-office#WSO#2025-06-12,WI-walworth-county-sheriff-office#WSO#2026-02-17,112,NA,FALSE,11,75,NA
