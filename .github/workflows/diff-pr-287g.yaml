@@ -88,7 +88,13 @@ jobs:
       - name: Restore the diff script's packages from renv.lock
         env:
           RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/latest
-        run: Rscript -e 'renv::restore(packages = c("arrow", "dplyr", "tidyr", "stringr"))'
+        # some renv.lock records name the Posit URL itself as their repository; renv
+        # fetches those as source (arrow alone compiles for 19 minutes). Recorded as
+        # "CRAN" they resolve through the override above, which serves Linux binaries.
+        run: |
+          sed 's#"Repository": "https://packagemanager.posit.co/cran/latest"#"Repository": "CRAN"#' \
+            renv.lock > "$RUNNER_TEMP/diff-renv.lock"
+          Rscript -e 'renv::restore(lockfile = file.path(Sys.getenv("RUNNER_TEMP"), "diff-renv.lock"), packages = c("arrow", "dplyr", "tidyr", "stringr"))'
 
       - name: Run diff script
         run: |
