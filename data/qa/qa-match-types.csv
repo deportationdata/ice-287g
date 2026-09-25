@@ -1,10 +1,10 @@
 match_layer,match_type,needs_review,n
-county,county_name,FALSE,657
+county,county_name,FALSE,660
 county,county_name,TRUE,2
 county,judicial_district_member_county,FALSE,37
 facility,doc_exact_state_prison_source,FALSE,1372
 facility,doc_manual_state_facility,FALSE,12
-facility,exact_county_pattern_all_facilities,FALSE,1328
+facility,exact_county_pattern_all_facilities,FALSE,1333
 facility,exact_county_pattern_all_facilities,TRUE,2
 facility,exact_municipal_pattern_facility,FALSE,7
 facility,exact_operator_facility,FALSE,230
@@ -19,8 +19,8 @@ facility,unmatched_facility,TRUE,9
 municipal,cousub_name,FALSE,61
 municipal,cousub_name,TRUE,7
 municipal,manual_override,FALSE,3
-municipal,place_name,FALSE,942
-municipal,place_name,TRUE,34
+municipal,place_name,FALSE,953
+municipal,place_name,TRUE,35
 municipal,regional_member_municipality,FALSE,38
 municipal,regional_member_municipality,TRUE,17
 municipal,unmatched,TRUE,4
