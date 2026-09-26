@@ -20,6 +20,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 # never cancel a run mid-scrape; a newer tick queues behind it
 concurrency:
@@ -233,6 +234,29 @@ jobs:
           fi
           echo "pr_number=${pr_num}" >> "$GITHUB_OUTPUT"
 
+      # a failed run leaves the branch's datasets stale: Friday 2026-09-25's sheet
+      # reached main through a PR whose build never ran. Look the PR up by branch,
+      # since the step that records its number may be the one that failed.
+      - name: Flag the update PR when this run fails
+        if: failure() && steps.update_branch.outputs.branch != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_num=$(gh pr list --state open --head "${{ steps.update_branch.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          if [ -z "$pr_num" ]; then
+            echo "No open update PR to flag."
+            exit 0
+          fi
+          gh api "repos/${{ github.repository }}/labels" -f name="run failed" -f color=d73a4a \
+            -f description="The latest scrape run failed; the datasets may be stale" >/dev/null 2>&1 || true
+          gh api "repos/${{ github.repository }}/issues/$pr_num/labels" -f "labels[]=run failed" --silent
+          gh pr comment "$pr_num" --body "🛑 **Do not merge: the scrape run failed while acquiring, so this branch's datasets were not rebuilt.**
+
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Later runs skip an unchanged sheet, so they will not rebuild it. Fix the failure, rebuild with \`bash code/run_all.sh\`, push to this branch, then remove the **run failed** label."
+
       - name: Clean up temp files
         if: always()
         run: rm -f "$RUNNER_TEMP"/sheet-check.xlsx "$RUNNER_TEMP"/287g-changes.txt "$RUNNER_TEMP"/pr-body*.txt
@@ -344,10 +368,38 @@ jobs:
             -f event_type=diff-pr \
             -F "client_payload[pr_number]=${{ needs.acquire.outputs.pr_number }}"
 
-      - name: Report a failed build on the PR
-        if: failure() && needs.acquire.outputs.pr_number != ''
+      - name: Flag the update PR when the build fails
+        if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment "${{ needs.acquire.outputs.pr_number }}" --body \
-            "Data build failed at $(git rev-parse --short HEAD); the raw snapshot is committed on this branch. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          pr_num=$(gh pr list --state open --head "${{ needs.acquire.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          if [ -z "$pr_num" ]; then
+            echo "No open update PR to flag."
+            exit 0
+          fi
+          gh api "repos/${{ github.repository }}/labels" -f name="run failed" -f color=d73a4a \
+            -f description="The latest scrape run failed; the datasets may be stale" >/dev/null 2>&1 || true
+          gh api "repos/${{ github.repository }}/issues/$pr_num/labels" -f "labels[]=run failed" --silent
+          gh pr comment "$pr_num" --body "🛑 **Do not merge: the data build failed, so this branch's datasets are stale.**
+
+          The raw snapshot is committed on this branch at $(git rev-parse --short HEAD). Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Later runs skip an unchanged sheet, so they will not rebuild it. Fix the failure, rebuild with \`bash code/run_all.sh\`, push to this branch, then remove the **run failed** label."
+
+      # a successful rebuild clears a flag an earlier failed run left
+      - name: Clear the failure flag after a successful build
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_num=$(gh pr list --state open --head "${{ needs.acquire.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          [ -n "$pr_num" ] || exit 0
+          flagged=$(gh api "repos/${{ github.repository }}/issues/$pr_num/labels" \
+            --jq 'any(.[]; .name == "run failed")')
+          if [ "$flagged" = "true" ]; then
+            gh api -X DELETE "repos/${{ github.repository }}/issues/$pr_num/labels/run%20failed" --silent
+            gh pr comment "$pr_num" --body "✅ **The data build succeeded, so this branch's datasets are current. The earlier failure flag is cleared.**"
+          fi
