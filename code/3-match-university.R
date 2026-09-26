@@ -51,7 +51,7 @@ university_sf <- agreements |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "university" |
-      (geometry_type == "polygon" & jurisdiction_level == "Campus" & is.na(manual_match_layer))
+      (geometry_type == "Polygon" & jurisdiction_level == "Campus" & is.na(manual_match_layer))
   ) |>
   mutate(
     manual_university_match = if_else(

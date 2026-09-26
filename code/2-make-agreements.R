@@ -73,7 +73,7 @@ active <- observations |>
   left_join(links, by = "sheet_row") |>
   arrange(sheet_row) |>
   distinct(agreement_id, .keep_all = TRUE) |>
-  transmute(agreement_id, status = "active", state,
+  transmute(agreement_id, status = "Active", state,
             raw_agency, raw_type, raw_county, raw_support, raw_moa,
             signed, moa_link, addendum_link)
 
@@ -81,7 +81,7 @@ active <- observations |>
 # workbook's links come from the workbook the agreement was last seen in, and an
 # archived page's table already carries the href in its MOA cell
 last_seen <- identities |>
-  filter(status != "active") |>
+  filter(status != "Active") |>
   select(agreement_id, pub_seq = last_seq) |>
   inner_join(publications |> select(publication_id, pub_seq), by = "pub_seq") |>
   inner_join(observation_ids |> select(publication_id, sheet_row, agreement_id), by = c("publication_id", "agreement_id")) |>
@@ -95,7 +95,7 @@ gone_links <- last_seen |>
   inner_join(last_seen |> select(agreement_id, path, sheet_row), by = c("path", "sheet_row")) |>
   select(agreement_id, moa_link, addendum_link)
 gone <- identities |>
-  filter(status != "active") |>
+  filter(status != "Active") |>
   left_join(gone_links, by = "agreement_id") |>
   transmute(agreement_id, status, state,
             raw_agency = raw_agency_last, raw_type = raw_type_last, raw_county = raw_county_last,
@@ -214,16 +214,16 @@ agreements <- agreements |>
     jurisdiction_level = coalesce(manual_level, name_level, type_level,
                                   na_if(str_to_title(agency_level_from_name(agency, state)), "Unknown")),
     jurisdiction_level_source = case_when(
-      !is.na(manual_level) ~ "manual",
-      !is.na(name_level) ~ "name_rule",
-      !is.na(type_level) ~ "ice_type",
-      !is.na(jurisdiction_level) ~ "agency_name",
+      !is.na(manual_level) ~ "Manual list",
+      !is.na(name_level) ~ "Name pattern",
+      !is.na(type_level) ~ "ICE type",
+      !is.na(jurisdiction_level) ~ "Name, no ICE type",
       TRUE ~ NA_character_
     ),
     # jail models are a point at the jail; a task force is the body's territory
     geometry_type = case_when(
-      support_clean %in% c("jail enforcement model", "warrant service officer", "jail & task force") ~ "point",
-      support_clean == "task force model" & !is.na(jurisdiction_level) ~ "polygon",
+      support_clean %in% c("jail enforcement model", "warrant service officer", "jail & task force") ~ "Point",
+      support_clean == "task force model" & !is.na(jurisdiction_level) ~ "Polygon",
       TRUE ~ NA_character_
     )
   ) |>
@@ -253,7 +253,7 @@ stopifnot(
     setequal(agreements$agreement_id, identities$agreement_id) && !anyDuplicated(agreements$agreement_id),
   "every agreement carries an agency_id" = !anyNA(agreements$agency_id),
   "active agreements must be exactly the current publication's signed identities" =
-    sum(agreements$status == "active") ==
+    sum(agreements$status == "Active") ==
       n_distinct(observation_ids$agreement_id[observation_ids$publication_id == current_id & !is.na(observation_ids$agreement_id)])
 )
 
@@ -272,5 +272,5 @@ n_link_fixed <- agreements |>
 message(sprintf("MOA links: %d pending agreements take a held PDF, %d take inputs/moa-link-fixes.csv; %d still pending",
                 nrow(pending_held), n_link_fixed, sum(agreements$moa == "pending", na.rm = TRUE)))
 message(sprintf("agreements: %d (%d active, %d superseded, %d removed)",
-                nrow(agreements), sum(agreements$status == "active"),
-                sum(agreements$status == "superseded"), sum(agreements$status == "removed")))
+                nrow(agreements), sum(agreements$status == "Active"),
+                sum(agreements$status == "Superseded"), sum(agreements$status == "Removed")))

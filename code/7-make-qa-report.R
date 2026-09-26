@@ -34,7 +34,7 @@ disagree <- read_csv(
 features <- all_sf |>
   mutate(empty = st_is_empty(geometry)) |>
   st_drop_geometry()
-active_features <- features |> filter(status == "active")
+active_features <- features |> filter(status == "Active")
 
 # the newest participating sheet is the ground truth for the active count
 newest_sheet <- newest_sheet_snapshot()
@@ -82,9 +82,9 @@ check <- function(check, value, expected = NA, scope = "all") {
 
 summary <- bind_rows(
   check("agreements rows", nrow(agreements)),
-  check("agreements active", sum(agreements$status == "active")),
-  check("agreements removed", sum(agreements$status == "removed")),
-  check("agreements superseded", sum(agreements$status == "superseded")),
+  check("agreements active", sum(agreements$status == "Active")),
+  check("agreements removed", sum(agreements$status == "Removed")),
+  check("agreements superseded", sum(agreements$status == "Superseded")),
   check("agreements == identities", nrow(agreements), nrow(identities)),
   check("agencies", n_distinct(agreements$agency_id)),
   check(
@@ -99,17 +99,17 @@ summary <- bind_rows(
     list_rbind(),
   check(
     "superseded agreements name a successor",
-    sum(agreements$status == "superseded" & is.na(agreements$succeeded_by)),
+    sum(agreements$status == "Superseded" & is.na(agreements$succeeded_by)),
     0
   ),
   check("sheet publications", nrow(pubs)),
   check(
     "sheet publications dated by ICE's filename",
-    sum(pubs$published_on_source == "ice_filename")
+    sum(pubs$published_on_source == "ICE filename")
   ),
   check(
     "sheet publications dated by ICE's Last-Modified",
-    sum(pubs$published_on_source == "ice_last_modified")
+    sum(pubs$published_on_source == "ICE Last-Modified")
   ),
   # 1 when ICE has changed its filename again
   check(
@@ -118,7 +118,7 @@ summary <- bind_rows(
   ),
   check(
     "sheet publications dated by an archive capture",
-    sum(pubs$published_on_source == "archive_capture")
+    sum(pubs$published_on_source == "Archive capture")
   ),
   check(
     "sheet publications out of date order",
@@ -172,7 +172,7 @@ summary <- bind_rows(
     list_rbind(),
   check(
     "active agreements == newest sheet rows",
-    sum(agreements$status == "active"),
+    sum(agreements$status == "Active"),
     newest_rows
   ),
   check(
@@ -246,7 +246,7 @@ summary <- bind_rows(
     sum(
       !is.na(ids$ORI9[
         ids$agreement_id %in%
-          agreements$agreement_id[agreements$status == "active"]
+          agreements$agreement_id[agreements$status == "Active"]
       ])
     )
   ),

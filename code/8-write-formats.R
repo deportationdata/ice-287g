@@ -54,7 +54,7 @@ stopifnot(
 tibble(shapefile_field = names(st_drop_geometry(agreements_shp)), field = names(agreements)) |>
   write_csv(file.path(shp_dir, "fields.csv"))
 
-layers <- c(point = "MULTIPOINT", polygon = "MULTIPOLYGON")
+layers <- c(Point = "MULTIPOINT", Polygon = "MULTIPOLYGON")
 stopifnot(
   "every agreement is in exactly one shapefile layer" =
     sum(agreements_sf$geometry_type %in% names(layers)) == nrow(agreements_sf)
@@ -64,7 +64,7 @@ for (type in names(layers)) {
     filter(geom_type == type) |>
     st_cast(layers[[type]]) |>
     st_write(
-      file.path(shp_dir, paste0("agreements-", type, "s.shp")),
+      file.path(shp_dir, paste0("agreements-", tolower(type), "s.shp")),
       layer_options = "ENCODING=UTF-8",
       quiet = TRUE
     )

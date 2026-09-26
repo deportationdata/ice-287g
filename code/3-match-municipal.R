@@ -163,7 +163,7 @@ stopifnot(
 )
 
 regional_sf <- agreements |>
-  filter(geometry_type == "polygon", jurisdiction_level == "Regional") |>
+  filter(geometry_type == "Polygon", jurisdiction_level == "Regional") |>
   inner_join(regional_members, by = c("agency", "state", "county")) |>
   st_as_sf() |>
   transmute(
@@ -189,7 +189,7 @@ stopifnot(
 # a regional body with no member list rides along unplaced, saying why, rather than being
 # read as a town by the city matcher
 regional_unmatched <- agreements |>
-  filter(geometry_type == "polygon", jurisdiction_level == "Regional") |>
+  filter(geometry_type == "Polygon", jurisdiction_level == "Regional") |>
   anti_join(regional_members, by = c("agency", "state", "county")) |>
   transmute(
     agreement_id,
@@ -221,7 +221,7 @@ municipal_base <- agreements |>
   ) |>
   # exact complement of 3-match-pa-constable.R's inclusion filter; constables must not land here
   filter(
-    !(state == "Pennsylvania" & geometry_type == "polygon" & jurisdiction_level == "Municipal" &
+    !(state == "Pennsylvania" & geometry_type == "Polygon" & jurisdiction_level == "Municipal" &
       str_detect(
         str_to_lower(agency),
         "\\bconstables?\\b"
@@ -230,7 +230,7 @@ municipal_base <- agreements |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "municipal" |
-      (geometry_type == "polygon" & jurisdiction_level == "Municipal" & is.na(manual_match_layer))
+      (geometry_type == "Polygon" & jurisdiction_level == "Municipal" & is.na(manual_match_layer))
   ) |>
   mutate(
     manual_city_match = if_else(

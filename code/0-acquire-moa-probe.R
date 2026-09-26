@@ -34,7 +34,7 @@ pending <- if (nzchar(ids)) {
 } else {
   # a pending agreement whose PDF is already held no longer reads as pending (2-make-agreements.R)
   agreements |>
-    filter(status == "active", moa == "pending", first_appeared <= Sys.Date() - min_days)
+    filter(status == "Active", moa == "pending", first_appeared <= Sys.Date() - min_days)
 }
 pending <- pending |>
   mutate(model = support_abbr(norm_support_key(support_type))) |>

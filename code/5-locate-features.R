@@ -47,7 +47,7 @@ stopifnot(
   ),
   "the facility layer holds exactly the facility-point agreements" = setequal(
     facility_sf$agreement_id,
-    agreements$agreement_id[agreements$geometry_type %in% "point"]
+    agreements$agreement_id[agreements$geometry_type %in% "Point"]
   )
 )
 
@@ -63,12 +63,12 @@ features_sf <-
     # the census unit a placed feature is; a jail, campus or airport is none
     geoid_type = case_when(
       is.na(geoid) ~ NA_character_,
-      match_layer == "state" ~ "state",
-      match_layer == "county" ~ "county",
-      match_type == "lrc_ward" ~ "pa_ward",
-      match_type == "lrc_voting_district" ~ "pa_voting_district",
-      match_layer == "municipal" & nchar(geoid) == 7 ~ "place",
-      match_layer == "municipal" & nchar(geoid) == 10 ~ "county_subdivision"
+      match_layer == "state" ~ "State",
+      match_layer == "county" ~ "County",
+      match_type == "lrc_ward" ~ "PA ward",
+      match_type == "lrc_voting_district" ~ "PA voting district",
+      match_layer == "municipal" & nchar(geoid) == 7 ~ "Place",
+      match_layer == "municipal" & nchar(geoid) == 10 ~ "County subdivision"
     )
   )
 stopifnot(
@@ -92,9 +92,9 @@ places_ref <- bind_rows(
     # NAMELSAD is the name plus its type; a consolidated city-county has it in the name and a blank LSAD
     place_type = str_squish(str_remove(place_type, fixed(place))),
     place_type = case_when(
-      nchar(place_geoid) == 7 & lsad == "00" ~ "consolidated city-county",
+      nchar(place_geoid) == 7 & lsad == "00" ~ "Consolidated city-county",
       place_type == "CDP" ~ place_type,
-      TRUE ~ na_if(str_to_lower(place_type), "")
+      TRUE ~ na_if(str_to_sentence(place_type), "")
     ),
     .rank = if_else(
       (str_sub(place_geoid, 1, 2) %in% new_england_fips) == (nchar(place_geoid) == 10),
@@ -131,14 +131,14 @@ features_sf <- features_sf |> mutate(.row = row_number())
 placed <- features_sf |> filter(!st_is_empty(geometry))
 # every county holding over one percent of the feature, largest first
 county_around <- placed |>
-  filter(!geoid_type %in% c("state", "county", "county_subdivision")) |>
+  filter(!geoid_type %in% c("State", "County", "County subdivision")) |>
   surrounding(counties_ref |> select(county_fips)) |>
   filter(.share > 0.01) |>
   arrange(.row, desc(.share)) |>
   summarize(county_fips_around = paste(county_fips, collapse = "; "), .by = .row)
 # the place holding most of the feature; ties go to the reference's .rank
 place_around <- placed |>
-  filter(!geoid_type %in% c("state", "county", "county_subdivision", "place")) |>
+  filter(!geoid_type %in% c("State", "County", "County subdivision", "Place")) |>
   surrounding(places_ref |> select(place_geoid, .rank)) |>
   arrange(.row, desc(.share), .rank) |>
   slice_head(n = 1, by = .row) |>
@@ -153,15 +153,15 @@ features_sf <- features_sf |>
     # the layer's own county stays beside the census one for the QA report
     layer_county_fips = county_fips,
     county_fips = case_when(
-      geoid_type == "state" ~ NA_character_,
-      geoid_type == "county" ~ geoid,
-      geoid_type == "county_subdivision" ~ str_sub(geoid, 1, 5),
+      geoid_type == "State" ~ NA_character_,
+      geoid_type == "County" ~ geoid,
+      geoid_type == "County subdivision" ~ str_sub(geoid, 1, 5),
       TRUE ~ coalesce(county_fips_around, county_fips)
     ),
     county = str_replace_all(county_fips, "[0-9]{5}", \(code) county_names[code]),
     place_geoid = case_when(
-      geoid_type %in% c("place", "county_subdivision") ~ geoid,
-      geoid_type %in% c("state", "county") ~ NA_character_,
+      geoid_type %in% c("Place", "County subdivision") ~ geoid,
+      geoid_type %in% c("State", "County") ~ NA_character_,
       TRUE ~ place_geoid_around
     )
   ) |>

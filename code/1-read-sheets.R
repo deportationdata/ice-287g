@@ -269,9 +269,9 @@ publications <- publications |>
       TRUE ~ captured_on
     ),
     published_on_source = case_when(
-      coalesce(published_on == ice_date, FALSE) ~ "ice_filename",
-      is.na(ice_date) & !is.na(modified_on) ~ "ice_last_modified",
-      TRUE ~ "archive_capture"
+      coalesce(published_on == ice_date, FALSE) ~ "ICE filename",
+      is.na(ice_date) & !is.na(modified_on) ~ "ICE Last-Modified",
+      TRUE ~ "Archive capture"
     )
   ) |>
   arrange(published_on, case_when(ice_part == "am" ~ 1L, ice_part == "pm" ~ 3L, TRUE ~ 2L), captured_at, file_hash) |>
@@ -314,7 +314,7 @@ first_listed <- observations |>
   arrange(published_on) |>
   summarise(first_on = first(published_on), first_source = first(published_on_source), .by = c(state, k, support_key, signed))
 year_typos <- first_listed |>
-  filter(first_source == "ice_filename", as.numeric(first_on - signed) > 300) |>
+  filter(first_source == "ICE filename", as.numeric(first_on - signed) > 300) |>
   mutate(same_year = suppressWarnings(as.Date(sprintf("%d-%02d-%02d", year(first_on), month(signed), day(signed)))),
          year_before = same_year %m-% years(1),
          signed_year_fixed = case_when(
@@ -344,9 +344,9 @@ publications <- publications |>
          date_flag, source_kind, n_rows, n_unsigned, is_current, pub_seq, prev_publication_id)
 
 message(sprintf("sheets: %d files -> %d publications (%d dated by ICE's filename, %d by ICE's Last-Modified, %d by archive capture, %d date flags; current: %s); %d observation rows, %d unsigned",
-                nrow(file_meta), nrow(publications), sum(publications$published_on_source == "ice_filename"),
-                sum(publications$published_on_source == "ice_last_modified"),
-                sum(publications$published_on_source == "archive_capture"), sum(!is.na(publications$date_flag)),
+                nrow(file_meta), nrow(publications), sum(publications$published_on_source == "ICE filename"),
+                sum(publications$published_on_source == "ICE Last-Modified"),
+                sum(publications$published_on_source == "Archive capture"), sum(!is.na(publications$date_flag)),
                 publications$publication_id[publications$is_current],
                 nrow(observations), sum(is.na(observations$signed))))
 

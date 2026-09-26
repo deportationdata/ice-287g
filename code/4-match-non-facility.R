@@ -34,7 +34,7 @@ non_facility_layers$unknown <- agreements |>
   transmute(agreement_id, match_name = NA_character_, match_type = NA_character_, geometry_unmatched = TRUE) |>
   empty_layer()
 non_facility_layers$precinct <- agreements |>
-  filter(geometry_type == "polygon", jurisdiction_level == "Constable District") |>
+  filter(geometry_type == "Polygon", jurisdiction_level == "Constable District") |>
   transmute(agreement_id, match_name = NA_character_, match_type = "no_precinct_boundary_layer", geometry_unmatched = TRUE) |>
   empty_layer()
 

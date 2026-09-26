@@ -465,15 +465,17 @@ agreement_level_sf <- agreement_level_sf |>
     ),
     geoid_type = case_when(
       is.na(geoid) ~ NA_character_,
-      jurisdiction_level %in% "State" ~ "state",
-      jurisdiction_level %in% "County" ~ "county",
+      jurisdiction_level %in% "State" ~ "State",
+      jurisdiction_level %in% "County" ~ "County",
       !is.na(geoid_type) ~ geoid_type,
-      nchar(geoid) == 7 ~ "place",
-      nchar(geoid) == 10 ~ "county_subdivision"
+      nchar(geoid) == 7 ~ "Place",
+      nchar(geoid) == 10 ~ "County subdivision"
     )
   ) |>
   select(-ice_county_fips, -member_county_fips) |>
   arrange(desc(last_appeared), latest_sheet_row, agreement_id) |>
+  # the sheet's file name alone; its snapshot folder is in the url
+  mutate(latest_sheet = basename(latest_sheet)) |>
   select(
     # the agency, the agreement, its model and status, its dates, its MOA, where it is, its geography, then ICE's values as printed
     agency,
@@ -537,7 +539,7 @@ stopifnot(
     is.na(agreement_level_sf$geoid) == is.na(agreement_level_sf$geoid_type)
   ),
   "a county agency's geoid is one county" = !any(
-    agreement_level_sf$geoid_type %in% "county" & str_detect(agreement_level_sf$geoid, ";")
+    agreement_level_sf$geoid_type %in% "County" & str_detect(agreement_level_sf$geoid, ";")
   )
 )
 

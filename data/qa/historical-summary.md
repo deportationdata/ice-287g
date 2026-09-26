@@ -4,7 +4,7 @@ Source claims: **516** from 4 sources; 3 agencies no rule resolves (`data/interm
 
 | source | as of | agencies | listed | signing dates | unresolved |
 |---|---|---|---|---|---|
-| ice_archive_index | 2026-04-20 | 109 | 0 | 76 | 2 |
-| ice_lists | 2007-09-19, 2008-03-10 | 41 | 41 | 0 | 0 |
-| ice_press | 2006-12-13, 2007-01-11 | 1 | 0 | 1 | 0 |
-| oig_2009 | 2009-10-28 | 66 | 66 | 64 | 1 |
+| ICE archive index | 2026-04-20 | 109 | 0 | 76 | 2 |
+| ICE press release | 2006-12-13, 2007-01-11 | 1 | 0 | 1 | 0 |
+| ICE undated lists | 2007-09-19, 2008-03-10 | 41 | 41 | 0 | 0 |
+| OIG 2009 report | 2009-10-28 | 66 | 66 | 64 | 1 |

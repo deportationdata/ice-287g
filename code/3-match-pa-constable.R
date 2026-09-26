@@ -155,7 +155,7 @@ ward_lookup <- lrc_wards |>
 pa_constables <- arrow::read_parquet("data/intermediate/agreements.parquet") |>
   filter(
     state == "Pennsylvania",
-    geometry_type == "polygon",
+    geometry_type == "Polygon",
     jurisdiction_level == "Municipal",
     str_detect(str_to_lower(agency), "\\bconstables?\\b")
   ) |>

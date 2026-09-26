@@ -28,7 +28,7 @@ geography <- arrow::read_parquet(
 
 # only an agreement ICE announced in a press release may add an agency; every
 # other source attests to agencies ICE's sheets already carry
-MINTING_SOURCES <- "ice_press"
+MINTING_SOURCES <- "ICE press release"
 
 # --- claims: each source reduced to (state, agency, field, value, as_of) --------
 rd <- \(f) read_csv(f, col_types = cols(.default = "c"), progress = FALSE) |> mutate(row = row_number())
@@ -41,21 +41,21 @@ claim <- function(source_id, rows, field, value, value_date = as.Date(NA), as_of
 lists <- rd("data/intermediate/historical-ice-lists.csv")
 oig <- rd("data/intermediate/historical-oig-2009.csv")
 idx <- rd("data/intermediate/historical-ice-archive-index.csv")
-press <- rd(src("ice_press")$provenance_file)
+press <- rd(src("ICE press release")$provenance_file)
 stopifnot("press claim fields are signed, rescinded, listed or model" =
             all(press$field %in% c("signed", "rescinded", "listed", "model")))
 
 claims <- bind_rows(
-  claim("ice_lists", lists, "listed", "TRUE", as_of = lists$as_of,
+  claim("ICE undated lists", lists, "listed", "TRUE", as_of = lists$as_of,
         evidence = paste0("sheets/sheets_wayback_pre2011/", lists$capture, "_s3.html")),
-  claim("oig_2009", oig, if_else(oig$status == "pending", "pending", "listed"), "TRUE"),
+  claim("OIG 2009 report", oig, if_else(oig$status == "pending", "pending", "listed"), "TRUE"),
   oig |> filter(!is.na(date_signed_original)) |>
-    (\(r) claim("oig_2009", r, "signed", r$date_signed_original, value_date = r$date_signed_original))(),
-  oig |> filter(!is.na(model)) |> (\(r) claim("oig_2009", r, "model", r$model))(),
-  claim("ice_archive_index", idx, "moa_file", idx$moa_file),
+    (\(r) claim("OIG 2009 report", r, "signed", r$date_signed_original, value_date = r$date_signed_original))(),
+  oig |> filter(!is.na(model)) |> (\(r) claim("OIG 2009 report", r, "model", r$model))(),
+  claim("ICE archive index", idx, "moa_file", idx$moa_file),
   idx |> filter(!is.na(date_signed)) |>
-    (\(r) claim("ice_archive_index", r, "signed", r$date_signed, value_date = r$date_signed))(),
-  claim("ice_press", press, press$field, press$value,
+    (\(r) claim("ICE archive index", r, "signed", r$date_signed, value_date = r$date_signed))(),
+  claim("ICE press release", press, press$field, press$value,
         value_date = if_else(press$field %in% c("signed", "rescinded"), as.Date(press$value), as.Date(NA)),
         as_of = press$as_of, evidence = press$evidence)
 )
@@ -100,9 +100,9 @@ ice_record <- identities |>
   summarise(
     ice_listed_from = min(first_appeared), ice_listed_from_source = first_appeared_source[which.min(first_appeared)],
     ice_listed_to = max(last_appeared),
-    n_agreements = n(), n_active = sum(status == "active"),
-    removed_between_from = if (any(status == "active")) as.Date(NA) else max(last_appeared),
-    removed_between_to = if (any(status == "active")) as.Date(NA) else max(removed_by, na.rm = TRUE),
+    n_agreements = n(), n_active = sum(status == "Active"),
+    removed_between_from = if (any(status == "Active")) as.Date(NA) else max(last_appeared),
+    removed_between_to = if (any(status == "Active")) as.Date(NA) else max(removed_by, na.rm = TRUE),
     models = paste(unique(support_abbr(support_key)), collapse = "; "),
     model_history = paste(sprintf("%s %s", support_abbr(support_key), signed), collapse = " -> "),
     .groups = "drop"
@@ -113,17 +113,17 @@ ice_record <- identities |>
 # the earliest signing date any source gives wins; ICE's own sheet names the
 # source when it shares the date
 signed_claims <- bind_rows(
-  identities |> transmute(agency_id, source_id = "ice_sheet", value_date = signed),
+  identities |> transmute(agency_id, source_id = "ICE sheet", value_date = signed),
   pa |> filter(field == "signed", !is.na(value_date)) |> select(agency_id, source_id, value_date)
 )
 first_signed <- signed_claims |>
-  arrange(agency_id, value_date, source_id != "ice_sheet", source_id) |>
+  arrange(agency_id, value_date, source_id != "ICE sheet", source_id) |>
   distinct(agency_id, .keep_all = TRUE) |>
   transmute(agency_id, first_signed = value_date, first_signed_source = source_id)
 signing_dates <- signed_claims |>
   distinct(agency_id, value_date, source_id) |>
   arrange(agency_id, value_date, source_id) |>
-  summarise(sources = paste(source_id, collapse = ","), .by = c(agency_id, value_date)) |>
+  summarise(sources = paste(source_id, collapse = ", "), .by = c(agency_id, value_date)) |>
   summarise(signing_dates = paste(sprintf("%s (%s)", value_date, sources), collapse = "; "),
             latest_signed = max(value_date), .by = agency_id)
 
@@ -170,7 +170,7 @@ moa_summary <- moa |>
 # semicolons, none for a state agency); an agency ICE never listed (a press-release
 # agreement) takes the level its name gives
 level_modern <- agreements |>
-  arrange(desc(status == "active"), desc(last_appeared)) |>
+  arrange(desc(status == "Active"), desc(last_appeared)) |>
   distinct(agency_id, .keep_all = TRUE) |>
   left_join(geography, by = "agreement_id") |>
   transmute(agency_id, jurisdiction_level, county_fips)
@@ -200,8 +200,8 @@ agencies <- bind_rows(ice |> select(agency_id, state, state_abbr, state_key, can
                                  TRUE ~ "never on an ICE roster we hold"),
     attested_active_from = pmin(ice_listed_from, attested_active_from, na.rm = TRUE),
     attested_active_to = pmax(ice_listed_to, attested_active_to, na.rm = TRUE),
-    source_ids = case_when(ice_published & !is.na(source_ids) ~ paste("ice_sheet", source_ids, sep = "; "),
-                           ice_published ~ "ice_sheet", TRUE ~ source_ids),
+    source_ids = case_when(ice_published & !is.na(source_ids) ~ paste("ICE sheet", source_ids, sep = "; "),
+                           ice_published ~ "ICE sheet", TRUE ~ source_ids),
     moa_pdf_present = coalesce(moa_pdf_present, FALSE)
   ) |>
   select(agency_id, state, state_abbr, display_agency, jurisdiction_level, county_fips, ice_published, is_current,
@@ -234,7 +234,7 @@ dis_date <- pa |>
   mutate(nearest = map2_chr(value_date, ice_dates, \(d, s) as.character(s[which.min(abs(as.numeric(d - s)))]))) |>
   distinct(agency_id, source_id, value_date, nearest) |>
   transmute(agency_id, kind = "date", field = "signed", value_a = as.character(value_date), source_a = source_id,
-            value_b = nearest, source_b = "ice_sheet", published_value = NA_character_,
+            value_b = nearest, source_b = "ICE sheet", published_value = NA_character_,
             resolution_rule = "ICE's dates are published as identities; the earliest of all dates is first_signed")
 model_map <- c("Jail Enforcement" = "JEM", "Task Force" = "TFM", "Hybrid" = "JTF")
 dis_model <- pa |>
@@ -244,7 +244,7 @@ dis_model <- pa |>
   filter(!map2_lgl(value, ice_models, \(m, s) model_map[[m]] %in% s)) |>
   distinct(agency_id, source_id, value, ice_models) |>
   transmute(agency_id, kind = "model", field = "model", value_a = value, source_a = source_id,
-            value_b = map_chr(ice_models, paste, collapse = "; "), source_b = "ice_sheet",
+            value_b = map_chr(ice_models, paste, collapse = "; "), source_b = "ICE sheet",
             published_value = value_b, resolution_rule = "models are ICE's; a source's differing model is recorded only")
 # a dated list's members against ICE's nearest publication at or before its date:
 # is each agency there or not, on both sides

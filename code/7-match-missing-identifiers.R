@@ -22,7 +22,7 @@ agreement_fips <- arrow::read_parquet("data/intermediate/match-all-features.parq
 
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet") |>
   # deliberate: the report is a to-do list for the live program, so active only
-  filter(status == "active")
+  filter(status == "Active")
 
 agreement_identifiers <- arrow::read_parquet(
   "data/intermediate/match-agency-identifiers.parquet"

@@ -14,7 +14,7 @@ manual_ports <- arrow::read_parquet("data/intermediate/manual-port-airports.parq
 manual_points <- arrow::read_parquet("data/intermediate/manual-facility-points.parquet")
 airport_boundaries <- st_read("data/intermediate/reference-airport-boundaries.parquet", quiet = TRUE)
 
-ports <- agreements |> filter(geometry_type == "polygon", jurisdiction_level == "Port")
+ports <- agreements |> filter(geometry_type == "Polygon", jurisdiction_level == "Port")
 
 counties_ref <- counties_reference(YEAR)
 

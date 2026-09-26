@@ -9,14 +9,14 @@ live in `inputs/other_sources/` (see its README).
 
 | Source (`source_id`) | What it is | Where |
 |---|---|---|
-| `ice_sheet` | Every archived capture of ICE's 287(g) roster, from the partners-page table of 29 Apr 2008 (signing dates back to Florida DLE, 2 Jul 2002) through the fact-sheet series to today's participating-agencies sheet | `sheets/` |
-| `ice_lists` | ICE's undated agency lists that preceded the table: "Signed MOAs as of 9-19-07" (28) and "Agencies with signed MOAs (updated 3-10-08)" (41) | `sheets/sheets_wayback_pre2011/` |
-| `ice_archive_index` | ICE's live `/287g-archive` index of MOA documents with original signing dates, retrieved 20 Apr 2026. It also files non-287(g) documents (a Cook County forfeiture MOU, a Morristown application letter), so it may not add an agency | `ice_live_287gMOA_index_2026-04-20.tsv` |
-| `oig_2009` | DHS OIG-10-63, Appendix E Table 3: all 67 jurisdictions as of 28 Oct 2009 with model, original signing date and signed/pending status, from ICE OSLC data. The only roster between the Aug 2009 and Apr 2010 captures, and the record of the Oct 2009 re-signing wave | `reports/DHS-OIG-10-63_Mar2010.pdf` |
-| `ice_press` | Agreements ICE announced that never reached a roster, one row per claim with its evidence url. Today: Massachusetts State Police, signed 13 Dec 2006 (ICE release), rescinded 12 Jan 2007 (press) | `press-claims.csv` |
+| `ICE sheet` | Every archived capture of ICE's 287(g) roster, from the partners-page table of 29 Apr 2008 (signing dates back to Florida DLE, 2 Jul 2002) through the fact-sheet series to today's participating-agencies sheet | `sheets/` |
+| `ICE undated lists` | ICE's undated agency lists that preceded the table: "Signed MOAs as of 9-19-07" (28) and "Agencies with signed MOAs (updated 3-10-08)" (41) | `sheets/sheets_wayback_pre2011/` |
+| `ICE archive index` | ICE's live `/287g-archive` index of MOA documents with original signing dates, retrieved 20 Apr 2026. It also files non-287(g) documents (a Cook County forfeiture MOU, a Morristown application letter), so it may not add an agency | `ice_live_287gMOA_index_2026-04-20.tsv` |
+| `OIG 2009 report` | DHS OIG-10-63, Appendix E Table 3: all 67 jurisdictions as of 28 Oct 2009 with model, original signing date and signed/pending status, from ICE OSLC data. The only roster between the Aug 2009 and Apr 2010 captures, and the record of the Oct 2009 re-signing wave | `reports/DHS-OIG-10-63_Mar2010.pdf` |
+| `ICE press release` | Agreements ICE announced that never reached a roster, one row per claim with its evidence url. Today: Massachusetts State Police, signed 13 Dec 2006 (ICE release), rescinded 12 Jan 2007 (press) | `press-claims.csv` |
 
 `source-registry.csv` registers each with its as-of date and provenance file;
-only `ice_press` may add an agency. `SOURCES.csv` is the citation
+only `ICE press release` may add an agency. `SOURCES.csv` is the citation
 and provenance record for every file, including those under
 `inputs/other_sources/`. `crosswalk/ice_agency_to_county.csv` is the hand-built
 jurisdiction crosswalk for agencies the modern sheet never typed.

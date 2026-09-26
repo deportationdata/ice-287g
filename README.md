@@ -23,19 +23,19 @@ repositories, built with the same approach.
   model signed on a date (`agreement_id`, e.g.
   `NC-alamance-county-sheriff-office#JEM#2007-01-10`). An agency can hold
   several — a re-signing supersedes its predecessor, and a sheriff may run jail,
-  task-force and warrant-service agreements at once. `status` is `active`
-  (on the current sheet), `superseded` (a later agreement of the same
+  task-force and warrant-service agreements at once. `status` is `Active`
+  (on the current sheet), `Superseded` (a later agreement of the same
   agency and model took over, first listed in the next publication or within
-  60 days) or `removed`. ICE's lists never say which, so timing decides:
+  60 days) or `Removed`. ICE's lists never say which, so timing decides:
   - an agreement first listed while the agency's other agreement is still
     listed is an **addition**, and nothing is superseded;
   - a same-model agreement first listed after the old one's last listing is a
-    **renewal**, and the old one is `superseded`, as is ICE's 2011–13 relabel
+    **renewal**, and the old one is `Superseded`, as is ICE's 2011–13 relabel
     of one MOA under a new model (same signing date);
   - a different-model agreement signed on another day and first listed after
-    the old one's last listing is a **switch**: the old one is `removed` with
-    `removal_flag` `model_switch`;
-  - otherwise the old one is simply `removed` (`possible_resign` when a
+    the old one's last listing is a **switch**: the old one is `Removed` with
+    `removal_flag` `Model switch`;
+  - otherwise the old one is simply `Removed` (`Possible re-signing` when a
     same-model agreement is active but could not be linked).
 
 Both ids are content-derived and stable across runs; an id changes only when
@@ -52,7 +52,7 @@ a pull request shows what moved.
 
 | file | contents |
 |---|---|
-| **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's SUPPORT TYPE and TYPE as printed are `ice_support_type` and `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9` (a multi-county prosecutor's office lists one ORI per county of its district, in county order), its jurisdiction in census terms (`place`, `county` and `state` with their census codes, each filled only when that unit holds the jurisdiction: a municipality, campus or airport has its place and county, a county agency its county alone (not its jail's town), a state agency its state alone (not the counties its offices or prisons sit in), a district or regional body the counties it spans, several separated by "; "; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit the jurisdiction is when it is one (`geoid`, `geoid_type`: the state, the county or the municipality; blank for a campus, airport, district or regional body), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` names that file under `sheets/` and `latest_sheet_url` serves it from GitHub. The file the slicer consumes. |
+| **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's SUPPORT TYPE and TYPE as printed are `ice_support_type` and `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9` (a multi-county prosecutor's office lists one ORI per county of its district, in county order), its jurisdiction in census terms (`place`, `county` and `state` with their census codes, each filled only when that unit holds the jurisdiction: a municipality, campus or airport has its place and county, a county agency its county alone (not its jail's town), a state agency its state alone (not the counties its offices or prisons sit in), a district or regional body the counties it spans, several separated by "; "; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit the jurisdiction is when it is one (`geoid`, `geoid_type`: the state, the county or the municipality; blank for a campus, airport, district or regional body), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` is that file's name (its snapshot folder under `sheets/` is part of `latest_sheet_url`, which serves it from GitHub). The file the slicer consumes. |
 | **`data/agencies.parquet`** | One row per agency across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to, MOA archive status and which sources attest it. |
 | `data/agreements.{parquet,xlsx,dta,sav}`, `data/agencies.{xlsx,dta,sav}`, `data/agreements-shp.zip` | The two published files in other formats, written by `8-write-formats.R`: the agreements without geometry, and a shapefile zip with a point layer (facility agreements) and a polygon layer (jurisdiction agreements). Shapefile field names stop at 10 characters, so the zip's `fields.csv` maps each back to its full name. |
 | `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window; `county` is the corrected county the matchers use and `raw_county` the COUNTY cell as printed. |

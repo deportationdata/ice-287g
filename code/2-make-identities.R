@@ -387,9 +387,9 @@ edges <- windows |>
 
 identities <- identities |>
   left_join(edges, by = "agreement_id") |>
-  mutate(status = case_when(last_seq == current_seq ~ "active",
-                            !is.na(succeeded_by) ~ "superseded",
-                            TRUE ~ "removed"))
+  mutate(status = case_when(last_seq == current_seq ~ "Active",
+                            !is.na(succeeded_by) ~ "Superseded",
+                            TRUE ~ "Removed"))
 
 # the lineage root: follow predecessors until none remain
 root <- set_names(identities$agreement_id, identities$agreement_id)
@@ -408,7 +408,7 @@ id_lookup <- identities |>
   select(state_key, support_key, signed, component, agreement_id, agency_id)
 
 agency_state <- identities |>
-  summarise(active_supports = list(unique(support_key[status == "active"])), .by = agency_id)
+  summarise(active_supports = list(unique(support_key[status == "Active"])), .by = agency_id)
 # a model switch: another model, signed another day, first listed in the lineage window
 switched <- windows |>
   inner_join(windows, by = "agency_id", suffix = c("", "_n"), relationship = "many-to-many") |>
@@ -420,9 +420,9 @@ identities <- identities |>
   left_join(agency_state, by = "agency_id") |>
   left_join(switched, by = "agreement_id") |>
   mutate(removal_flag = case_when(
-    status != "removed" ~ NA_character_,
-    map2_lgl(support_key, active_supports, \(s, a) s %in% a) ~ "possible_resign",
-    coalesce(switched, FALSE) ~ "model_switch",
+    status != "Removed" ~ NA_character_,
+    map2_lgl(support_key, active_supports, \(s, a) s %in% a) ~ "Possible re-signing",
+    coalesce(switched, FALSE) ~ "Model switch",
     TRUE ~ NA_character_
   )) |>
   select(agreement_id, agency_id, agreement_lineage_id, state, state_abbr, state_key,
@@ -436,7 +436,7 @@ agencies <- identities |>
   arrange(last_seq) |>
   group_by(agency_id, state, state_abbr, state_key, canonical_agency) |>
   summarise(display_agency = last(raw_agency_last),
-            n_agreements = n(), n_active = sum(status == "active"),
+            n_agreements = n(), n_active = sum(status == "Active"),
             first_seen = min(first_appeared), last_seen = max(last_appeared),
             ice_first_signed = min(signed), .groups = "drop") |>
   mutate(is_current = n_active > 0)
@@ -459,12 +459,12 @@ stopifnot(
   "agreement_id must be unique across identities" = !anyDuplicated(identities$agreement_id),
   "every identity must resolve to an agency" = all(identities$agency_id %in% agencies$agency_id),
   "active identities must be exactly the current publication's signed rows" =
-    setequal(identities$agreement_id[identities$status == "active"],
+    setequal(identities$agreement_id[identities$status == "Active"],
              observation_ids$agreement_id[observation_ids$is_current]),
   "no identity may be both active and superseded" =
-    !any(identities$status == "active" & !is.na(identities$succeeded_by)),
+    !any(identities$status == "Active" & !is.na(identities$succeeded_by)),
   "a superseded identity must name a successor" =
-    all(is.na(identities$succeeded_by) == (identities$status != "superseded")),
+    all(is.na(identities$succeeded_by) == (identities$status != "Superseded")),
   "identity resolution must never merge across state, model or signing date" =
     nrow(distinct(identities, agreement_id, state_key, support_key, signed)) == nrow(identities)
 )
@@ -489,7 +489,7 @@ near <- pairs |>
 generic <- c("county", "parish", "borough", "city", "town", "township", "village", "sheriff", "office",
              "police", "department", "of", "the", "and", "constable", "state", "public", "safety")
 name_tokens <- \(x) map(str_split(x, " "), setdiff, generic)
-gone <- identities |> filter(status == "removed")
+gone <- identities |> filter(status == "Removed")
 renames <- gone |>
   inner_join(identities |> select(state_key, agency_id_s = agency_id, agency_s = canonical_agency,
                                   first_seq_s = first_seq, support_key_s = support_key),
@@ -537,8 +537,8 @@ summary_row <- tibble(
   run_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
   publications = nrow(pubs), observations = nrow(obs), unsigned_observations = sum(is.na(obs$signed)),
   identities = nrow(identities), agencies = nrow(agencies),
-  active = sum(status_n["active"], na.rm = TRUE), superseded = sum(status_n["superseded"], na.rm = TRUE),
-  removed = sum(status_n["removed"], na.rm = TRUE),
+  active = sum(status_n["Active"], na.rm = TRUE), superseded = sum(status_n["Superseded"], na.rm = TRUE),
+  removed = sum(status_n["Removed"], na.rm = TRUE),
   merged_by_alias = sum(resolution_n["alias"], na.rm = TRUE),
   merged_by_typo = sum(resolution_n["typo"], na.rm = TRUE),
   merged_by_modifier = sum(resolution_n["modifier"], na.rm = TRUE),
