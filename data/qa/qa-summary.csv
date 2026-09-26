@@ -98,7 +98,7 @@ placed features by geometry vintage,NA,3055,NA,info
 missing identifiers by type,missing_both,3,NA,info
 missing identifiers by type,missing_fips,49,NA,info
 missing identifiers by type,missing_ori,92,NA,info
-distinct MOA urls on the sheet,all,2518,NA,info
+distinct MOA urls on the sheet,all,2523,NA,info
 distinct MOA urls in agreements manifests,all,2954,NA,info
 agreements folders with outstanding failed downloads,all,0,0,pass
 MOA urls the sheet links that the origin reports gone and no archive holds,all,0,NA,info

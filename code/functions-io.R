@@ -81,9 +81,10 @@ read_roster_html <- function(path) {
         str_detect(ty, "JEO") & str_detect(ty, "TFO") ~ "JAIL & TASK FORCE",
         TRUE ~ t$`SUPPORT TYPE`)
     }
-    # the MOA cell's href, made absolute, else its own text ("link pending")
+    # the MOA cell's href, made absolute, else its own text ("link pending");
+    # in-page anchors are footnote markers ("DELAWARE**" links #note), not documents
     href <- map_chr(body_rows, \(r) {
-      a <- xml2::xml_find_first(r, "./td//a[@href]")
+      a <- xml2::xml_find_first(r, "./td//a[@href and not(starts-with(@href, '#'))]")
       if (inherits(a, "xml_missing")) NA_character_ else xml2::xml_attr(a, "href")
     })
     href <- case_when(is.na(href) | href == "" ~ NA_character_,
