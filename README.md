@@ -52,10 +52,10 @@ a pull request shows what moved.
 
 | file | contents |
 |---|---|
-| **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's SUPPORT TYPE and TYPE as printed are `ice_support_type` and `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9`, where it sits (`place`, `county` and `state` with their census codes, looked up around the geometry: a municipality is its own place, a jail or campus takes the town and county around it, boundaries in several counties list them all with semicolons, and a multi-unit body keeps a place only when all its units share one; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit it is when it is one (`geoid`, `geoid_type`), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` names that file under `sheets/` and `latest_sheet_url` serves it from GitHub. The file the slicer consumes. |
+| **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's SUPPORT TYPE and TYPE as printed are `ice_support_type` and `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9`, its jurisdiction in census terms (`place`, `county` and `state` with their census codes, each filled only when that unit holds the jurisdiction: a municipality, campus or airport has its place and county, a county agency its county alone (not its jail's town), a state agency its state alone (not the counties its offices or prisons sit in), a district or regional body the counties it spans, several separated by semicolons; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit the jurisdiction is when it is one (`geoid`, `geoid_type`: the state, the county or the municipality; blank for a campus, airport, district or regional body), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` names that file under `sheets/` and `latest_sheet_url` serves it from GitHub. The file the slicer consumes. |
 | **`data/agencies.parquet`** | One row per agency across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to, MOA archive status and which sources attest it. |
 | `data/agreements.{parquet,xlsx,dta,sav}`, `data/agencies.{xlsx,dta,sav}`, `data/agreements-shp.zip` | The two published files in other formats, written by `8-write-formats.R`: the agreements without geometry, and a shapefile zip with a point layer (facility agreements) and a polygon layer (jurisdiction agreements). Shapefile field names stop at 10 characters, so the zip's `fields.csv` maps each back to its full name. |
-| `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window. |
+| `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window; `county` is the corrected county the matchers use and `raw_county` the COUNTY cell as printed. |
 | `data/intermediate/identity-agreements.parquet`, `data/intermediate/sheet-publications.parquet`, `data/intermediate/sheet-publication-files.parquet`, `data/intermediate/sheet-row-agreements.parquet`, `data/intermediate/identity-agency-spellings.parquet` | The identity layer: every distinct sheet ever published, every row of every sheet resolved to an agreement, and every spelling ICE printed for each agency. |
 | `data/intermediate/historical-source-claims.csv`, `data/intermediate/historical-source-claims-unresolved.csv` | Every claim a non-sheet source (ICE's undated lists, ICE's MOA archive index, DHS OIG's Oct 2009 appendix, ICE press releases) makes about an agency — listed, pending, signed, model, MOA file, rescinded — with the rule that resolved it; what no rule resolves is listed, never dropped. |
 | `data/intermediate/agency-disagreements.csv` | Where a source and ICE differ: a signing date, a model, a state, or presence on the ICE publication nearest to the source's date. |
@@ -145,12 +145,13 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   the undated agency lists of Sep 2007 and Mar 2008, the MOA archive index —
   and the DHS OIG appendix of Oct 2009, each registered in
   `inputs/historical/source-registry.csv` with its grade, rank and as-of date.
-  **`2-make-agencies.R`** reduces them, and the press-release claims in
+  **`7-make-agencies.R`** reduces them, and the press-release claims in
   `inputs/historical/press-claims.csv`, to typed claims resolved to
   agencies by rule, then arbitrates one record per agency with the
   winning source beside each value and records every disagreement with ICE.
   Only a press-release claim may add an agency; every other source
-  attests to existing ones.
+  attests to existing ones. It runs after the geography so each agency
+  takes its active or latest agreement's level and counties.
 - **`3-match-*.R`** match agreements to geometry, one script per layer, in
   any order. Each emits `agreement_id`, `match_name` (the matched geometry's
   own name), `match_type`, FIPS codes, `geometry_vintage`, its named review
@@ -186,11 +187,17 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   asserts every placed feature lies in ICE's state, judges roster-county
   disagreements per agreement, composes `review_reason` from one vocabulary of
   flags, derives `needs_review` and `match_quality`, unions each agreement's
-  features (its counties are the union of theirs; a unit code or place is kept
-  only when its features agree; an agreement with no boundaries takes ICE's
-  county), and writes the two shipped datasets,
+  features (its counties are the union of theirs; a place is kept only when
+  its features agree; an agreement with no boundaries takes ICE's county),
+  keeps only the geography that holds the jurisdiction (a state agency has no
+  county or place, a county agency no place, a district or regional body no
+  place, and a regional jail authority lists the member counties in
+  `inputs/manual-regional-jail-counties.csv`), names the census unit the
+  jurisdiction is (`geoid`), and writes the two shipped datasets,
   leaving the three review columns in `match-all-features.parquet`.
-- **`7-match-missing-identifiers.R`** writes the exception report and
+- **`7-make-agencies.R`** builds the agencies grain (see above), each agency
+  taking its level and counties from its active or latest agreement.
+  **`7-match-missing-identifiers.R`** writes the exception report and
   **`7-make-qa-report.R`** the QA tables; `QA_STRICT=1` (set by CI) makes any
   failing check fatal.
 
@@ -211,6 +218,9 @@ QA diff.
   corrections (include/exclude), and layer overrides for agreements the
   automated matchers get wrong. Each row carries a `reason`/`note` recording
   the evidence.
+- `inputs/manual-regional-jail-counties.csv` — the member counties a regional
+  jail authority serves, one per row with its source. The agreement's county
+  columns list them; its geometry stays the jails.
 - `inputs/manual-jurisdiction-levels.csv` — an agreement's jurisdiction level
   where neither ICE's TYPE nor the agency's name settles it, with the evidence
   in each row. Each agreement's `jurisdiction_level` names what the agency

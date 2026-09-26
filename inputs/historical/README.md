@@ -2,7 +2,7 @@
 
 The agency history is built from ICE's own records plus one DHS OIG
 appendix. Every file here is read by `code/1-read-historical-*.R` or
-`code/2-make-agencies.R`; the secondary sources the pipeline does not read
+`code/7-make-agencies.R`; the secondary sources the pipeline does not read
 live in `inputs/other_sources/` (see its README).
 
 ## Sources the pipeline reads
@@ -23,7 +23,7 @@ jurisdiction crosswalk for agencies the modern sheet never typed.
 
 ## How the record is built
 
-- `2-make-agencies.R` first reduces each source to typed claims (`listed`,
+- `7-make-agencies.R` first reduces each source to typed claims (`listed`,
   `pending`, `signed`, `model`, `moa_file`, `rescinded`) and resolves each to a
   agency by rule — the registry of ICE's spellings and the alias table,
   then a name that begins exactly one agency, then a signing date unique

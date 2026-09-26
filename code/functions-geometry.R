@@ -58,12 +58,6 @@ county_subdivisions_reference <- function(year = 2024) {
 among <- function(code, listed) {
   str_detect(paste0(";", listed, ";"), fixed(paste0(";", code, ";")))
 }
-# the names for a list of codes, in the same order
-name_codes <- function(codes, names_by_code) {
-  map_chr(str_split(codes, ";"), \(cs) {
-    if (all(is.na(cs))) NA_character_ else paste(names_by_code[cs], collapse = ";")
-  })
-}
 # one row per group under a total order: the caller's ranking first, then the
 # tiebreak columns, so no pick ever depends on row order
 slice_best <- function(x, ..., by, tiebreak) {

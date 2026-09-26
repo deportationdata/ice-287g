@@ -15,7 +15,7 @@ facility,hifld_law_enforcement_location,TRUE,26
 facility,manual,FALSE,3
 facility,manual_facility_match,FALSE,2
 facility,unmatched_facility,TRUE,9
-municipal,census_county_subdivision,FALSE,18
+municipal,census_county_subdivision,FALSE,19
 municipal,cousub_name,FALSE,61
 municipal,cousub_name,TRUE,7
 municipal,lrc_voting_district,FALSE,1
@@ -26,7 +26,7 @@ municipal,place_name,TRUE,24
 municipal,regional_member_municipality,FALSE,38
 municipal,regional_member_municipality,TRUE,17
 municipal,unmatched,TRUE,4
-municipal,unmatched_pa_constable_geometry,TRUE,3
+municipal,unmatched_pa_constable_geometry,TRUE,2
 municipal,unmatched_regional_members,TRUE,2
 port,airport_boundary,FALSE,5
 precinct,no_precinct_boundary_layer,TRUE,48

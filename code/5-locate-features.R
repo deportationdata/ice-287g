@@ -158,7 +158,7 @@ features_sf <- features_sf |>
       geoid_type == "county_subdivision" ~ str_sub(geoid, 1, 5),
       TRUE ~ coalesce(county_fips_around, county_fips)
     ),
-    county = name_codes(county_fips, county_names),
+    county = str_replace_all(county_fips, "[0-9]{5}", \(code) county_names[code]),
     place_geoid = case_when(
       geoid_type %in% c("place", "county_subdivision") ~ geoid,
       geoid_type %in% c("state", "county") ~ NA_character_,

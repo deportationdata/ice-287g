@@ -106,6 +106,8 @@ gone <- identities |>
 agreements <- bind_rows(active, gone) |>
   transmute(
     agreement_id, status, state,
+    # the COUNTY cell as printed, published as ice_county; the cleaned county below is the matchers'
+    raw_county,
     # missing counties arrive as #N/A-style text, not blanks
     county = str_to_title(str_squish(raw_county)),
     county = if_else(str_to_lower(county) %in% c("#na", "#n/a", "na", "n/a"), NA_character_, county),
@@ -236,7 +238,7 @@ agreements <- agreements |>
     by = "agreement_id", relationship = "one-to-one"
   ) |>
   select(
-    agreement_id, status, state, county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, ice_support_type, signed,
+    agreement_id, status, state, county, raw_county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, ice_support_type, signed,
     moa, addendum, geometry_type, needs_review,
     first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source, removal_flag,
     agency_id, agreement_lineage_id, succeeded_by, latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows,

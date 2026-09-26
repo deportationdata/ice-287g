@@ -59,7 +59,7 @@ feature rows by layer,precinct,48,NA,info
 feature rows by layer,state,70,NA,info
 feature rows by layer,university,20,NA,info
 empty-geometry features by layer,facility,9,NA,info
-empty-geometry features by layer,municipal,9,NA,info
+empty-geometry features by layer,municipal,8,NA,info
 empty-geometry features by layer,precinct,48,NA,info
 empty-geometry features by layer,university,1,NA,info
 active features flagged needs_review,all,122,NA,info
@@ -91,7 +91,7 @@ Connecticut features carrying a legacy county fips,all,1,NA,info
 Connecticut features carrying a planning-region fips,all,0,0,pass
 placed features by geometry vintage,2016,5,NA,info
 placed features by geometry vintage,2021,2,NA,info
-placed features by geometry vintage,2024,1948,NA,info
+placed features by geometry vintage,2024,1949,NA,info
 placed features by geometry vintage,NA,3050,NA,info
 missing identifiers by type,missing_both,9,NA,info
 missing identifiers by type,missing_fips,45,NA,info

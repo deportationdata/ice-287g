@@ -67,6 +67,9 @@ compose_review_reason <- function(flags) {
 all_agreements_sf <- features_sf |>
   left_join(
     agreements |>
+      # ICE's COUNTY as printed, squished like ice_type; the corrected county
+      # (2-make-agreements.R) is the matchers' and gives the census code below
+      mutate(ice_county = str_squish(raw_county)) |>
       select(
         agreement_id,
         agency_id,
@@ -76,7 +79,7 @@ all_agreements_sf <- features_sf |>
         latest_sheet_url,
         n_sheet_rows,
         state,
-        ice_county = county,
+        ice_county,
         agency,
         ice_type,
         jurisdiction_level,
@@ -351,12 +354,35 @@ quality_order <- c(
   "exact"
 )
 
-# ICE's county as a census code, for the agreements with no geometry
 reference_counties <- arrow::read_parquet("data/intermediate/reference-counties.parquet")
-ice_county_codes <- reference_counties |>
+county_codes <- reference_counties |>
   distinct(state, county_key, .keep_all = TRUE) |>
-  select(state, county_key, ice_county_fips = county_fips)
+  select(state, county_key, county_fips)
 county_names <- reference_counties |> distinct(county_fips, county) |> deframe()
+# ICE's county, corrected, as a census code for the agreements with no geometry
+ice_county_codes <- agreements |>
+  mutate(county_key = norm_county(county)) |>
+  left_join(county_codes |> rename(ice_county_fips = county_fips), by = c("state", "county_key")) |>
+  select(agreement_id, ice_county_fips)
+
+# a regional jail authority serves its member counties, listed by hand; its geometry
+# stays its jails
+regional_jail_counties <- arrow::read_parquet(
+  "data/intermediate/manual-regional-jail-counties.parquet"
+) |>
+  mutate(county_key = norm_county(county)) |>
+  left_join(county_codes, by = c("state", "county_key"))
+stopifnot(
+  "every regional jail county must match one census county" = !anyNA(
+    regional_jail_counties$county_fips
+  ),
+  "every regional jail authority listed by hand is an agreement" = all(
+    paste(regional_jail_counties$agency, regional_jail_counties$state) %in%
+      paste(agreements$agency, agreements$state)
+  )
+)
+regional_jail_counties <- regional_jail_counties |>
+  summarize(member_county_fips = paste(county_fips, collapse = ";"), .by = c(agency, state))
 
 agreement_level_sf <- all_agreements_sf |>
   group_by(
@@ -408,19 +434,45 @@ agreement_level_sf <- agreement_level_sf |>
     ]),
     needs_review = !is.na(review_reason),
     has_addendum = !is.na(addendum),
-    moa_pending = coalesce(moa == "pending", FALSE),
-    # a type goes with its code
-    geoid_type = if_else(is.na(geoid), NA_character_, geoid_type),
-    place_type = if_else(is.na(place_geoid), NA_character_, place_type),
-    county_key = norm_county(ice_county)
+    moa_pending = coalesce(moa == "pending", FALSE)
   ) |>
-  left_join(ice_county_codes, by = c("state", "county_key")) |>
-  # an agreement without boundaries is still in ICE's county
+  left_join(ice_county_codes, by = "agreement_id") |>
+  left_join(regional_jail_counties, by = c("agency", "state")) |>
+  # the geography names the jurisdiction and the census units holding it, never a unit
+  # inside it: a state agency has no county or place (its offices and prisons sit in
+  # some), a county agency no place (its jail's town), a district or regional body no
+  # place; a regional jail authority's counties are its members; an agreement without
+  # boundaries is still in ICE's county; geoid is the census unit the jurisdiction is,
+  # when it is one
   mutate(
-    county_fips = if_else(st_is_empty(geometry) & is.na(county_fips), ice_county_fips, county_fips),
-    county = name_codes(county_fips, county_names)
+    county_fips = case_when(
+      jurisdiction_level %in% "State" ~ NA_character_,
+      !is.na(member_county_fips) ~ member_county_fips,
+      st_is_empty(geometry) & is.na(county_fips) ~ ice_county_fips,
+      TRUE ~ county_fips
+    ),
+    county = str_replace_all(county_fips, "[0-9]{5}", \(code) county_names[code]),
+    across(
+      c(place_geoid, place, place_type),
+      \(x) if_else(jurisdiction_level %in% c("Municipal", "Campus", "Port"), x, NA_character_)
+    ),
+    place_type = if_else(is.na(place_geoid), NA_character_, place_type),
+    geoid = case_when(
+      jurisdiction_level %in% "State" ~ state_fips,
+      jurisdiction_level %in% "County" ~ county_fips,
+      jurisdiction_level %in% "Municipal" ~ coalesce(geoid, place_geoid),
+      TRUE ~ NA_character_
+    ),
+    geoid_type = case_when(
+      is.na(geoid) ~ NA_character_,
+      jurisdiction_level %in% "State" ~ "state",
+      jurisdiction_level %in% "County" ~ "county",
+      !is.na(geoid_type) ~ geoid_type,
+      nchar(geoid) == 7 ~ "place",
+      nchar(geoid) == 10 ~ "county_subdivision"
+    )
   ) |>
-  select(-county_key, -ice_county_fips) |>
+  select(-ice_county_fips, -member_county_fips) |>
   arrange(desc(last_appeared), latest_sheet_row, agreement_id) |>
   select(
     # the agency and where it is, the agreement's history, its geography, then ICE's values as printed
@@ -480,6 +532,12 @@ stopifnot(
   ),
   "a place type never outlives its place" = !any(
     is.na(agreement_level_sf$place) & !is.na(agreement_level_sf$place_type)
+  ),
+  "a geoid type travels with its code" = all(
+    is.na(agreement_level_sf$geoid) == is.na(agreement_level_sf$geoid_type)
+  ),
+  "a county agency's geoid is one county" = !any(
+    agreement_level_sf$geoid_type %in% "county" & str_detect(agreement_level_sf$geoid, ";")
   )
 )
 
