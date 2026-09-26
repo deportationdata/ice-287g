@@ -488,12 +488,10 @@ agreement_level_sf <- agreement_level_sf |>
     county_fips,
     state,
     state_fips,
-    jurisdiction_level,
-    jurisdiction_level_source,
-    geometry_type,
     geoid,
     geoid_type,
-    geometry_vintage,
+    jurisdiction_level,
+    jurisdiction_level_source,
     ice_county,
     ice_type,
     latest_sheet_row,
@@ -502,6 +500,8 @@ agreement_level_sf <- agreement_level_sf |>
     match_quality,
     review_reason,
     needs_review,
+    geometry_type,
+    geometry_vintage,
     geometry
   )
 
