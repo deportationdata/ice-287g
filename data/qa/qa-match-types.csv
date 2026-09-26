@@ -1,10 +1,10 @@
 match_layer,match_type,needs_review,n
-county,county_name,FALSE,657
+county,county_name,FALSE,671
 county,county_name,TRUE,2
 county,judicial_district_member_county,FALSE,37
 facility,doc_exact_state_prison_source,FALSE,1372
 facility,doc_manual_state_facility,FALSE,12
-facility,exact_county_pattern_all_facilities,FALSE,1330
+facility,exact_county_pattern_all_facilities,FALSE,1338
 facility,exact_municipal_pattern_facility,FALSE,7
 facility,exact_operator_facility,FALSE,232
 facility,exact_operator_facility,TRUE,30
@@ -21,7 +21,7 @@ municipal,cousub_name,TRUE,7
 municipal,lrc_voting_district,FALSE,1
 municipal,lrc_ward,FALSE,1
 municipal,manual_override,FALSE,3
-municipal,place_name,FALSE,952
+municipal,place_name,FALSE,981
 municipal,place_name,TRUE,24
 municipal,regional_member_municipality,FALSE,38
 municipal,regional_member_municipality,TRUE,17
@@ -30,7 +30,7 @@ municipal,unmatched_pa_constable_geometry,TRUE,3
 municipal,unmatched_regional_members,TRUE,2
 port,airport_boundary,FALSE,5
 precinct,no_precinct_boundary_layer,TRUE,48
-state,state_name,FALSE,67
+state,state_name,FALSE,68
 state,state_name,TRUE,2
 university,manual_override,TRUE,1
 university,university_name,FALSE,18
