@@ -54,9 +54,9 @@ county_subdivisions_reference <- function(year = 2024) {
     filter(!FUNCSTAT %in% c("I", "N", "S"))
 }
 
-# a boundary in several counties lists their codes with semicolons, largest share first
+# a boundary in several counties lists their codes "; "-separated, largest share first
 among <- function(code, listed) {
-  str_detect(paste0(";", listed, ";"), fixed(paste0(";", code, ";")))
+  str_detect(paste0(";", str_remove_all(listed, "\\s"), ";"), fixed(paste0(";", code, ";")))
 }
 # one row per group under a total order: the caller's ranking first, then the
 # tiebreak columns, so no pick ever depends on row order

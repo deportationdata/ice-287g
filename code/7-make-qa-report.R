@@ -55,13 +55,14 @@ manifests <- list.files(
   list_rbind()
 
 census_counties <- counties_reference(2024) |> st_drop_geometry() |> pull(geoid)
-ori_ok <- str_detect(coalesce(ids$ORI9, "AA0000000"), "^[A-Z]{2}[A-Z0-9]{7}$")
+# a multi-county prosecutor lists one ORI per county, "; "-separated
+ori_ok <- str_detect(coalesce(ids$ORI9, "AA0000000"), "^[A-Z]{2}[A-Z0-9]{7}(; [A-Z]{2}[A-Z0-9]{7})*$")
 county_ok <- with(
   all_sf,
   # a straddling boundary lists its counties
   is.na(county_fips) |
-    (str_detect(county_fips, "^\\d{5}(;\\d{5})*$") &
-      map2_lgl(str_split(county_fips, ";"), state_fips, \(codes, state) all(str_sub(codes, 1, 2) == state)))
+    (str_detect(county_fips, "^\\d{5}(; \\d{5})*$") &
+      map2_lgl(str_split(county_fips, "; "), state_fips, \(codes, state) all(str_sub(codes, 1, 2) == state)))
 )
 
 # one row per check; `expected` NA means the row is a tracked count, not a test

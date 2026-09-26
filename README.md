@@ -52,7 +52,7 @@ a pull request shows what moved.
 
 | file | contents |
 |---|---|
-| **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's SUPPORT TYPE and TYPE as printed are `ice_support_type` and `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9`, its jurisdiction in census terms (`place`, `county` and `state` with their census codes, each filled only when that unit holds the jurisdiction: a municipality, campus or airport has its place and county, a county agency its county alone (not its jail's town), a state agency its state alone (not the counties its offices or prisons sit in), a district or regional body the counties it spans, several separated by semicolons; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit the jurisdiction is when it is one (`geoid`, `geoid_type`: the state, the county or the municipality; blank for a campus, airport, district or regional body), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` names that file under `sheets/` and `latest_sheet_url` serves it from GitHub. The file the slicer consumes. |
+| **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's SUPPORT TYPE and TYPE as printed are `ice_support_type` and `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9` (a multi-county prosecutor's office lists one ORI per county of its district, in county order), its jurisdiction in census terms (`place`, `county` and `state` with their census codes, each filled only when that unit holds the jurisdiction: a municipality, campus or airport has its place and county, a county agency its county alone (not its jail's town), a state agency its state alone (not the counties its offices or prisons sit in), a district or regional body the counties it spans, several separated by "; "; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit the jurisdiction is when it is one (`geoid`, `geoid_type`: the state, the county or the municipality; blank for a campus, airport, district or regional body), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` names that file under `sheets/` and `latest_sheet_url` serves it from GitHub. The file the slicer consumes. |
 | **`data/agencies.parquet`** | One row per agency across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to, MOA archive status and which sources attest it. |
 | `data/agreements.{parquet,xlsx,dta,sav}`, `data/agencies.{xlsx,dta,sav}`, `data/agreements-shp.zip` | The two published files in other formats, written by `8-write-formats.R`: the agreements without geometry, and a shapefile zip with a point layer (facility agreements) and a polygon layer (jurisdiction agreements). Shapefile field names stop at 10 characters, so the zip's `fields.csv` maps each back to its full name. |
 | `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window; `county` is the corrected county the matchers use and `raw_county` the COUNTY cell as printed. |
@@ -177,7 +177,7 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   (`geoid_type`) and finds the county and place around it: a county or state
   polygon is its own county, a county subdivision names its county in its
   geoid, and a jail, campus, airport or municipality takes the county around
-  it, listing every county holding over one percent of it with semicolons,
+  it, listing every county holding over one percent of it "; "-separated,
   largest first, when it straddles a county line, and the place it lies in (a
   census place, else the county subdivision with a working government around
   it; in New England the town outranks the same-named place) with the type the
@@ -312,7 +312,9 @@ regenerable.
   renamed since may carry stale or missing identifiers there. The shipped
   `ORI9` prefers the strongest match tier, then the newest source (CDE 2025,
   then LEAR, then LEAIC, then manual); an exact match that could not tell two
-  ORIs apart yields to another roster's unique full-name match.
+  ORIs apart yields to another roster's unique full-name match. A prosecutor
+  whose district spans several counties carries one ORI per county, "; "-separated
+  in county order, because the state lists file the office once per county.
 - Every list since March 2025 is dated by ICE's own filename date, lists sharing
   a date in ICE's am/mid/pm order; a list with no filename date by ice.gov's
   Last-Modified; earlier lists (archived ICE pages, which carry no date) by the

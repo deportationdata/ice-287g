@@ -135,7 +135,7 @@ county_around <- placed |>
   surrounding(counties_ref |> select(county_fips)) |>
   filter(.share > 0.01) |>
   arrange(.row, desc(.share)) |>
-  summarize(county_fips_around = paste(county_fips, collapse = ";"), .by = .row)
+  summarize(county_fips_around = paste(county_fips, collapse = "; "), .by = .row)
 # the place holding most of the feature; ties go to the reference's .rank
 place_around <- placed |>
   filter(!geoid_type %in% c("state", "county", "county_subdivision", "place")) |>

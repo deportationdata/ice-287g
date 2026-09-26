@@ -109,7 +109,7 @@ county_fips_tbl <- crime |>
     county_fips = if_else(
       any(is.na(county_fips)),
       NA_character_,
-      paste(sort(unique(county_fips)), collapse = ";")
+      paste(sort(unique(county_fips)), collapse = "; ")
     ),
     .groups = "drop"
   )

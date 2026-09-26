@@ -75,12 +75,12 @@ active features with an addendum,all,93,NA,info
 county geoids outside the census county list,all,0,NA,info
 DOC agreements fanned out to state prisons,all,37,NA,info
 agreement-identifiers rows == agreements rows,all,3012,3012,pass
-active agreements with an ORI9,all,2470,NA,info
+active agreements with an ORI9,all,2494,NA,info
 ORI9 by source,crime,2640,NA,info
 ORI9 by source,leaic,39,NA,info
 ORI9 by source,lear,120,NA,info
-ORI9 by source,manual,62,NA,info
-ORI9 by source,none,151,NA,info
+ORI9 by source,manual,87,NA,info
+ORI9 by source,none,126,NA,info
 malformed ORI9 values,all,0,0,pass
 ORI9 sentinel -1 shipped,all,0,0,pass
 ori_conflict flagged,all,24,NA,info
@@ -93,9 +93,9 @@ placed features by geometry vintage,2016,5,NA,info
 placed features by geometry vintage,2021,2,NA,info
 placed features by geometry vintage,2024,1949,NA,info
 placed features by geometry vintage,NA,3050,NA,info
-missing identifiers by type,missing_both,9,NA,info
-missing identifiers by type,missing_fips,45,NA,info
-missing identifiers by type,missing_ori,110,NA,info
+missing identifiers by type,missing_both,3,NA,info
+missing identifiers by type,missing_fips,51,NA,info
+missing identifiers by type,missing_ori,92,NA,info
 distinct MOA urls on the sheet,all,2515,NA,info
 distinct MOA urls in agreements manifests,all,2951,NA,info
 agreements folders with outstanding failed downloads,all,0,0,pass

@@ -141,7 +141,7 @@ all_agreements_sf <- features_sf |>
           !map2_lgl(
             coalesce(crime_county_fips, ""),
             coalesce(county_fips, ""),
-            \(codes, listed) any(among(str_split_1(codes, ";"), listed))
+            \(codes, listed) any(among(str_split_1(codes, ";\\s*"), listed))
           ),
         FALSE
       ),
@@ -342,8 +342,8 @@ single_or_na <- function(x) {
   if (length(ux) == 1) ux else NA_character_
 }
 union_codes <- function(lists) {
-  cs <- unique(unlist(str_split(lists[!is.na(lists)], ";")))
-  if (length(cs)) paste(cs, collapse = ";") else NA_character_
+  cs <- unique(unlist(str_split(lists[!is.na(lists)], ";\\s*")))
+  if (length(cs)) paste(cs, collapse = "; ") else NA_character_
 }
 quality_order <- c(
   "unmatched",
@@ -382,7 +382,7 @@ stopifnot(
   )
 )
 regional_jail_counties <- regional_jail_counties |>
-  summarize(member_county_fips = paste(county_fips, collapse = ";"), .by = c(agency, state))
+  summarize(member_county_fips = paste(county_fips, collapse = "; "), .by = c(agency, state))
 
 agreement_level_sf <- all_agreements_sf |>
   group_by(
@@ -475,11 +475,24 @@ agreement_level_sf <- agreement_level_sf |>
   select(-ice_county_fips, -member_county_fips) |>
   arrange(desc(last_appeared), latest_sheet_row, agreement_id) |>
   select(
-    # the agency and where it is, the agreement's history, its geography, then ICE's values as printed
-    agreement_id,
-    agency_id,
+    # the agency, the agreement, its model and status, its dates, its MOA, where it is, its geography, then ICE's values as printed
     agency,
+    agency_id,
     ORI9,
+    agreement_id,
+    support_type,
+    status,
+    signed,
+    first_appeared,
+    first_appeared_source,
+    last_appeared,
+    removed_by,
+    removed_by_source,
+    removal_flag,
+    moa,
+    moa_pending,
+    addendum,
+    has_addendum,
     place,
     place_type,
     place_geoid,
@@ -487,19 +500,6 @@ agreement_level_sf <- agreement_level_sf |>
     county_fips,
     state,
     state_fips,
-    status,
-    support_type,
-    signed,
-    moa,
-    moa_pending,
-    addendum,
-    has_addendum,
-    first_appeared,
-    first_appeared_source,
-    last_appeared,
-    removed_by,
-    removed_by_source,
-    removal_flag,
     jurisdiction_level,
     jurisdiction_level_source,
     geometry_type,
