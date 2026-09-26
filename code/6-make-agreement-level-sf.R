@@ -461,6 +461,11 @@ agreement_level_sf <- agreement_level_sf |>
     )
   ) |>
   select(-ice_county_fips, -member_county_fips) |>
+  # an agreement with no shape has no geometry type or vintage
+  mutate(
+    geometry_type = if_else(st_is_empty(geometry), NA_character_, geometry_type),
+    geometry_vintage = if_else(st_is_empty(geometry), NA_integer_, geometry_vintage)
+  ) |>
   arrange(desc(last_appeared), latest_sheet_row, agreement_id) |>
   mutate(latest_sheet = basename(latest_sheet)) |>
   select(
@@ -523,6 +528,9 @@ stopifnot(
   "a geoid type travels with its code" = all(
     is.na(agreement_level_sf$geoid) == is.na(agreement_level_sf$geoid_type)
   ),
+  "a geometry type and vintage go with a shape" = all(
+    is.na(agreement_level_sf$geometry_type) == st_is_empty(agreement_level_sf$geometry)
+  ) && !any(!is.na(agreement_level_sf$geometry_vintage) & st_is_empty(agreement_level_sf$geometry)),
   "a county agency's geoid is one county" = !any(
     agreement_level_sf$geoid_type %in% "County" & str_detect(agreement_level_sf$geoid, ";")
   )

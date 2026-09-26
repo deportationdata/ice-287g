@@ -55,8 +55,8 @@ tibble(shapefile_field = names(st_drop_geometry(agreements_shp)), field = names(
 
 layers <- c(Point = "MULTIPOINT", Polygon = "MULTIPOLYGON")
 stopifnot(
-  "every agreement is in exactly one shapefile layer" =
-    sum(agreements_sf$geometry_type %in% names(layers)) == nrow(agreements_sf)
+  "every agreement with a shape is in exactly one shapefile layer" =
+    sum(agreements_sf$geometry_type %in% names(layers)) == sum(!st_is_empty(agreements_sf))
 )
 for (type in names(layers)) {
   agreements_shp |>
