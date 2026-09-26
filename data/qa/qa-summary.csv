@@ -45,7 +45,7 @@ agency disagreements by kind,date,16,NA,info
 agency disagreements by kind,model,1,NA,info
 agency disagreements by kind,presence,19,NA,info
 agency disagreements by kind,state,1,NA,info
-active agreements == newest sheet rows,all,2539,2539,pass
+active agreements == newest sheet rows,all,2539,2589,fail
 duplicate identity rows in agreements,all,0,0,pass
 distinct states in agreements,all,47,NA,info
 feature rows,all,5020,NA,info
