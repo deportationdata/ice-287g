@@ -1,5 +1,5 @@
-# Snapshot ICE's participating-agencies workbook into sheets/sheets_<timestamp>/
-# with a manifest. The MOA pdfs it links are fetched by 0-acquire-moa-pass.R.
+# Snapshot ICE's participating-agencies workbook with a manifest; 0-acquire-moa-pass.R fetches the MOAs it links.
+# -> sheets/sheets_<timestamp>/
 suppressPackageStartupMessages({
   library(httr); library(rvest); library(stringr); library(purrr); library(dplyr)
   library(readr); library(fs); library(digest)
@@ -48,7 +48,7 @@ looks_like_excel <- function(candidate) {
   }, error = function(e) FALSE)
 }
 participating <- candidate_links[map_lgl(candidate_links, looks_like_excel)]
-# ICE has published a pending-agencies workbook before; keep the slot
+# intentionally unused: a slot for a pending-agencies workbook ICE may publish
 pending <- character()
 
 if (length(participating) == 0) {

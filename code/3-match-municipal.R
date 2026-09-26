@@ -52,10 +52,38 @@ cousubs_sf <- county_subdivisions_reference(YEAR) |>
     geometry
   )
 
+# a New England town coextensive with a same-named city or borough is one government: the town
+# carries the city's type and the place drops out; a city inside a larger same-named town stays
+ne_places <- places_sf |>
+  filter(statefp %in% new_england_fips, !is.na(cand_type)) |>
+  transmute(place_geoid = geoid, statefp, place_key = norm_place(place_guess), place_type = cand_type) |>
+  st_transform(3857) |>
+  mutate(place_area = as.numeric(st_area(geometry)))
+ne_cousubs <- cousubs_sf |>
+  filter(statefp %in% new_england_fips) |>
+  transmute(cousub_geoid = geoid, cousub_statefp = statefp, cousub_key = norm_place(place_guess)) |>
+  st_transform(3857) |>
+  mutate(cousub_area = as.numeric(st_area(geometry)))
+consolidated <- suppressWarnings(st_intersection(ne_places, ne_cousubs)) |>
+  filter(statefp == cousub_statefp, place_key == cousub_key) |>
+  mutate(shared = as.numeric(st_area(geometry))) |>
+  st_drop_geometry() |>
+  filter(shared > 0.99 * place_area, shared > 0.99 * cousub_area) |>
+  distinct(cousub_geoid, .keep_all = TRUE) |>
+  select(place_geoid, cousub_geoid, place_type)
+
 places_lookup <-
   bind_rows(
-    places_sf |> mutate(src = "place"),
-    cousubs_sf |> mutate(src = "cousub")
+    places_sf |>
+      filter(!geoid %in% consolidated$place_geoid) |>
+      mutate(src = "place"),
+    cousubs_sf |>
+      left_join(
+        consolidated |> select(geoid = cousub_geoid, consolidated_type = place_type),
+        by = "geoid"
+      ) |>
+      mutate(cand_type = coalesce(consolidated_type, cand_type), src = "cousub") |>
+      select(-consolidated_type)
   ) |>
   mutate(
     state_key = norm_state(state),
@@ -68,9 +96,8 @@ places_lookup <-
     )
   )
 
-# places can span several counties, so take every county they intersect; cousubs
-# carry their own, except in Connecticut where the 2024 code names a planning
-# region and the legacy county comes from the reference polygons
+# places can span several counties, so take every county they intersect; cousubs carry their
+# own, except in Connecticut where the 2024 code names a planning region, not the legacy county
 counties_ref <- counties_reference(YEAR) |>
   transmute(state_key, sheet_county_key = county_key, sheet_county_fips = geoid, geometry) |>
   st_transform(st_crs(places_sf))
@@ -105,12 +132,10 @@ municipal_overrides <- manual_polygons |>
     manual_note = note
   )
 
-# regional departments: one row per member municipality, unioned at the agreement level. A
-# member is the county subdivision of its name and type in its county (Pennsylvania boroughs
-# and townships, Michigan cities and townships); where a state's subdivisions are not its
-# municipalities (Missouri's townships), it is the place of that name in the county
+# regional departments: one row per member, unioned per agreement. A member is the county
+# subdivision of its name and type, or the same-named place where subdivisions are not municipalities
 member_type_word <- \(x) {
-  # the last type word names the entity: Velda Village Hills is a city
+  # the last type word names the entity
   str_extract(str_to_lower(x), "\\b(township|borough|village|town|city)\\b(?!.*\\b(township|borough|village|town|city)\\b)")
 }
 member_candidates <- bind_rows(
@@ -151,7 +176,7 @@ regional_members <- manual_regional |>
     by = c("state_key", "member_county_key")
   ) |>
   left_join(member_candidates, by = c("state_key", "place_key", "member_county_fips", "member_type")) |>
-  # a city that is both a subdivision and a place (Michigan) is taken once, as the subdivision
+  # a city that is both a subdivision and a place is taken once, as the subdivision
   slice_min(src_rank, n = 1, by = member_row, with_ties = FALSE) |>
   select(-member_row, -src_rank)
 
@@ -186,8 +211,7 @@ stopifnot(
   "every department in the member list is a Regional agreement that matched its members" =
     nrow(regional_sf) == nrow(agreements |> inner_join(regional_members, by = c("agency", "state", "county")))
 )
-# a regional body with no member list rides along unplaced, saying why, rather than being
-# read as a town by the city matcher
+# a regional body with no member list rides along unplaced rather than read as a town
 regional_unmatched <- agreements |>
   filter(geometry_type == "Polygon", jurisdiction_level == "Regional") |>
   anti_join(regional_members, by = c("agency", "state", "county")) |>
@@ -227,10 +251,11 @@ municipal_base <- agreements |>
         "\\bconstables?\\b"
       ))
   ) |>
-  # un-overridden rows of another class evaluate to NA; filter() drops those
+  # un-overridden rows of another class evaluate to NA; filter() drops those. A municipal
+  # department on a jail point is matched by name for its place and county; its geometry stays the jail
   filter(
     manual_match_layer == "municipal" |
-      (geometry_type == "Polygon" & jurisdiction_level == "Municipal" & is.na(manual_match_layer))
+      (geometry_type %in% c("Polygon", "Point") & jurisdiction_level == "Municipal" & is.na(manual_match_layer))
   ) |>
   mutate(
     manual_city_match = if_else(
@@ -260,6 +285,11 @@ municipal_base <- agreements |>
       distinct(state_key, sheet_county_key, sheet_county_fips),
     by = c("state_key", "sheet_county_key")
   )
+
+# the jail-point agreements: their match leaves the layer as attributes, below
+name_only_ids <- municipal_base |>
+  filter(geometry_type == "Point", is.na(manual_match_layer)) |>
+  pull(agreement_id)
 
 municipal_matches <- municipal_base |>
   left_join(
@@ -292,7 +322,7 @@ municipal_matches <- municipal_base |>
       sheet_county_fips == cand_county_fips,
       NA
     ),
-    # a type word inside the candidate's own name is not a type claim ("Cross City" is a town)
+    # a type word inside the candidate's own name is not a type claim
     hint_is_type_claim = !is.na(municipal_type_hint) &
       !coalesce(
         str_detect(
@@ -338,12 +368,14 @@ municipal_sf <- municipal_matches |>
     state_fips = statefp,
     # places carry no county attribute, so fall back to the sheet's confirmed county
     county_fips = case_when(
+      # a Connecticut subdivision's 2024 code names a planning region; its legacy county is the one the reference polygons gave it
+      statefp %in% "09" & !is.na(countyfp) ~ cand_county_fips,
       !is.na(statefp) & !is.na(countyfp) ~ paste0(statefp, countyfp),
       coalesce(county_confirmed, FALSE) ~ sheet_county_fips,
       TRUE ~ NA_character_
     ),
     place_fips = placefp,
-    # keep-all: unmatched agreements ride along with an empty sentinel geometry
+    # unmatched agreements ride along with an empty sentinel geometry
     geometry = st_sfc(
       map(geometry, \(g) {
         if (inherits(g, "sfg")) g else st_geometrycollection()
@@ -395,6 +427,14 @@ municipal_sf <- municipal_sf |>
   left_join(county_overlap, by = "agreement_id") |>
   mutate(county_fips = coalesce(county_fips, overlap_county_fips)) |>
   select(-overlap_county_fips)
+
+# jail-point agreements' municipalities are written without geometry for 5-locate-features.R
+municipal_sf |>
+  filter(agreement_id %in% name_only_ids) |>
+  st_drop_geometry() |>
+  select(agreement_id, match_name, match_type, county_fips, geoid, ambiguous_candidates, type_mismatch) |>
+  arrow::write_parquet("data/intermediate/match-municipal-names.parquet")
+municipal_sf <- municipal_sf |> filter(!agreement_id %in% name_only_ids)
 
 bind_rows(municipal_sf, st_transform(regional_sf, st_crs(municipal_sf)), st_transform(regional_unmatched, st_crs(municipal_sf))) |>
   st_transform(4326) |>

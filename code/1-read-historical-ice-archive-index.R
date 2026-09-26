@@ -1,6 +1,4 @@
-# ICE's own archive index of 287(g) MOAs: state, agency as ICE names it, original signing
-# date and the archived file, from every dated snapshot of the page (0-acquire-archive-index.R
-# adds one when the page changes); a document ICE later drops from the page stays evidence
+# ICE's 287(g) MOA archive index from every dated snapshot; documents ICE drops stay evidence
 # -> data/intermediate/historical-ice-archive-index.csv
 suppressPackageStartupMessages({ library(dplyr); library(stringr); library(readr); library(purrr) })
 

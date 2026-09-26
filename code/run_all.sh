@@ -43,8 +43,7 @@ run 5-match-agency-identifiers.R
 run 5-locate-features.R
 run 6-make-agreement-level-sf.R
 
-# the agencies grain: every source resolved to agencies and arbitrated against ICE's
-# own record, each agency's county from its latest agreement's geography
+# the agencies grain: every source resolved to agencies and arbitrated against ICE's own record
 run 7-make-agencies.R
 run 7-match-missing-identifiers.R
 run 7-make-qa-report.R

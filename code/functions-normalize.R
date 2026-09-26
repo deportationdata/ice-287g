@@ -1,4 +1,4 @@
-# Key normalization: agency, place, county, state, ORI and pattern helpers.
+# Key normalization: agency, place, county, state, ORI and pattern helpers
 
 snap_state_name <- function(state, valid_states, max_dist = 2) {
   key <- norm_state(state)
@@ -62,16 +62,15 @@ norm_place <- function(x) {
       "\\b(county|city|town|village|borough|township|municipality)\\b",
       " "
     ) |>
-    # a remaining -borough belongs to the name ("Middlesborough" vs "Middlesboro")
+    # a remaining -borough belongs to the name, so it matches the -boro spelling
     str_replace_all("borough\\b", "boro") |>
     str_replace_all("[^a-z0-9\\s]", " ") |>
-    # a bare "n" is "and" once quoting is stripped (Cut "N" Shoot)
+    # a bare "n" is "and" once quoting is stripped
     str_replace_all("\\bn\\b", "and") |>
     str_squish()
 }
 
-# rosters drop the "Parish" suffix ICE carries, so strip it; "#N/A" -> NA so
-# sentinels never key-match
+# rosters drop the "Parish" suffix ICE carries; "#N/A" -> NA so sentinels never key-match
 norm_ori_county <- function(x) {
   x <- if_else(
     str_to_lower(str_squish(x)) %in% c("#na", "#n/a", "na", "n/a", ""),
@@ -84,8 +83,7 @@ norm_ori_county <- function(x) {
     str_squish()
 }
 
-# LEAIC/NCIC abbreviates heavily, so expand before keying; transliterate first
-# so curly-apostrophe possessives reach the singularization
+# LEAIC/NCIC abbreviates heavily, so expand first; transliterate so curly-apostrophe possessives singularize
 expand_leaic_abbrev <- function(x) {
   x |>
     stringi::stri_trans_general("Latin-ASCII") |>
@@ -103,13 +101,9 @@ expand_leaic_abbrev <- function(x) {
     str_replace_all("\\bpd\\b", " police department ") |>
     str_replace_all("\\buniv\\.?\\b", " university ") |>
     str_replace_all("\\b(sheriff|constable|marshal)'?s?\\b", "\\1 ") |>
-    # fuse, or norm_key collapses "Arkansas Department of Public Safety" onto
-    # "Arkansas City PD"
+    # fuse, or norm_key collapses a state department of public safety onto a city PD
     str_replace_all("\\bpublic safety\\b", " publicsafety ") |>
-    # styling that differs between ICE and the rosters (each tested over every agreement
-    # and roster on 2026-09-13 with no wrong match): "Metro"/"Metropolitan" is a prefix
-    # (Metropolitan Moore County Sheriff's Office is Moore County's), a state highway patrol
-    # is its highway patrol, and a college's board of trustees signs for the college police
+    # styling that differs between ICE and the rosters: "Metro" prefixes, state highway patrols, college trustees
     str_replace_all("\\bmetro(politan)?\\b", " ") |>
     str_replace_all("\\bstate highway patrol\\b", " highway patrol ") |>
     str_replace_all("\\b(district )?board of trustees( of)?\\b", " ")
@@ -122,8 +116,7 @@ norm_ori_agency <- function(x) {
     norm_key()
 }
 
-# the body that runs a jail, as the jails census names operators: the RSW Regional Jail
-# Authority's jails carry the authority as operator, and "authority" is the styling
+# the body that runs a jail, as the jails census names operators, which styles authorities without "authority"
 norm_operator_key <- function(x) {
   x |>
     str_to_lower() |>
@@ -131,8 +124,7 @@ norm_operator_key <- function(x) {
     norm_ori_agency()
 }
 
-# a town marshal's office is the town's police, except in Louisiana, whose city marshals
-# are court officers distinct from the police department
+# a town marshal's office is the town's police, except Louisiana's city marshals, which are court officers
 marshal_as_police <- function(name, state_key) {
   if_else(state_key == "louisiana", name,
           str_replace_all(name, regex("\\bmarshal['’]?s?\\b", ignore_case = TRUE), "Police"))
@@ -145,15 +137,14 @@ public_safety_as_police <- function(name, jurisdiction_level) {
           name)
 }
 
-# keeps every word, so "Melbourne PD" and "Melbourne Village PD" stay distinct
+# keeps every word, so a town PD and a village PD of the same root stay distinct
 norm_ori_fullname <- function(x) {
   x |>
     expand_leaic_abbrev() |>
     str_replace_all("[^a-z0-9]", "")
 }
 
-# parish -> county, then drop the type word from both sides; keep "city" so
-# Virginia independent cities stay distinct from namesake counties
+# parish -> county, drop the type word from both sides; keep "city" so Virginia independent cities stay distinct
 norm_county <- function(x) {
   x |>
     stringi::stri_trans_general("Latin-ASCII") |>
@@ -173,7 +164,7 @@ extract_city_guess <- function(x) {
   s <- str_remove(
     s,
     regex(
-      "(?i)\\b(police|pd|police dept\\.?|police department|department|dept|division|public safety|office|marshal['’]?s?)\\b.*$"
+      "(?i)\\b(police|pd|police dept\\.?|police department|department|dept|division|public safety|office|marshal['’]?s?|sheriff['’]?s?)\\b.*$"
     )
   )
   s <- str_squish(s)
@@ -223,8 +214,7 @@ extract_facility_guess <- function(x) {
 
 norm_match_phrase <- function(x) {
   x |>
-    # fold curly apostrophes BEFORE stripping punctuation, or "St. John’s"
-    # splits into "john s" while "St. John's" yields "johns"
+    # fold curly apostrophes before stripping punctuation, or the two apostrophes key differently
     stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
     str_replace_all("&", " and ") |>
@@ -250,7 +240,7 @@ exact_county_suffix_pattern <- function() {
   paste(
     "sheriffs? office",
     "sheriffs? department",
-    # possessives too: "Culberson County Sheriff's" names the jail
+    # possessives too: a bare sheriff's name names the jail
     "sheriffs?",
     "county jail",
     "parish jail",
@@ -299,7 +289,8 @@ is_exact_municipal_pattern <- function(name, city) {
     root != "" &
     str_detect(
       phrase,
-      paste0("^", root, "\\s+(", suffixes, ")$")
+      # "City of X Police Department" names the same department as "X Police Department"
+      paste0("^((city|town|village) of\\s+)?", root, "\\s+(", suffixes, ")$")
     )
 }
 
@@ -400,6 +391,8 @@ extract_pa_constable_parts <- function(x) {
         ignore_case = TRUE
       )) |>
       str_remove(regex("\\bPA\\s+State\\s+Constable\\b", ignore_case = TRUE)) |>
+      str_remove(regex("^\\s*Office\\s+of\\s+", ignore_case = TRUE)) |>
+      str_remove(regex("\\bState\\s+Constable'?s?\\b", ignore_case = TRUE)) |>
       str_remove(regex("\\bConstable'?s?\\s+Office\\b", ignore_case = TRUE)) |>
       str_remove(regex("\\bConstables\\s+Office\\b", ignore_case = TRUE)) |>
       str_remove(regex("\\bConstable\\b", ignore_case = TRUE)) |>
@@ -440,8 +433,7 @@ appearance_norm <- function(x) {
   str_squish(str_to_upper(str_replace_all(x, "[’‘]", "'")))
 }
 
-# map ICE's historical model names onto the modern ones, or an agreement that
-# bridged the eras reads as a false 2017 removal; keys only, never display
+# map ICE's historical model names onto the modern ones, or a bridging agreement reads as a 2017 removal; keys only
 norm_support_key <- function(x) {
   k <- appearance_norm(x)
   case_when(
@@ -454,12 +446,9 @@ norm_support_key <- function(x) {
 
 # ---- identity family: folds spelling, never jurisdiction ---------------------
 
-# a redundant own-state token carries no information inside a state-scoped key:
-# "MO State Highway Patrol" is Missouri's, "Washington County Sheriff Office AR"
-# is Arkansas's. A leading state NAME is dropped only before an agency-type word,
-# so "Virginia Beach Police" and "Kansas City PD" keep their place names.
+# drop a redundant own-state token; a leading state name only before an agency-type word, so place names survive
 expand_own_state_token <- function(x, state_abbr, state_full) {
-  # the names become regex, so a footnote-marked "DELAWARE**" must not break them
+  # the names become regex, so footnote marks ("DELAWARE**") must not break them
   ab <- str_remove_all(str_to_lower(state_abbr), "[^a-z]")
   full <- str_remove_all(str_to_lower(state_full), "[^a-z ]")
   x <- str_remove(x, paste0("\\s+(", ab, "|", full, ")$"))
@@ -475,7 +464,7 @@ canonical_agency <- function(agency, state_abbr, state_full) {
     stringi::stri_trans_general("Latin-ASCII") |>
     str_to_lower() |>
     str_remove_all("'") |>
-    # a leading own-state abbreviation goes first, or "CO Dept." reads as "county"
+    # a leading own-state abbreviation goes first, or "CO" reads as "county"
     str_replace(paste0("^", str_remove_all(str_to_lower(state_abbr), "[^a-z]"), "\\b"),
                 str_remove_all(str_to_lower(state_full), "[^a-z ]")) |>
     str_replace_all("&", " and ") |>
@@ -492,7 +481,6 @@ canonical_agency <- function(agency, state_abbr, state_full) {
     str_replace_all("\\bhwy\\.?\\b", " highway ") |>
     str_replace_all("\\buniv\\.?\\b", " university ") |>
     str_replace_all("\\bpct\\.?\\b", " precinct ") |>
-    # ICE abbreviates a county commission and a public-safety department in a few rows
     str_replace_all("\\bbocc\\b", " board of county commissioners ") |>
     str_replace_all("\\bdps\\b", " department of public safety ") |>
     str_replace_all("[^a-z0-9]", " ") |>
@@ -532,9 +520,7 @@ slug <- function(x) {
     str_remove_all("^-|-$")
 }
 
-# county keys: typed keeps the jurisdiction word (geometry joins need "Hopewell
-# city" ≠ "Hopewell County"); bare is typed minus type words (roster joins), so
-# the two can never disagree on anything else
+# county keys: typed keeps the jurisdiction word (geometry joins); bare drops type words (roster joins)
 county_key_typed <- function(x) {
   x <- if_else(str_to_lower(str_squish(x)) %in% c("#na", "#n/a", "na", "n/a", ""), NA_character_, x)
   x |>
@@ -571,11 +557,8 @@ read_agency_aliases <- function(xwalk, path = "inputs/agency-aliases.csv") {
                                               NA_character_))
 }
 
-# ICE's sheets carried no TYPE column before 2025; the name says what the sheet would. A
-# leading state name before an agency word wins (Utah County Sheriff's Office is a county's),
-# then a county or parish in the name (Hudson County Department of Corrections is a county
-# jail, not a state one), then the state-agency words; a public-safety department that does
-# not open with its state's name is a town's (Jupiter Island Department of Public Safety)
+# ICE's sheets had no TYPE column before 2025, so infer it from the name: a leading state name before an agency
+# word wins, then a county or parish, then state-agency words; other public-safety departments are a town's
 agency_level_from_name <- function(agency, state) {
   a <- str_to_lower(agency)
   agency_word <- "(department|state|highway|office|bureau|division|attorney|corrections?|police|patrol|fish|game|wildlife|national guard|military)"
@@ -583,8 +566,7 @@ agency_level_from_name <- function(agency, state) {
     str_detect(agency, "^[A-Z]{2} (State|Department|Dept|Highway|Bureau|Division)\\b") |
       str_detect(a, paste0("^", str_to_lower(state), "\\s+", agency_word, "\\b")) |
       str_detect(a, "^department of public safety\\b") ~ "state",
-    # a sheriff is a county officer even where the name omits the county (Jacksonville Sheriff's
-    # Office serves consolidated Duval County)
+    # a sheriff is a county officer even where the name omits the county
     str_detect(a, "\\b(county|parish|sheriff)\\b") ~ "county",
     str_detect(a, "\\b(state police|highway patrol|department of corrections?|department of safety|department of law enforcement|bureau of investigation|attorney general)\\b") ~ "state",
     str_detect(a, "\\b(police|marshal|constable|town|city|village|borough|township|public safety)\\b") ~ "municipal",
@@ -595,25 +577,20 @@ agency_level_from_name <- function(agency, state) {
 # the eight jurisdiction levels, as published
 JURISDICTION_LEVELS <- c("State", "County", "Municipal", "Regional", "Campus", "Port", "Constable District", "Judicial District")
 
-# an educational institution's own police (a university, college or school district),
-# whatever TYPE ICE gives it
+# an educational institution's own police, whatever TYPE ICE gives it
 is_campus_agency <- function(agency) {
   str_detect(str_to_lower(agency), "university|college|campus|board of trustees|\\bschools?\\b|\\bschool district\\b|\\bisd\\b")
 }
 
-# name rules for the levels the hand list otherwise supplies, each tested over every
-# agency on 2026-09-13 with no false positive: a body several jurisdictions formed, a
-# state office serving a multi-county judicial district, an airport or port authority's police
+# name rules for levels the hand list otherwise supplies: regional bodies, judicial districts, airport or port police
 is_regional_agency <- function(agency) str_detect(str_to_lower(agency), "\\bregional\\b")
 is_judicial_district_agency <- function(agency) {
   str_detect(str_to_lower(agency), "\\bjudicial\\b|\\bdistrict attorney\\b.*\\bdistrict\\b")
 }
 is_port_agency <- function(agency) str_detect(str_to_lower(agency), "\\bairport\\b|\\bport authority\\b")
 
-# a constable whose office is a division of the county: a Texas justice precinct, or a
-# Mississippi justice court district. Tennessee's constables are elected by district but
-# hold county-wide jurisdiction, so they are county officers like a constable named for the
-# county alone; Pennsylvania's serve a borough, township or ward and stay municipal
+# a constable whose office is a division of the county (Texas precinct, Mississippi district); other states'
+# constables are county officers, except Pennsylvania's, which stay municipal
 is_constable_district <- function(agency, state) {
   a <- str_to_lower(agency)
   str_detect(a, "\\bconstable") & state %in% c("Texas", "Mississippi") &

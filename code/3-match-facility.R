@@ -56,7 +56,7 @@ manual_facility_exclusions <- manual_facility_review |>
   ) |>
   distinct(state_key, agency_key, facility_key)
 
-# a facility a state DOC no longer runs (Winn, an ICE detention center since 2019)
+# a facility a state DOC no longer runs
 manual_doc_exclusions <- manual_facility_review |>
   filter(
     review_type == "doc_facility",
@@ -90,8 +90,7 @@ fac_287g <- agreements |>
   mutate(
     state_key = norm_state(state),
     county_key = norm_ori_county(county),
-    # the archive's pre-2018 rows carry no county, but a county sheriff or
-    # jail names its own, and a statewide name search may not cross it
+    # a county sheriff or jail names its own county; a statewide name search may not cross it
     county_key = coalesce(
       na_if(county_key, ""),
       if_else(
@@ -107,8 +106,7 @@ fac_287g <- agreements |>
     is_county_exact_agency = is_exact_county_pattern(agency, county),
     is_municipal_exact_agency = jurisdiction_level == "Municipal" &
       is_exact_municipal_pattern(agency, city_guess),
-    # a DOC named for its state is a state agency whatever TYPE says, and a
-    # county or city department of corrections never is
+    # a DOC named for its state is a state agency whatever TYPE says; a county or city DOC never is
     is_doc_agency = str_detect(str_to_lower(agency), doc_pattern) &
       (jurisdiction_level == "State" |
          str_detect(str_to_lower(agency), paste0("^", str_to_lower(state), "\\b")) |
@@ -118,9 +116,8 @@ fac_287g <- agreements |>
 
 # exact match tiers
 
-# dedup grain is (agreement, facility): a county agreement fans out to all its facilities.
-# A state or federal prison named for the county (Morgan County Correctional Complex is
-# TDOC's) is not the county's jail, so HIFLD's STATE and FEDERAL rows stay out
+# a county agreement fans out to all its facilities; HIFLD STATE and FEDERAL prisons named
+# for the county are not its jail, so they stay out
 county_pattern_exact_matches <- fac_287g |>
   filter(!is_doc_agency, is_county_exact_agency) |>
   inner_join(
@@ -174,7 +171,7 @@ pattern_exact_matches <- bind_rows(
   municipal_pattern_exact_matches
 )
 
-# the jails census names each jail's operating agency, catching jail names with no county tie
+# the jails census names each jail's operating agency, catching names with no county tie
 operator_exact_matches <- fac_287g |>
   filter(!is_doc_agency) |>
   mutate(agency_operator_key = norm_operator_key(agency)) |>
@@ -283,8 +280,7 @@ facility_fuzzy_state <- facility_unmatched_after_fuzzy_county |>
     by = "state_key",
     relationship = "many-to-many"
   ) |>
-  # the same county guard as the exact tiers: a statewide name search may not
-  # cross a county the sheet names (Washburn PD, Barry County -> Warren County Jail)
+  # same county guard as the exact tiers: a statewide search may not cross the sheet's county
   filter(
     is.na(county_key) |
       county_key == "" |
@@ -361,7 +357,7 @@ doc_candidates <- fac_287g |>
     operator_clean = str_to_lower(str_squish(facility_operator_name)),
     doc_manual_include = coalesce(doc_manual_include, FALSE),
     doc_manual_exclude = coalesce(doc_manual_exclude, FALSE),
-    # ICE's own detention list names a DOC itself as a facility (CNMI Department of Corrections)
+    # ICE's detention list can name a DOC itself as a facility
     doc_is_named_facility = source == "facilities" & facility_key == agency_key,
     doc_is_state_prison_source = source == "hifld_prisons" &
       type_clean == "STATE",
@@ -578,7 +574,7 @@ facility_matched_sf <- facility_all_matches |>
     remove = FALSE
   )
 
-# keep-all: every agreement keeps a row, unmatched ones with an empty geometry
+# every agreement keeps a row, unmatched ones with an empty geometry
 facility_unmatched <- fac_287g |>
   anti_join(
     facility_matched_sf |> st_drop_geometry(),

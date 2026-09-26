@@ -168,8 +168,7 @@ run_backfill <- function(out_dir, queries, extra_stamps) {
     html <- tryCatch(read_html(raw_path), error = function(e) NULL)
     if (is.null(html)) { cat(ts, "unparseable html\n"); next }
 
-    # a page that carries the roster table is complete as saved: 1-read-sheets.R
-    # reads the table from the raw capture
+    # a page with the roster table is complete as saved; 1-read-sheets.R reads the raw capture
     if (!is.null(read_roster_html(raw_path))) { n_table <- n_table + 1; next }
 
     links <- html |> html_elements("a") |> html_attr("href")

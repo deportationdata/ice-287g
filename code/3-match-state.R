@@ -14,7 +14,7 @@ manual_polygons <- arrow::read_parquet("data/intermediate/manual-non-facility-po
 
 YEAR <- 2024
 
-# sheet and manual names must match tigris NAME exactly; str_to_title would break "District of Columbia"
+# names must match tigris NAME exactly; str_to_title would break "District of Columbia"
 states_sf <- tigris::states(cb = TRUE, year = YEAR, class = "sf") |>
   filter(as.integer(STATEFP) <= 56 | STATEFP == "72") |> # states plus PR
   transmute(
@@ -82,7 +82,7 @@ state_agreements_sf <- agreements |>
     state_fips = statefp,
     geoid = state_fips,
     geometry_vintage = if_else(is.na(statefp), NA_integer_, YEAR),
-    # keep-all: unmatched agreements ride along with empty geometries
+    # unmatched agreements ride along with empty geometries
     geometry_unmatched = is.na(geometry) | st_is_empty(geometry)
   ) |>
   select(

@@ -1,35 +1,26 @@
 # Every archived participating-agencies sheet, hash-grouped into publications
-# -> data/sheet-publications.parquet, data/sheet-publication-files.parquet,
-#    data/intermediate/sheet-rows.parquet
+# -> data/intermediate/sheet-{publications,publication-files,rows}.parquet
 library(tidyverse)
 
 source("code/functions.R")
 
 state_xwalk <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
-# ICE printed some agreements under the wrong agency and later corrected the name;
-# keyed on the erroneous row, so a fix does nothing on every row ICE printed correctly
+# fixes are keyed on the erroneous row ICE printed, so they do nothing on correct rows
 agency_name_fixes <- read_csv("inputs/agency-name-fixes.csv", col_types = "cccDcc") |>
   transmute(state, agency, support_key = canonical_support(support_type), signed, agency_fixed)
-# ICE has printed an agreement under the wrong state for a stretch; keyed the same way
 state_fixes <- read_csv("inputs/state-fixes.csv", col_types = "cccDcc") |>
   transmute(state, agency, support_key = canonical_support(support_type), signed, state_fixed)
-# ICE has renewed an agreement by linking the new MOA from the old row without re-dating it;
-# rows on lists from the first to link the renewal take its date, so the old agreement ends
-# there. Keyed on the erroneous row, so a fix does nothing once ICE prints the renewal's date
+# renewals linked from the old row without re-dating: rows from the linking list on take the new date
 renewal_date_fixes <- read_csv("inputs/renewal-date-fixes.csv", col_types = "cccDDDc") |>
   transmute(state, agency, support_key = canonical_support(support_type), signed, published_from, signed_fixed)
-# ICE has printed a wrong signing date (a year typo, a neighbour's date); keyed the same way,
-# and applied here so the corrected rows join the agreement they belong to
+# date fixes apply here so corrected rows join their agreement
 signed_date_fixes <- read_csv("inputs/signed-date-fixes.csv", col_types = "cccDDc") |>
   transmute(state, agency, support_key = canonical_support(support_type), signed, signed_fixed)
-# ICE has printed an agreement under the wrong model for a list or two (Morehouse Parish's task
-# force as a jail agreement); keyed the same way, and applied before the date fixes and the
-# identity rules so the corrected rows join the agreement they belong to
+# model fixes apply before the date fixes and identity rules so corrected rows join their agreement
 support_type_fixes <- read_csv("inputs/support-type-fixes.csv", col_types = "cccDcc") |>
   transmute(state, agency, support_key = canonical_support(support_type), signed, support_type_fixed)
 
-# ICE's workbooks, and the roster table of every archived page that carries one
-# (the pages before April 2008 describe the program in prose and yield nothing)
+# ICE's workbooks and every archived page's roster table; pages before April 2008 are prose and yield nothing
 workbooks <- list.files("sheets", "\\.xlsx$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 # pending lists are a different population
 workbooks <- workbooks[!str_detect(basename(workbooks), regex("^pending", ignore_case = TRUE))]
@@ -40,21 +31,15 @@ files <- c(workbooks, names(page_tables))
 manifests <- snapshot_manifests("sheets") |>
   select(folder, path_now, url, note, retrieved_at, capture_time, last_modified)
 
-# a workbook is one publication per distinct bytes; a page is one per distinct
-# table per capture day, so a table that returns after a different one (a row
-# dropped and restored) still reads as a change rather than folding into the
-# earlier publication and hiding the removal between them
+# workbooks group by bytes, pages by table and capture day, so a dropped-then-restored row still shows
 hash_of <- \(p) {
   if (!p %in% names(page_tables)) return(digest::digest(file = p, algo = "sha256"))
   day <- str_match(basename(p), "^(?:ice_287g_)?(\\d{8})")[, 2]
   digest::digest(list(page_tables[[p]], day))
 }
 
-# a publication is dated by ICE's own filename date wherever a file carries one (every
-# list since March 2025), else by ice.gov's Last-Modified, else by the Eastern date of
-# its earliest archive capture;
-# capture times are kept only as evidence, to order lists that share a date and to
-# catch a filename date the file was online before (dated once its rows are read)
+# dated by ICE's filename date (every list since March 2025), else Last-Modified, else earliest capture (Eastern); capture
+# times only order same-date lists and catch files online before their filename date
 stamp <- \(x) as.POSIXct(x, format = "%Y%m%d%H%M%S", tz = "UTC")
 file_meta <- tibble(path = files) |>
   mutate(
@@ -67,8 +52,7 @@ file_meta <- tibble(path = files) |>
     ice_part = ice_filename_part(path),
     modified_on = as.Date(format(as.POSIXct(last_modified, format = "%a, %d %b %Y %H:%M:%S", tz = "UTC"),
                                  tz = "America/New_York")),
-    # when the file was demonstrably online: a Wayback capture, our scraper's run folder,
-    # a logged download, or the once-a-day snapshot folder of a mirror
+    # when the file was demonstrably online
     captured_at = coalesce(
       stamp(coalesce(capture_time, str_match(url, "/web/(\\d{14})")[, 2],
                      str_match(basename(path), "^(?:ice_287g_)?(\\d{14})")[, 2])),
@@ -121,8 +105,6 @@ if (length(read_failures)) {
           paste(read_failures, collapse = ", "))
 }
 
-# keys: state through the same snap as the agreements build, agency and support
-# through the identity family
 observations <- observations |>
   mutate(
     state = snap_state_name(str_to_title(str_squish(raw_state)), state_xwalk$state_full),
@@ -140,12 +122,8 @@ observations <- observations |>
   mutate(signed_date_fixed = !is.na(signed_fixed), signed_printed = signed, signed = coalesce(signed_fixed, signed)) |>
   select(-signed_fixed)
 
-# ICE has printed an agreement under the wrong state for a stretch (Burnet County TX under
-# Florida for three captures): the same agency, model and date under two states, never on one
-# list, with the shorter run at most a quarter of the longer or ten lists, takes the longer
-# run's state. Tested 2026-09-13: it repairs the two hand fixes and seven more stretches, and
-# leaves the four real same-name pairs (Anderson SC/KS, Logan AR/KS, Madison NY/TN, the two
-# Bureaus of Investigation), which share lists, alone
+# wrong-state stretches: same agency, model and date under two states never on one list; the
+# shorter run (at most 10 lists or a quarter of the longer) takes the longer run's state
 stretch_rows <- observations |>
   filter(!is.na(signed)) |>
   mutate(k = norm_key(raw_agency)) |>
@@ -224,8 +202,7 @@ stopifnot(
     setequal(publications$publication_id, unique(observations$publication_id))
 )
 
-# ICE prints the same agreement twice under two spellings now and then; a fold
-# inside one publication is reported for review, never a reason to stop the build
+# two spellings of one agreement in one publication are reported for review, never a stop
 dir.create("data/qa", showWarnings = FALSE)
 within_folds <- observations |>
   filter(!is.na(signed)) |>
@@ -243,11 +220,8 @@ if (nrow(within_folds)) {
   message(nrow(within_folds), " identit(ies) fold two spellings printed in one publication; see data/qa/within-publication-folds.csv")
 }
 
-# ICE has dated a filename a year early (01062025 on a January 2026 list), and a list
-# cannot predate the newest signing it prints; a list online before its filename date
-# takes that capture's date instead. Lists sharing a date keep ICE's am/mid/pm order,
-# then capture order (ICE has re-posted a file under the same name)
-# printed dates: a date fix can postdate lists that carried the agreement
+# a list can't predate its newest printed signing, so a year-early filename date (01062025 on a January 2026 list) moves forward;
+# a list online before its filename date takes the capture date
 newest_signed <- observations |>
   filter(!is.na(signed_printed)) |>
   summarise(newest_signed = max(signed_printed), .by = publication_id)
@@ -297,16 +271,8 @@ if (nrow(unmatched_renewal_fixes)) {
 message(sprintf("renewal date fixes: %d sheet rows re-dated by %d fixes", sum(observations$renewal_date_fixed),
                 nrow(renewal_date_fixes) - nrow(unmatched_renewal_fixes)))
 
-# ICE has printed a signing year early (2025-02-23 for an agreement first listed in February
-# 2026; 2016 for 2026): a listing first seen on an ICE-dated list more than 300 days after its
-# printed date, whose month and day fall within the 60 days before that list in the list's
-# year or the year before, takes that year. A listing is a spelling, so a spelling ICE
-# corrected on an ICE-dated list is not new: when the same date was already printed for a
-# near-identical spelling (Albermarle District Jail, signed 2020-03-19, respelled Albemarle
-# on the 2025-03-26 list), the date stands. Tested 2026-09-13 with the two year-typo rows of
-# inputs/signed-date-fixes.csv (kept as the record) lifted: exactly those two and Tenaha
-# Police Department, which ICE itself later re-dated, and none of the archive-era listings,
-# which the source test excludes
+# year typos: a listing first on an ICE-dated list >300 days after its date, month/day in the 60 days
+# before that list, takes the list's year (or the one before); a respelling keeps its earlier date
 first_listed <- observations |>
   filter(!is.na(signed)) |>
   inner_join(publications |> select(publication_id, published_on, published_on_source), by = "publication_id") |>

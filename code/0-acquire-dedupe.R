@@ -18,12 +18,8 @@ dedupe_scope_key <- function(base_path, file_path, file_hash) {
   parts <- strsplit(rel_path, "/", fixed = TRUE)[[1]]
   # parts[1] is the snapshot folder; scope is STATE/AGENCY for agreements
   scope <- parts[-c(1, length(parts))]
-  # a sheet's scope is the day it was observed: the scrape folder's date, ICE's
-  # filename date (pending lists carry it in the same forms as participating
-  # ones), or the Wayback capture timestamp that names an archived page (the
-  # digits 1-read-sheets.R dates a capture by). Identical content on different
-  # days is two observations, not a duplicate; a sheet with no date of its own
-  # is never a duplicate of another file
+  # a sheet's scope is the day it was observed (scrape folder, ICE filename or Wayback timestamp);
+  # identical content on different days is not a duplicate, and an undated sheet never is one
   if (basename(base_path) == "sheets") {
     name <- basename(file_path)
     day <- coalesce(
@@ -150,9 +146,7 @@ delete_path_log_only_dirs <- function(base_path) {
 
     contents <- list.files(dir_path, all.files = TRUE, no.. = TRUE)
 
-    # a folder whose only file is a manifest with rows is provenance (revalidated
-    # validators, or rows for files retained elsewhere) and stays; only a
-    # download_path_log.csv or a rowless manifest marks a folder as empty
+    # a folder holding only a manifest with rows is provenance and stays; a lone path log or rowless manifest is empty
     manifest <- file.path(dir_path, "manifest.csv")
     manifest_has_rows <- file.exists(manifest) && length(readLines(manifest, warn = FALSE)) > 1
     if (length(contents) > 0 && !manifest_has_rows &&

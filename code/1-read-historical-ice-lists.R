@@ -1,7 +1,5 @@
-# ICE's own agency lists from before the dated roster table: the 287(g) partners
-# page carried an undated list "as of 9-19-07" (28 agencies) and one "updated
-# 3-10-08" (41 agencies) before the STATE / AGENCY / SUPPORT / SIGNED table
-# appeared in April 2008 -> data/historical-ice-lists.csv
+# ICE's undated agency lists (as of 9-19-07, 28 agencies; updated 3-10-08, 41) from before its
+# April 2008 roster table -> data/historical-ice-lists.csv
 suppressPackageStartupMessages({ library(dplyr); library(stringr); library(purrr); library(readr); library(xml2) })
 
 DIR <- "sheets/sheets_wayback_pre2011"
@@ -26,12 +24,10 @@ read_list <- function(path) {
   # the list ends at the first non-matching line after it starts
   stop_at <- which(!is_row & cumsum(is_row) > 0)[1]
   rows <- body[seq_len(if (is.na(stop_at)) length(body) else stop_at - 1)]
-  # a missing line break runs two agencies into one node ("... Sheriff's Office FL Collier
-  # County ..."); a state code after a lowercase word starts a new row. ICE's page
-  # encodes its apostrophes as a replacement character
+  # a state code after a lowercase word starts a new row; apostrophes arrive as replacement characters
   rows <- unlist(str_split(rows, "(?<=[a-z'.]\\s)(?=[A-Z]{2} [A-Z])")) |>
     str_replace_all("�", "'") |>
-    # "Sheriff 's" and "Sherrif's" are the page's own typos
+    # the page's own typos ("Sheriff 's", "Sherrif's")
     str_replace_all(" 's", "'s") |>
     str_replace_all("Sherrif", "Sheriff")
   rows <- rows[str_detect(rows, "^[A-Z]{2} \\S")]
@@ -40,7 +36,7 @@ read_list <- function(path) {
 }
 
 lists <- map(files, read_list) |> list_rbind() |>
-  # the same list can sit in several captures; keep it once, under its earliest capture
+  # keep each list once, under its earliest capture
   group_by(as_of) |> filter(capture == min(capture)) |> ungroup() |>
   left_join(xwalk |> select(state_abbr, state = state_full), by = "state_abbr") |>
   mutate(source = sprintf("ICE 287(g) partners page, agency list as of %s (Wayback %s)", as_of, capture)) |>

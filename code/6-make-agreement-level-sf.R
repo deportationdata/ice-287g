@@ -1,5 +1,5 @@
-# Assemble the per-feature layer (intermediate/match-all-features) and the
-# published agreement-level-sf
+# Assemble the per-feature layer and the published agreement-level layer
+# -> data/intermediate/match-all-features.parquet, data/agreements-sf.parquet
 library(tidyverse)
 library(sf)
 
@@ -33,8 +33,7 @@ agreement_identifiers <-
 
 state_codes <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
 
-# the review vocabulary: every flag a layer or roster stage sets, and the one
-# wording it gets; a flag outside this table cannot reach the published files
+# every review flag and its one wording; a flag outside this table cannot be published
 review_vocabulary <- tribble(
   ~flag                         , ~reason                                          ,
   "geometry_type_unknown"       , "agreement type cannot be placed"                ,
@@ -67,8 +66,7 @@ compose_review_reason <- function(flags) {
 all_agreements_sf <- features_sf |>
   left_join(
     agreements |>
-      # ICE's COUNTY as printed, squished like ice_type; the corrected county
-      # (2-make-agreements.R) is the matchers' and gives the census code below
+      # ICE's COUNTY as printed; the corrected county gives the census code below
       mutate(ice_county = str_squish(raw_county)) |>
       select(
         agreement_id,
@@ -85,7 +83,6 @@ all_agreements_sf <- features_sf |>
         jurisdiction_level,
         jurisdiction_level_source,
         support_type,
-        ice_support_type,
         signed,
         moa,
         addendum,
@@ -101,8 +98,7 @@ all_agreements_sf <- features_sf |>
   ) |>
   left_join(agreement_identifiers, by = "agreement_id") |>
   mutate(
-    # only county/municipal matches are checked against roster counties; a roster agrees
-    # when its county is among the feature's
+    # only county/municipal matches are checked against roster counties
     checkable_layer = match_layer %in% c("county", "municipal"),
     leaic_fips_mismatch = case_when(
       match_layer == "county" ~ coalesce(
@@ -169,8 +165,7 @@ all_agreements_sf <- features_sf |>
       FALSE
     )
   ) |>
-  # a roster disagreement is judged per agreement: one feature the roster agrees
-  # with (a regional department's own member) clears it
+  # a roster disagreement is judged per agreement: one agreeing feature clears it
   mutate(
     across(
       c(
@@ -257,7 +252,6 @@ all_agreements_sf <- all_agreements_sf |>
     jurisdiction_level,
     jurisdiction_level_source,
     support_type,
-    ice_support_type,
     signed,
     moa,
     addendum,
@@ -287,6 +281,7 @@ all_agreements_sf <- all_agreements_sf |>
     county_fips,
     county,
     layer_county_fips,
+    jail_county_fips,
     place_fips,
     place_geoid,
     place,
@@ -335,8 +330,7 @@ sf::st_write(
   quiet = TRUE
 )
 
-# an agreement can span several features, so a unit code is kept only when unique and
-# its counties are listed
+# an agreement can span several features, so a unit code is kept only when unique
 single_or_na <- function(x) {
   ux <- unique(x[!is.na(x)])
   if (length(ux) == 1) ux else NA_character_
@@ -365,8 +359,7 @@ ice_county_codes <- agreements |>
   left_join(county_codes |> rename(ice_county_fips = county_fips), by = c("state", "county_key")) |>
   select(agreement_id, ice_county_fips)
 
-# a regional jail authority serves its member counties, listed by hand; its geometry
-# stays its jails
+# a regional jail authority's counties are its hand-listed members; its geometry stays its jails
 regional_jail_counties <- arrow::read_parquet(
   "data/intermediate/manual-regional-jail-counties.parquet"
 ) |>
@@ -407,7 +400,6 @@ agreement_level_sf <- all_agreements_sf |>
     removal_flag,
     ORI9,
     support_type,
-    ice_support_type,
     ice_type,
     jurisdiction_level,
     jurisdiction_level_source,
@@ -438,12 +430,8 @@ agreement_level_sf <- agreement_level_sf |>
   ) |>
   left_join(ice_county_codes, by = "agreement_id") |>
   left_join(regional_jail_counties, by = c("agency", "state")) |>
-  # the geography names the jurisdiction and the census units holding it, never a unit
-  # inside it: a state agency has no county or place (its offices and prisons sit in
-  # some), a county agency no place (its jail's town), a district or regional body no
-  # place; a regional jail authority's counties are its members; an agreement without
-  # boundaries is still in ICE's county; geoid is the census unit the jurisdiction is,
-  # when it is one
+  # geography names the census units holding the jurisdiction, never a unit inside it:
+  # place only for municipal and campus agencies; no geometry falls back to ICE's county
   mutate(
     county_fips = case_when(
       jurisdiction_level %in% "State" ~ NA_character_,
@@ -454,7 +442,7 @@ agreement_level_sf <- agreement_level_sf |>
     county = str_replace_all(county_fips, "[0-9]{5}", \(code) county_names[code]),
     across(
       c(place_geoid, place, place_type),
-      \(x) if_else(jurisdiction_level %in% c("Municipal", "Campus", "Port"), x, NA_character_)
+      \(x) if_else(jurisdiction_level %in% c("Municipal", "Campus"), x, NA_character_)
     ),
     place_type = if_else(is.na(place_geoid), NA_character_, place_type),
     geoid = case_when(
@@ -474,10 +462,8 @@ agreement_level_sf <- agreement_level_sf |>
   ) |>
   select(-ice_county_fips, -member_county_fips) |>
   arrange(desc(last_appeared), latest_sheet_row, agreement_id) |>
-  # the sheet's file name alone; its snapshot folder is in the url
   mutate(latest_sheet = basename(latest_sheet)) |>
   select(
-    # the agency, the agreement, its model and status, its dates, its MOA, where it is, its geography, then ICE's values as printed
     agency,
     agency_id,
     ORI9,
@@ -510,7 +496,6 @@ agreement_level_sf <- agreement_level_sf |>
     geometry_vintage,
     ice_county,
     ice_type,
-    ice_support_type,
     latest_sheet_row,
     latest_sheet,
     latest_sheet_url,

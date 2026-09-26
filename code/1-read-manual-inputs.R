@@ -11,7 +11,7 @@ manual_points <- read_csv(
     state,
     county,
     facility_name = manual_facility_name,
-    # CNMI's positive longitude is correct (Saipan is east of the meridian)
+    # CNMI's positive longitude is correct
     latitude = as.numeric(latitude),
     longitude = as.numeric(longitude),
     reason = manual_reason,
@@ -43,7 +43,7 @@ manual_regional <- read_csv(
     state,
     county,
     municipality,
-    # township names recur across counties (Morris Township: Greene, Washington)
+    # township names recur across counties
     municipality_county,
     source,
     note

@@ -1,10 +1,6 @@
-# Resolve every sheet observation to an agreement identity and an agency.
-# Automatic tiers first (exact key, typo, modifier, closed under union), the
-# committed alias table for the tail, and a candidate report for what is left;
-# the pipeline never waits on a manual check.
-# -> data/intermediate/identity-agreements.parquet, data/intermediate/identity-agencies.parquet,
-#    data/intermediate/identity-agency-spellings.parquet, data/intermediate/sheet-row-agreements.parquet,
-#    data/qa/identity-candidates.csv, data/qa/identity-summary.csv
+# Resolve every sheet observation to an agreement identity and an agency; leftovers go to a candidate report
+# -> data/intermediate/identity-agreements.parquet, identity-agencies.parquet, identity-agency-spellings.parquet,
+#    sheet-row-agreements.parquet, data/qa/identity-candidates.csv, data/qa/identity-summary.csv
 library(tidyverse)
 library(stringdist)
 
@@ -18,9 +14,8 @@ obs <- arrow::read_parquet("data/intermediate/sheet-rows.parquet") |>
   inner_join(pubs |> select(publication_id, pub_seq, is_current), by = "publication_id")
 current_seq <- pubs$pub_seq[pubs$is_current]
 
-# each publication's date: ICE's filename date, else its archive capture's (1-read-sheets.R)
 pub_dates <- pubs |> select(pub_seq, published_on, published_on_source)
-# every sheet is committed under sheets/; this serves it as ICE posted it
+# every sheet is committed under sheets/, served as ICE posted it
 SHEET_URL_BASE <- "https://github.com/deportationdata/ice-287g/raw/refs/heads/main/"
 
 xwalk <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
@@ -37,8 +32,7 @@ signed_obs <- obs |>
          canonical_agency = coalesce(target_key, canonical_agency)) |>
   select(-target_key)
 
-# T1: one variant per (bucket, spelling), with its observation window; a spelling
-# published beyond this bucket is an agency in its own right, not a typo
+# T1: one variant per (bucket, spelling); a spelling published beyond this bucket is its own agency
 agency_life <- signed_obs |>
   summarise(agency_n_pub = n_distinct(publication_id), .by = c(state_key, canonical_agency))
 variants <- signed_obs |>
@@ -52,10 +46,7 @@ variants <- signed_obs |>
          digits = map_chr(str_extract_all(canonical_agency, "\\d+"), paste, collapse = ","),
          tokens = str_split(canonical_agency, " "))
 
-# T2 typo and T3 modifier, scoped to a bucket: the tightest scope in which two
-# rows can be the same agreement. Digit signature keeps "precinct 1" apart from
-# "precinct 2"; a typo either hands over to its correction or is a dominated,
-# otherwise-unknown spelling (Pima beside Pinal is neither)
+# T2 typo and T3 modifier, scoped to a bucket; the digit signature keeps "precinct 1" apart from "precinct 2"
 pairs <- variants |>
   inner_join(variants, by = c("state_key", "support_key", "signed"),
              suffix = c("_a", "_b"), relationship = "many-to-many") |>
@@ -68,27 +59,21 @@ pairs <- variants |>
     minority_established = if_else(n_pub_a <= n_pub_b, established_a, established_b),
     superset = map2_lgl(tokens_a, tokens_b, \(x, y) all(x %in% y) || all(y %in% x)),
     dominated = ratio <= 0.25 & !minority_established,
-    # a typo at distance 3 merges only when disjoint and dominated (Freedom for Freeborn,
-    # Brookfield for Brookford); at distance 2 either suffices
+    # a typo at distance 3 merges only when disjoint and dominated; at distance 2 either suffices
     t2 = same_digits & ((dist <= 2 & (disjoint | dominated)) | (dist == 3 & disjoint & dominated)),
-    # a spelling with extra words merges when the windows are disjoint, or when it is dominated
-    # (one list of "Arkansas State Police" inside the run of "Arkansas State Police Department")
+    # a spelling with extra words merges when the windows are disjoint or it is dominated
     t3 = !t2 & superset & same_digits & (disjoint | dominated),
     merge = t2 | t3,
     # two spellings that each live in other buckets are two agencies, not a typo pair
     near = !merge & (dist <= 3 | superset) & same_digits & !(established_a & established_b)
   )
 
-# T3b: a rename. ICE relists an agreement under a new name (a sheriff's jail agreement moved
-# to the county commission; "Louisiana State Patrol" corrected to State Police): the old
-# spelling ends on one list, the new begins on the next, and both link the same MOA file,
-# whose name carries a word of one of the spellings. Tested 2026-09-13 over every list: 22
-# such handovers, every one the same agreement
+# T3b: a rename: the old spelling ends on one list, the new begins on the next, both link the same MOA
+# file, and the file name carries a word of one spelling
 moa_file_key <- \(u) str_to_lower(str_remove_all(basename(coalesce(u, "")), "[^A-Za-z0-9]"))
 href <- \(x) if_else(str_detect(coalesce(x, ""), "^https?://"), x, NA_character_)
-# an MOA cell links an MOA when it is ICE's hyperlinked "Link" (with or without "| Addendum"), a
-# url, or an anchor to a real file; "Link Pending", a blank cell, a stray word ICE left in the
-# column ("Cons", "#note") and an anchor to ICE's placeholder xxx.pdf do not
+# an MOA cell links an MOA when it is a "Link" hyperlink (optionally "| Addendum"), a url or an anchor to a real
+# file; not "Link Pending", blank, a stray word ("Cons", "#note") or ICE's placeholder xxx.pdf
 linked <- \(cell) {
   cell <- str_to_lower(str_squish(coalesce(cell, "")))
   str_detect(cell, "^https?://") | str_detect(cell, "^link( \\| addendum)?$") |
@@ -141,16 +126,8 @@ if (nrow(adjacent)) {
   pairs$merge <- pairs$merge | pairs$t3b
 }
 
-# T3c: a relabel. While an MOA is still pending, ICE can list the agreement under the wrong
-# agency and then print it under the right one (Pinal County Sheriff's Office for the Pinal
-# County Attorney's Office, Haskell Police Department for Haskell County Sheriff's Office): a
-# spelling that never linked an MOA ends on one list, and on the very next list another spelling
-# first appears with the same state, model and signing date. It is judged on whole agreements,
-# after the tiers above have joined each agency's spellings, so a short-lived typo of one agency
-# never pairs with another agency's spelling (Greene and South Pymatuning Township constables,
-# both signed 2025-07-15). Only one agreement may begin there, and a "distinct" row in the alias
-# table keeps two names apart. Tested 2026-09-13 over every list: four such handovers, each
-# confirmed by the MOA the later agency posted
+# T3c: a relabel: a never-linked spelling ends and another first appears on the next list with the same
+# state, model and signing date; judged on whole agreements, one successor only, "distinct" aliases respected
 component_of <- function(from, to, n) {
   parent <- seq_len(n)
   find_root <- function(i) { while (parent[i] != i) { parent[i] <<- parent[parent[i]]; i <- parent[i] }; i }
@@ -198,8 +175,7 @@ for (k in which(pairs$merge)) {
 }
 variants$component <- vapply(variants$variant_id, find_root, integer(1))
 
-# one canonical spelling per component: an alias target, else what the current
-# sheet prints, else the most published, else the earliest, else alphabetical
+# canonical spelling: alias target, else current sheet's, else most published, earliest, alphabetical
 chosen <- variants |>
   arrange(component, desc(aliased), desc(in_current), desc(n_pub), first_seq, canonical_agency) |>
   distinct(component, .keep_all = TRUE) |>
@@ -215,14 +191,8 @@ obs_ids <- signed_obs |>
             by = c("state_key", "support_key", "signed", "canonical_agency"),
             relationship = "many-to-one")
 
-# T4: a signing date ICE corrected is one agreement, not a re-signing. When an agency and
-# model hand over from one signing date to another between consecutive sheets, with no
-# other listing of theirs spanning the handover, the earlier rows take the later date if
-# the earlier listing never linked an MOA (its cell said "link pending", or was blank, as
-# ICE's first sheets of March 2025 left it) and the later one posts the MOA (ICE prints the
-# MOA's own date once it has it: 06-12 became 06-11 for dozens of agencies in June 2025),
-# or both link the same MOA file within 30 days, or the earlier listing's last cell shows no link
-# and the new date is within three months
+# T4: a corrected signing date is one agreement: at a clean handover the earlier rows take the later date if
+# the earlier never linked an MOA ("link pending" or blank) and the later does, both link one file within 30 days, or unlinked within 90 days
 listings <- obs_ids |>
   arrange(pub_seq, sheet_row) |>
   summarise(component = first(component), first_seq = min(pub_seq), last_seq = max(pub_seq), n_pub = n_distinct(pub_seq),
@@ -245,7 +215,6 @@ straddled <- handovers |>
   filter(x_signed != signed, x_signed != signed_s, x_first <= last_seq, x_last >= first_seq_s) |>
   distinct(state_key, support_key, chosen_agency, signed, signed_s)
 
-# the same-file test reads the MOA hyperlink behind each side of a close handover
 need_links <- handovers |>
   filter(!pending_only, abs(as.numeric(signed_s - signed)) <= 30 | abs(as.numeric(signed_s - signed)) %in% c(365, 366)) |>
   (\(h) bind_rows(h |> transmute(publication_id = last_pub, sheet_row = last_row),
@@ -274,18 +243,13 @@ corrections <- handovers |>
            # one PDF under two dates within a month, or exactly a year apart (a year typo)
            !is.na(link_a) & !is.na(link_b) & moa_file_key(link_a) == moa_file_key(link_b) &
              (abs(as.numeric(signed_s - signed)) <= 30 | abs(as.numeric(signed_s - signed)) %in% c(365, 366)) ~ "same_moa_file",
-           # re-dated within three months while the last cell showed no link: a pending date replaced
-           # by the MOA's own (Lawrence County AL, 05-20 to 06-30), or a link that fell back to "Link
-           # Pending" before a one-day re-date (Orange County TX, 05-07 to 05-06). Tested 2026-09-13:
-           # seven such handovers; the next closest pair is 109 days apart and a real addendum
+           # re-dated within three months while the last cell showed no link
            no_link(last_moa) & abs(as.numeric(signed_s - signed)) <= 90 ~ "unlinked_redated",
            TRUE ~ NA_character_)) |>
   filter(!is.na(rule)) |>
   slice_min(first_seq_s, n = 1, by = c(state_key, support_key, chosen_agency, signed), with_ties = FALSE)
 
-# a pending listing's date ICE printed for a stretch and then reverted: a run wholly inside
-# another date's listing window, which is absent exactly while it is printed, takes that
-# date (never where a handover above already maps the other way)
+# a pending date ICE printed for a stretch and then reverted takes the surrounding date, unless a handover maps the other way
 reverts <- listings |>
   filter(pending_only, n_pub == last_seq - first_seq + 1L) |>
   inner_join(listings |> select(state_key, support_key, chosen_agency, signed_s = signed, component_s = component,
@@ -328,8 +292,7 @@ identities <- obs_ids |>
   summarise(
     state = first(state),
     state_abbr = first(state_abbr),
-    # before canonical_agency is overwritten below: a folded date correction adds a
-    # variant but not a spelling
+    # before canonical_agency is overwritten: a folded date correction adds a variant, not a spelling
     n_spellings = n_distinct(canonical_agency),
     canonical_agency = first(chosen_agency),
     identity_resolution = case_when(
@@ -361,7 +324,7 @@ identities <- obs_ids |>
               inner_join(pub_files, by = "publication_id") |>
               transmute(last_seq, latest_sheet = path), by = "last_seq") |>
   mutate(latest_sheet_url = paste0(SHEET_URL_BASE, map_chr(latest_sheet, utils::URLencode))) |>
-  # the first publication without it; none while the current sheet still lists it
+  # the first publication without it; none while the current sheet lists it
   left_join(pub_dates |> transmute(last_seq = pub_seq - 1L, removed_by = published_on,
                                    removed_by_source = published_on_source), by = "last_seq")
 
@@ -381,7 +344,6 @@ edges <- windows |>
                               x_first <= last_seq & x_last >= first_seq_s), .groups = "drop") |>
   filter(!straddled) |>
   slice_min(order_by = tibble(first_seq_s, support_key_s != support_key, signed_s), n = 1, by = agreement_id, with_ties = FALSE) |>
-  # one predecessor per successor
   slice_max(last_seq, n = 1, by = agreement_id_s, with_ties = FALSE) |>
   select(agreement_id, succeeded_by = agreement_id_s)
 
@@ -391,7 +353,6 @@ identities <- identities |>
                             !is.na(succeeded_by) ~ "Superseded",
                             TRUE ~ "Removed"))
 
-# the lineage root: follow predecessors until none remain
 root <- set_names(identities$agreement_id, identities$agreement_id)
 pred_of <- set_names(edges$agreement_id, edges$succeeded_by)
 repeat {
@@ -407,8 +368,15 @@ identities$agreement_lineage_id <- unname(root[identities$agreement_id])
 id_lookup <- identities |>
   select(state_key, support_key, signed, component, agreement_id, agency_id)
 
-agency_state <- identities |>
-  summarise(active_supports = list(unique(support_key[status == "Active"])), .by = agency_id)
+# a possible re-signing: same model, active, signed within a year of the old one leaving the list
+resigned <- identities |>
+  filter(status == "Removed") |>
+  select(agreement_id, agency_id, support_key, gone = removed_by, last_appeared) |>
+  inner_join(identities |> filter(status == "Active") |> select(agency_id, support_key, signed_n = signed),
+             by = c("agency_id", "support_key"), relationship = "many-to-many") |>
+  filter(as.numeric(signed_n - coalesce(gone, last_appeared)) <= 365) |>
+  distinct(agreement_id) |>
+  mutate(resigned = TRUE)
 # a model switch: another model, signed another day, first listed in the lineage window
 switched <- windows |>
   inner_join(windows, by = "agency_id", suffix = c("", "_n"), relationship = "many-to-many") |>
@@ -417,11 +385,11 @@ switched <- windows |>
   distinct(agreement_id) |>
   mutate(switched = TRUE)
 identities <- identities |>
-  left_join(agency_state, by = "agency_id") |>
+  left_join(resigned, by = "agreement_id") |>
   left_join(switched, by = "agreement_id") |>
   mutate(removal_flag = case_when(
     status != "Removed" ~ NA_character_,
-    map2_lgl(support_key, active_supports, \(s, a) s %in% a) ~ "Possible re-signing",
+    coalesce(resigned, FALSE) ~ "Possible re-signing",
     coalesce(switched, FALSE) ~ "Model switch",
     TRUE ~ NA_character_
   )) |>
@@ -484,8 +452,7 @@ near <- pairs |>
             left_n_pub = n_pub_a, right_n_pub = n_pub_b,
             suggested_relation = if_else(dist <= 2, "same", "distinct"))
 
-# a rename is judged on the naming tokens: "x county sheriff office" and "y county
-# sheriff office" share every generic word and nothing else
+# a rename is judged on the naming tokens, since generic words like "county sheriff office" match everywhere
 generic <- c("county", "parish", "borough", "city", "town", "township", "village", "sheriff", "office",
              "police", "department", "of", "the", "and", "constable", "state", "public", "safety")
 name_tokens <- \(x) map(str_split(x, " "), setdiff, generic)

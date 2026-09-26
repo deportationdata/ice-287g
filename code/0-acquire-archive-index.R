@@ -1,6 +1,4 @@
-# Check ICE's /287g-archive page, its index of archived 287(g) MOAs, against the dated
-# snapshots in inputs/historical/. When the page's documents change, save a snapshot beside
-# the earlier ones and fetch any newly listed PDF no snapshot folder holds.
+# Check ICE's /287g-archive MOA index against inputs/historical/; on change, snapshot it and fetch newly listed PDFs.
 #   MOA_REPORT  append a markdown summary to this file (the PR body)
 suppressPackageStartupMessages({
   library(httr); library(stringr); library(purrr); library(dplyr); library(readr); library(digest); library(xml2)

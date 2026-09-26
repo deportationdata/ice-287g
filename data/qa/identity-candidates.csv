@@ -35,6 +35,7 @@ lineage_unlinked,louisiana,JAIL ENFORCEMENT MODEL,2020-06-08,LA-ouachita-parish-
 lineage_unlinked,massachusetts,JAIL ENFORCEMENT MODEL,2007-08-25,MA-barnstable-county-sheriff-office#JEM#2007-08-25,MA-barnstable-county-sheriff-office#JEM#2018-01-25,40,NA,FALSE,6,28,NA
 lineage_unlinked,massachusetts,JAIL ENFORCEMENT MODEL,2014-05-21,MA-department-of-correction#JEM#2014-05-21,MA-department-of-correction#JEM#2014-04-22,2,NA,FALSE,1,7,NA
 lineage_unlinked,missouri,JAIL ENFORCEMENT MODEL,2025-12-02,MO-callaway-county-sheriff-office#JEM#2025-12-02,MO-callaway-county-sheriff-office#TFM#2026-06-23,2,NA,FALSE,89,24,NA
+lineage_unlinked,missouri,TASK FORCE MODEL,2008-06-25,MO-state-highway-patrol#TFM#2008-06-25,MO-state-highway-patrol#TFM#2025-03-21,212,NA,FALSE,15,228,NA
 lineage_unlinked,nevada,JAIL ENFORCEMENT MODEL,2019-06-03,NV-las-vegas-metropolitan-police-department#JEM#2019-06-03,NV-las-vegas-metropolitan-police-department#WSO#2025-06-16,183,NA,FALSE,10,199,NA
 lineage_unlinked,nevada,JAIL ENFORCEMENT MODEL,2018-05-04,NV-lyon-county-sheriff-office#JEM#2018-05-04,NV-lyon-county-sheriff-office#JEM#2025-06-03,178,NA,FALSE,26,204,NA
 lineage_unlinked,northcarolina,JAIL ENFORCEMENT MODEL,2007-01-10,NC-alamance-county-sheriff-office#JEM#2007-01-10,NC-alamance-county-sheriff-office#WSO#2020-05-21,56,NA,FALSE,17,384,NA
@@ -44,6 +45,7 @@ lineage_unlinked,pennsylvania,WARRANT SERVICE OFFICER,2025-05-22,PA-butler-count
 lineage_unlinked,southcarolina,TASK FORCE MODEL,2008-06-25,SC-beaufort-county-sheriff-office#TFM#2008-06-25,SC-beaufort-county-sheriff-office#TFM#2025-07-31,268,NA,FALSE,16,171,NA
 lineage_unlinked,southcarolina,JAIL ENFORCEMENT MODEL,2020-06-09,SC-charleston-county-sheriff-office#JEM#2020-06-09,SC-charleston-county-sheriff-office#WSO#2025-03-10,146,NA,FALSE,6,230,NA
 lineage_unlinked,southcarolina,TASK FORCE MODEL,2026-03-11,SC-jamestown-police-department#TFM#2026-03-11,SC-jamestown-police-department#TFM#2026-07-22,26,NA,FALSE,31,14,NA
+lineage_unlinked,tennessee,TASK FORCE MODEL,2008-06-25,TN-department-of-safety-and-homeland-security#TFM#2008-06-25,TN-department-of-safety-and-homeland-security#TFM#2025-05-13,225,NA,FALSE,16,214,NA
 lineage_unlinked,texas,JAIL ENFORCEMENT MODEL,2025-09-09,TX-henderson-county-sheriff-office#JEM#2025-09-09,TX-henderson-county-sheriff-office#TFM#2026-07-20,117,NA,FALSE,23,15,NA
 lineage_unlinked,texas,JAIL ENFORCEMENT MODEL,2020-05-04,TX-williamson-county-sheriff-office#JEM#2020-05-04,TX-williamson-county-sheriff-office#WSO#2025-09-22,225,NA,FALSE,7,151,NA
 lineage_unlinked,utah,JAIL ENFORCEMENT MODEL,2025-06-11,UT-sanpete-county-sheriff-office#JEM#2025-06-11,UT-sanpete-county-sheriff-office#WSO#2025-11-20,4,NA,FALSE,75,121,NA

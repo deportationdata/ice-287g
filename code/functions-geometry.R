@@ -13,9 +13,7 @@ lsad_type <- c(
 # New England towns (county subdivisions) outrank same-named CDPs
 new_england_fips <- c("09", "23", "25", "33", "44", "50")
 
-# Census counties for the pipeline's vintage, except Connecticut: from 2022 on
-# tigris carries its planning regions, while ICE, the rosters and the panel name
-# the eight legacy counties, so those come from the last vintage that drew them
+# Census counties; Connecticut (planning regions from 2022) keeps its eight legacy counties from the last vintage that drew them
 counties_reference <- function(year = 2024, ct_year = 2021) {
   current <- tigris::counties(cb = TRUE, year = year, class = "sf")
   legacy_ct <- tigris::counties(cb = TRUE, year = ct_year, class = "sf") |> filter(STATEFP == "09")
@@ -37,8 +35,7 @@ counties_reference <- function(year = 2024, ct_year = 2021) {
     sf::st_transform(4326)
 }
 
-# Census county subdivisions with a working government: the gazetteer's FUNCSTAT drops
-# inactive (I), nonfunctioning (N) and statistical (S) units
+# Census county subdivisions with a working government (gazetteer FUNCSTAT drops I, N and S)
 county_subdivisions_reference <- function(year = 2024) {
   status <- readr::read_tsv(
     sprintf("inputs/%d-census-gazetteer-county-subdivisions/%d_Gaz_cousubs_national.txt", year, year),
@@ -58,8 +55,7 @@ county_subdivisions_reference <- function(year = 2024) {
 among <- function(code, listed) {
   str_detect(paste0(";", str_remove_all(listed, "\\s"), ";"), fixed(paste0(";", code, ";")))
 }
-# one row per group under a total order: the caller's ranking first, then the
-# tiebreak columns, so no pick ever depends on row order
+# one row per group by ranking then tiebreak columns, so no pick depends on row order
 slice_best <- function(x, ..., by, tiebreak) {
   x |>
     arrange(..., across(all_of(tiebreak))) |>

@@ -31,7 +31,6 @@ shp_names <- c(
   juris_lvl = "jurisdiction_level",
   juris_src = "jurisdiction_level_source",
   support = "support_type",
-  ice_suppt = "ice_support_type",
   moa_pendng = "moa_pending",
   has_addend = "has_addendum",
   first_seen = "first_appeared",

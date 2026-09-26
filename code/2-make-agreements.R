@@ -1,29 +1,24 @@
-# The agreements dataset: every identity ever observed, active rows carrying the
-# current sheet's values and removed rows their last-observed ones, cleaned once
-# -> data/agreements.parquet
+# Every agreement ever observed, active rows from the current sheet and others as last printed
+# -> data/intermediate/agreements.parquet
 library(tidyverse)
 
 source("code/functions.R")
 
 state_xwalk <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
-# a county typo is fixed wherever printed, a fix naming an agency applies to it alone, a blank
-# fix removes the county and a blank county fills one ICE never printed
+# a fix with an agency applies to it alone; a blank fix removes the county, a blank county fills one
 county_name_fixes <- read_csv("inputs/county-name-fixes.csv", col_types = "ccccc", na = character()) |>
   transmute(state, agency = na_if(agency, ""), county = na_if(county, ""), county_fixed)
-# ICE's TYPE for an agency, keyed on the erroneous value so a fix does nothing once ICE corrects it
+# keyed on the erroneous TYPE, so a fix does nothing once ICE corrects it
 agency_type_fixes <- read_csv("inputs/agency-type-fixes.csv", col_types = "ccccc") |>
   transmute(state, agency, type_clean = str_to_lower(type), type_fixed = str_to_lower(type_fixed))
-# the agency's own MOA where the sheet links another agency's, used only while it links that
-# file (with moa_linked blank, while the sheet says link pending); a row does nothing once ICE fixes it
+# the agency's own MOA, used only while the sheet links the wrong file (blank moa_linked: link pending)
 moa_link_fixes <- read_csv("inputs/moa-link-fixes.csv", col_types = "cccDccc") |>
   transmute(state, agency, support_type = str_to_title(norm_support_key(support_type)), signed, moa_linked, moa_url)
-# every MOA PDF held under agreements/, by the ice.gov url it was fetched from
 held_moas <- snapshot_manifests("agreements") |>
   filter(on_disk, str_detect(coalesce(url, ""), "^https://www\\.ice\\.gov/doclib/287gMOA/")) |>
   distinct(url) |>
   mutate(file = basename(str_remove(url, "[?#].*$")))
-# the Census counties, for the county an agency names; the hand list of jurisdiction levels,
-# keyed to agencies so an alias spelling reaches the same row
+# levels are keyed to agency_id so an alias spelling reaches the same row
 counties_ref <- arrow::read_parquet("data/intermediate/reference-counties.parquet")
 aliases <- read_agency_aliases(state_xwalk)
 level_manual <- read_csv("inputs/manual-jurisdiction-levels.csv", col_types = cols(.default = "c")) |>
@@ -33,8 +28,7 @@ level_manual <- read_csv("inputs/manual-jurisdiction-levels.csv", col_types = co
 stopifnot("every level in inputs/manual-jurisdiction-levels.csv is one of the eight" =
             all(level_manual$manual_level %in% JURISDICTION_LEVELS))
 
-# the county an agency names ("Lavaca County Sheriff's Office"): the longest run of up to three
-# words before County or Parish that names a real county of the agency's state
+# longest run of up to three words before County/Parish that is a real county of the state
 county_from_agency_name <- function(agency, state, counties_ref) {
   ref <- counties_ref |> distinct(state_key, county_key, county)
   out <- rep(NA_character_, length(agency))
@@ -64,8 +58,7 @@ current_header <- names(readxl::read_excel(current_path, n_max = 0)) |> str_squi
 stopifnot("current sheet has no MOA/ADDENDUM column; layout changed?" = all(c("MOA", "ADDENDUM") %in% current_header))
 links <- workbook_links(current_path)
 
-# active rows: the current publication, one row per identity (ICE prints a few
-# agreements twice; the first row speaks for the identity)
+# one row per identity; the first row wins where ICE prints an agreement twice
 active <- observations |>
   filter(publication_id == current_id) |>
   inner_join(observation_ids, by = c("publication_id", "sheet_row"), relationship = "one-to-one") |>
@@ -77,9 +70,7 @@ active <- observations |>
             raw_agency, raw_type, raw_county, raw_support, raw_moa,
             signed, moa_link, addendum_link)
 
-# removed and superseded rows read as ICE last printed them, links included: a
-# workbook's links come from the workbook the agreement was last seen in, and an
-# archived page's table already carries the href in its MOA cell
+# removed and superseded rows as last printed; archived pages carry the link in the MOA cell
 last_seen <- identities |>
   filter(status != "Active") |>
   select(agreement_id, pub_seq = last_seq) |>
@@ -106,7 +97,7 @@ gone <- identities |>
 agreements <- bind_rows(active, gone) |>
   transmute(
     agreement_id, status, state,
-    # the COUNTY cell as printed, published as ice_county; the cleaned county below is the matchers'
+    # published as ice_county
     raw_county,
     # missing counties arrive as #N/A-style text, not blanks
     county = str_to_title(str_squish(raw_county)),
@@ -120,8 +111,6 @@ agreements <- bind_rows(active, gone) |>
       TRUE ~ NA_character_
     ),
     addendum = addendum_link,
-    # ICE's SUPPORT TYPE and TYPE as printed
-    ice_support_type = str_squish(raw_support),
     support_type = str_to_title(norm_support_key(raw_support)),
     ice_type = str_squish(raw_type),
     type_clean = str_to_lower(str_squish(raw_type)),
@@ -136,9 +125,7 @@ agreements <- bind_rows(active, gone) |>
   mutate(type_clean = coalesce(type_fixed, type_clean)) |>
   select(-type_fixed)
 
-# an MOA ICE has posted to ice.gov under a name its pattern predicts but not yet linked from
-# its sheet (0-acquire-moa-probe.R fetches them): a pending agreement takes the held PDF, and
-# the sheet's own link takes over once ICE adds it
+# a pending agreement takes a held MOA that ICE posted but hasn't linked; the sheet's link wins once added
 pending_held <- agreements |>
   filter(coalesce(moa, "pending") == "pending") |>
   left_join(state_xwalk |> select(state = state_full, state_abbr), by = "state") |>
@@ -158,17 +145,12 @@ agreements <- agreements |>
   mutate(moa_fixed = !is.na(moa_url) & coalesce(moa, "pending") == coalesce(moa_linked, "pending"),
          moa = if_else(moa_fixed, moa_url, moa)) |>
   select(-moa_url, -moa_linked) |>
-  # the county an agency names is the county it is in: it fills a blank sheet county and replaces
-  # one that is not a real county of the state or is a different real county. Tested 2026-09-13
-  # over the 1,087 agencies naming a county: none disagrees with a real sheet county, and the two
-  # it overrides (Bradford PA printed as Bedford, Madison TN as Macon) ICE corrected itself
+  # the county an agency names is the county it is in, overriding the sheet
   mutate(county_named = county_from_agency_name(agency, state, counties_ref),
          county_from_name = !is.na(county_named) & (is.na(county) | county_named != county),
          county = coalesce(county_named, county)) |>
   select(-county_named) |>
-  # ICE's TYPE against the name, two narrow patterns tested over everything ICE has printed
-  # (74 flips, none wrong): a plain police department typed County is a municipality's, and a
-  # county's sheriff, jail, constable or police department typed otherwise is the county's
+  # a plain police department typed County is municipal; a county's sheriff/jail/police typed otherwise is County
   mutate(
     agency_lower = str_to_lower(agency),
     plain_police = str_detect(agency_lower, "\\bpolice (department|dept)\\b") &
@@ -197,9 +179,7 @@ agreements <- agreements |>
       type_clean == "municipality" ~ "Municipal",
       TRUE ~ NA_character_
     ),
-    # what the agency covers, one of eight levels: the hand list, then the name rules (each
-    # tested over every agency with no false positive), then ICE's TYPE, then, for the
-    # rosters that carried no TYPE, the name alone
+    # one of eight levels; precedence: manual list, name rules, ICE's TYPE, then the name alone where no TYPE was printed
     name_level = case_when(
       is_constable_district(agency, state) ~ "Constable District",
       is_county_constable(agency, state) ~ "County",
@@ -227,8 +207,7 @@ agreements <- agreements |>
       TRUE ~ NA_character_
     )
   ) |>
-  # identity-level concerns only; the geometry, roster and document flags are
-  # composed into review_reason by 6-make-agreement-level-sf.R
+  # identity-level only; 6-make-agreement-level-sf.R adds the other review reasons
   mutate(needs_review = is.na(geometry_type)) |>
   left_join(
     identities |>
@@ -238,7 +217,7 @@ agreements <- agreements |>
     by = "agreement_id", relationship = "one-to-one"
   ) |>
   select(
-    agreement_id, status, state, county, raw_county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, ice_support_type, signed,
+    agreement_id, status, state, county, raw_county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, signed,
     moa, addendum, geometry_type, needs_review,
     first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source, removal_flag,
     agency_id, agreement_lineage_id, succeeded_by, latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows,
@@ -257,8 +236,7 @@ stopifnot(
       n_distinct(observation_ids$agreement_id[observation_ids$publication_id == current_id & !is.na(observation_ids$agreement_id)])
 )
 
-# An unplaceable state would silently miss every state-keyed join. Warn rather
-# than stop: a failure here aborts the daily workflow and drops the snapshot.
+# warn, not stop: a failure here aborts the daily workflow and drops the snapshot
 unknown_states <- setdiff(agreements$state, state_xwalk$state_full)
 if (length(unknown_states) > 0) {
   warning("State value(s) not in the xwalk even after snapping: ", paste(unknown_states, collapse = ", "))

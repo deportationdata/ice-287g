@@ -1,6 +1,5 @@
-# Invariants and counts over the shipped outputs -> data/qa/*.csv, committed so a
-# regression shows as a diff in the PR. QA_STRICT=1 (set by CI) turns any "fail" into
-# an error; unset locally so a red check is reported, not fatal.
+# Invariants and counts over the shipped outputs; QA_STRICT=1 (CI) makes any "fail" an error
+# -> data/qa/*.csv
 library(tidyverse)
 library(sf)
 
@@ -59,7 +58,6 @@ census_counties <- counties_reference(2024) |> st_drop_geometry() |> pull(geoid)
 ori_ok <- str_detect(coalesce(ids$ORI9, "AA0000000"), "^[A-Z]{2}[A-Z0-9]{7}(; [A-Z]{2}[A-Z0-9]{7})*$")
 county_ok <- with(
   all_sf,
-  # a straddling boundary lists its counties
   is.na(county_fips) |
     (str_detect(county_fips, "^\\d{5}(; \\d{5})*$") &
       map2_lgl(str_split(county_fips, "; "), state_fips, \(codes, state) all(str_sub(codes, 1, 2) == state)))
@@ -217,7 +215,6 @@ summary <- bind_rows(
     list_rbind(),
   check(
     "active agreements flagged needs_review",
-    # an agreement is flagged when any of its features is
     n_distinct(active_features$agreement_id[active_features$needs_review])
   ),
   check("active features with a pending MOA", sum(active_features$moa_pending)),
@@ -266,7 +263,8 @@ summary <- bind_rows(
       !empty,
       !is.na(layer_county_fips),
       !is.na(county_fips),
-      !among(layer_county_fips, county_fips)
+      # a municipal department's jail is judged against the counties around the jail
+      !among(layer_county_fips, coalesce(jail_county_fips, county_fips))
     ) |>
     count(match_layer, name = "n") |>
     pmap(\(match_layer, n) {
@@ -287,6 +285,11 @@ summary <- bind_rows(
       check("placed features with no geoid", n, 0, scope = match_layer)
     }) |>
     list_rbind(),
+  # a municipal jail agreement's place is the municipality of its name, else none
+  check(
+    "municipal jail agreements with no municipality of their name",
+    sum(is.na(arrow::read_parquet("data/intermediate/match-municipal-names.parquet")$geoid))
+  ),
   check(
     "Connecticut features carrying a legacy county fips",
     sum(
@@ -371,7 +374,7 @@ summary <- bind_rows(
 )
 write_csv(summary, "data/qa/qa-summary.csv")
 
-# why rows are flagged: the review vocabulary, one column per flag
+# why rows are flagged, one column per flag
 flag_cols <- c(
   "geometry_type_unknown",
   "geometry_unmatched",
@@ -418,7 +421,7 @@ map(folders, \(d) {
     filter(!is.na(url), url != "") |>
     summarise(n = n_distinct(file_hash), .by = url)
   failed <- file.path(d, "failed_downloads.txt")
-  # a row may point at bytes kept in another folder; a ghost is a row whose file exists nowhere
+  # a ghost is a row whose file exists in no folder
   exists_anywhere <- file.exists(m$saved_path) |
     file.exists(file.path(d, basename(m$saved_path)))
   tibble(

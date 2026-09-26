@@ -1,6 +1,5 @@
-# Summarize what an acquisition run changed under agreements/, sheets/ and manifests/
-# from git's view of the staged tree -> $RUNNER_TEMP/287g-changes.txt, or the single
-# line NO_REAL_CHANGES. The pass log alone is not a real change.
+# Summarize what an acquisition run changed in git's staged tree; the pass log alone doesn't count
+# -> $RUNNER_TEMP/287g-changes.txt, or the line NO_REAL_CHANGES
 out_dir <- Sys.getenv("RUNNER_TEMP", tempdir())
 out_path <- file.path(out_dir, "287g-changes.txt")
 
@@ -12,7 +11,7 @@ status <- system2(
 status <- status[nzchar(status)]
 code <- substr(status, 1, 2)
 path <- substring(status, 4)
-path <- sub("^.* -> ", "", path)   # a rename reports "old -> new"; the new path is what exists
+path <- sub("^.* -> ", "", path)   # a rename reports "old -> new"
 
 kind <- ifelse(grepl("A|\\?", code), "added",
         ifelse(grepl("D", code), "removed",

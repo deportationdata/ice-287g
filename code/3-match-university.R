@@ -105,7 +105,7 @@ place_overlap <- matched_campuses |>
   slice_head(n = 1) |>
   ungroup()
 
-# campuses in no incorporated place fall back to cousubs (townships and New England towns are municipalities too)
+# campuses in no incorporated place fall back to cousubs, which are municipalities too
 unplaced_campuses <- matched_campuses |>
   anti_join(place_overlap, by = "agreement_id")
 

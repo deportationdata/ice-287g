@@ -94,7 +94,7 @@ county_fips_xwalk <- tigris::fips_codes |>
   filter(n() == 1) |>
   ungroup()
 
-# CDE can name several counties in one cell ("LEE, MACON"), so all are kept
+# CDE can name several counties in one cell ("LEE, MACON"); all are kept
 county_fips_tbl <- crime |>
   distinct(state_key, county) |>
   mutate(county_component = county) |>

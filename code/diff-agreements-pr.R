@@ -36,8 +36,7 @@ main_df <- read_clean(main_path)
 pr_df <- read_clean(pr_path)
 
 id_cols <- c("agreement_id", "agency_id", "agreement_lineage_id", "succeeded_by", "latest_sheet_row", "latest_sheet", "latest_sheet_url")
-# the roster end date moves on every active row whenever ICE posts a new sheet;
-# it is reported as one line, not counted as a modified cell
+# the roster end date moves on every active row with each new sheet, so it is reported as one line
 roster_cols <- c("last_appeared")
 
 make_key <- function(df) {
@@ -61,8 +60,7 @@ make_key <- function(df) {
     ),
     names(df)
   )
-  # ids must not drive pairing (a new id would read as add+remove) and must not
-  # be diffed as cells (one id change would report on every row)
+  # ids neither pair rows (a new id would read as add+remove) nor diff as cells (one change would hit every row)
   sort_cols <- setdiff(names(df), c("geometry", id_cols))
 
   df |>

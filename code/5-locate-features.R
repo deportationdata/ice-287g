@@ -1,5 +1,4 @@
-# Binds the facility and non-facility layers into one feature layer, names the census
-# unit each placed feature is, and finds the counties and place around it
+# Binds facility and non-facility layers and finds each feature's census unit, counties and place
 # -> data/intermediate/match-features.parquet
 library(tidyverse)
 library(sf)
@@ -80,8 +79,7 @@ stopifnot(
 # ---- the census counties and place around each feature ----
 counties_ref <- counties_reference(YEAR) |>
   transmute(county_fips = geoid, county, geometry)
-# a census place, else the county subdivision around it; New England towns outrank
-# same-named places
+# a census place, else the county subdivision around it; New England towns outrank same-named places
 places_ref <- bind_rows(
   places(cb = TRUE, year = YEAR, class = "sf") |>
     transmute(place_geoid = GEOID, place = NAME, lsad = LSAD, place_type = NAMELSAD, geometry),
@@ -103,8 +101,7 @@ places_ref <- bind_rows(
     )
   )
 
-# the share of each feature in every reference unit around it: a point's whole, a
-# polygon's overlap area
+# each feature's share of every reference unit around it: a point's whole, a polygon's overlap area
 surrounding <- function(x, ref) {
   x <- x |> select(.row) |> st_transform(3857)
   ref <- ref |> st_transform(3857)
@@ -130,8 +127,12 @@ surrounding <- function(x, ref) {
 features_sf <- features_sf |> mutate(.row = row_number())
 placed <- features_sf |> filter(!st_is_empty(geometry))
 # every county holding over one percent of the feature, largest first
+# a cousub's code names its county, except in Connecticut where the 2024 code names a planning region
 county_around <- placed |>
-  filter(!geoid_type %in% c("State", "County", "County subdivision")) |>
+  filter(
+    !geoid_type %in% c("State", "County"),
+    !(geoid_type %in% "County subdivision" & str_sub(geoid, 1, 2) != "09")
+  ) |>
   surrounding(counties_ref |> select(county_fips)) |>
   filter(.share > 0.01) |>
   arrange(.row, desc(.share)) |>
@@ -144,29 +145,55 @@ place_around <- placed |>
   slice_head(n = 1, by = .row) |>
   select(.row, place_geoid_around = place_geoid)
 
+# a municipal department's jail agreement keeps the jail geometry but takes place and county
+# from its own municipality; if that did not match, it has no place rather than the jail's town
+own_municipality <- arrow::read_parquet("data/intermediate/match-municipal-names.parquet") |>
+  transmute(agreement_id, own_geoid = geoid, own_ambiguous = ambiguous_candidates, own_type_mismatch = type_mismatch)
+own_county_around <- features_sf |>
+  st_drop_geometry() |>
+  select(.row, agreement_id) |>
+  inner_join(own_municipality |> filter(!is.na(own_geoid)), by = "agreement_id") |>
+  inner_join(places_ref |> select(place_geoid, geometry), by = c("own_geoid" = "place_geoid")) |>
+  st_as_sf() |>
+  surrounding(counties_ref |> select(county_fips)) |>
+  filter(.share > 0.01) |>
+  arrange(.row, desc(.share)) |>
+  summarize(own_county_fips = paste(county_fips, collapse = "; "), .by = .row)
+
 county_names <- counties_ref |> st_drop_geometry() |> deframe()
 
 features_sf <- features_sf |>
   left_join(county_around, by = ".row") |>
   left_join(place_around, by = ".row") |>
+  left_join(own_municipality, by = "agreement_id") |>
+  left_join(own_county_around, by = ".row") |>
   mutate(
-    # the layer's own county stays beside the census one for the QA report
+    own_city = agreement_id %in% own_municipality$agreement_id,
+    # keep the layer's own county for the QA report, and the counties around a jail
     layer_county_fips = county_fips,
+    jail_county_fips = if_else(!is.na(own_geoid), county_fips_around, NA_character_),
     county_fips = case_when(
       geoid_type == "State" ~ NA_character_,
       geoid_type == "County" ~ geoid,
-      geoid_type == "County subdivision" ~ str_sub(geoid, 1, 5),
+      geoid_type == "County subdivision" & str_sub(geoid, 1, 2) != "09" ~ str_sub(geoid, 1, 5),
+      !is.na(own_geoid) ~ own_county_fips,
       TRUE ~ coalesce(county_fips_around, county_fips)
     ),
     county = str_replace_all(county_fips, "[0-9]{5}", \(code) county_names[code]),
     place_geoid = case_when(
       geoid_type %in% c("Place", "County subdivision") ~ geoid,
       geoid_type %in% c("State", "County") ~ NA_character_,
+      own_city ~ own_geoid,
       TRUE ~ place_geoid_around
-    )
+    ),
+    ambiguous_candidates = coalesce(ambiguous_candidates, FALSE) | coalesce(own_ambiguous, FALSE),
+    type_mismatch = coalesce(type_mismatch, FALSE) | coalesce(own_type_mismatch, FALSE)
   ) |>
   left_join(places_ref |> st_drop_geometry() |> select(place_geoid, place, place_type), by = "place_geoid") |>
-  select(-.row, -county_fips_around, -place_geoid_around)
+  select(
+    -.row, -county_fips_around, -place_geoid_around,
+    -own_city, -own_geoid, -own_county_fips, -own_ambiguous, -own_type_mismatch
+  )
 
 stopifnot(
   "every place a feature sits in has a type" = !any(

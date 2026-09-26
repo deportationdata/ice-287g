@@ -1,7 +1,4 @@
-# One-time fetch of the pre-2018 sources: captures, MOA pdfs, reports, panel.
-# Only the DHS OIG appendix is read by the pipeline; the other reports, the Yale
-# FOIA page and the East et al. panel are kept under inputs/other_sources/ for
-# reference and are not parsed (see inputs/other_sources/README.md).
+# One-time fetch of the pre-2018 sources; only the DHS OIG appendix is parsed, the rest is kept for reference.
 
 suppressPackageStartupMessages({
   library(httr); library(jsonlite)
@@ -19,7 +16,6 @@ for (d in c(DIR_FS, DIR_MOA, file.path(SRC, "reports"), DIR_REP, DIR_PAN)) dir.c
 UA    <- user_agent("287g-historical-reconstruction (academic research)")
 DELAY <- 1.5
 
-# archive.org refuses connections after ~20 quick requests: stay serial
 MAX_TRIES  <- 6
 BACKOFF_S  <- 20
 
@@ -132,7 +128,6 @@ for (nm in names(REPORTS)) {
   fetch(REPORTS[[nm]], dest, binary = TRUE)
 }
 
-# cato.org returns a 212-byte HTML stub to a request without a Referer
 fetch("https://www.cato.org/sites/cato.org/files/pubs/pdf/working-paper-52-updated.pdf",
       file.path(DIR_REP, "Cato-WP52_Forrester-Nowrasteh_2018.pdf"), binary = TRUE,
       referer = "https://www.cato.org/working-paper/do-immigration-enforcement-programs-reduce-crime")

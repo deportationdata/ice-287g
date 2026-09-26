@@ -21,7 +21,7 @@ agreement_fips <- arrow::read_parquet("data/intermediate/match-all-features.parq
   summarize(has_fips = any(has_fips), .by = agreement_id)
 
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet") |>
-  # deliberate: the report is a to-do list for the live program, so active only
+  # active only: the report is a to-do list for the live program
   filter(status == "Active")
 
 agreement_identifiers <- arrow::read_parquet(

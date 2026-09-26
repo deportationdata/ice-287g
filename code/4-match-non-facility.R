@@ -23,8 +23,7 @@ stopifnot(
   )
 )
 
-# unplaceable agreements ride along with empty geometries so none is dropped: agreements of
-# no known class, and constable precincts, for which no boundary layer exists
+# unclassed agreements and constable precincts (no boundary layer) keep empty geometries so none is dropped
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet")
 empty_layer <- function(rows) {
   st_as_sf(rows, geometry = st_sfc(rep(list(st_geometrycollection()), nrow(rows)), crs = 4326))

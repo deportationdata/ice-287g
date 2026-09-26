@@ -41,7 +41,7 @@ muni_type_from_lrc <- function(x) {
   )
 }
 
-# the number follows the label ("Ward 3") as digits, an ordinal, or first..tenth
+# the ward number follows its label ("Ward 3") as digits, an ordinal, or first..tenth
 parse_layer_number <- function(x, label) {
   token <- str_match(
     x,
@@ -57,7 +57,7 @@ parse_layer_number <- function(x, label) {
   pa_constable_ordinal_number(token)
 }
 
-# the source sheet misspells Mifflin County as "Miffin"; every layer runs the same repair
+# the source sheet misspells Mifflin County as "Miffin"; every layer repairs it
 pa_county_key <- function(x) {
   x |>
     str_replace(regex("\\bMiffin\\b", ignore_case = TRUE), "Mifflin") |>
@@ -171,7 +171,7 @@ pa_constables <- bind_cols(
     source_county_key = na_if(pa_county_key(county), "")
   )
 
-# post-join checks, not join keys: a missing county or type hint passes instead of dropping all candidates
+# post-join checks, not join keys: a missing county or type hint passes rather than dropping all candidates
 filter_candidates <- function(candidates) {
   candidates |>
     filter(
@@ -182,7 +182,7 @@ filter_candidates <- function(candidates) {
     )
 }
 
-# unique-match-only: several surviving candidates fall through to unmatched rather than being assigned
+# several surviving candidates fall through to unmatched rather than being assigned
 select_unique_matches <- function(candidates, match_type) {
   candidates |>
     add_count(agreement_id, name = "candidate_count") |>
@@ -262,7 +262,7 @@ matched <- pa_constables |>
   mutate(geometry_vintage = if_else(match_type == "census_county_subdivision", as.integer(YEAR), 2021L),
          geometry_unmatched = FALSE, ambiguous_candidates = FALSE)
 
-# keep-all: constables with no unique candidate ride along with empty geometries
+# constables with no unique candidate ride along with empty geometries
 unmatched <- pa_constables |>
   filter(!agreement_id %in% pa_matches$agreement_id) |>
   transmute(

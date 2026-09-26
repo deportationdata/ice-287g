@@ -1,6 +1,4 @@
-# Source claims: every non-sheet source is reduced to typed claims about a
-# agency (listed, pending, signed, model, moa_file, rescinded), and each
-# claim resolves to an agency by rule or is left visible as unresolved.
+# Source claims: non-sheet sources reduced to typed claims, resolved to agencies by rule or left unresolved.
 
 claim_columns <- c("source_id", "agency_id", "resolution", "state", "agency_raw",
                    "field", "value", "value_date", "as_of", "evidence")
@@ -31,13 +29,10 @@ state_from_token <- function(token, valid_states) {
   if_else(nzchar(t), out, NA_character_)
 }
 
-# "Alamance County Sheriff's Office (North Carolina)", "Barnstable County,
-# Massachusetts", "Morristown, NJ", "Manassas Park, City of" and "Alabama
-# Department of Public Safety" all carry their state in the name; the state
-# column wins when set, and a marker leaves the name either way
+# strip a state carried in the name; the state column wins when set
 split_state_marker <- function(agency, state, valid_states) {
   agency <- str_squish(coalesce(agency, ""))
-  # ", City of" / ", State of" is a library-catalogue inversion of "City of X"
+  # ", City of" is an inversion of "City of X"
   inverted <- str_match(agency, "^(.*?),\\s*((City|Town|County|State) of)$")
   agency <- if_else(!is.na(inverted[, 1]), paste(inverted[, 3], inverted[, 2]), agency)
   paren <- str_match(agency, "\\(([A-Za-z .]+)\\)")[, 2]
@@ -52,16 +47,14 @@ split_state_marker <- function(agency, state, valid_states) {
   tibble(state = coalesce(state, found), agency = str_squish(cleaned))
 }
 
-# a name that is a url fragment, a hyphen-truncated line or a footnote cannot
-# resolve; a single-word place name may resolve by containment but never mints
+# a url fragment, truncated line or footnote cannot resolve; a one-word place name never mints
 validate_agency_shape <- function(agency) {
   a <- coalesce(agency, "")
   !(str_detect(a, "https?://") | str_detect(a, "-$") | str_detect(a, "<U\\+|\\*|†") |
       str_count(a, "[A-Za-z]{2,}") < 1)
 }
 
-# the registry of keys that name a published agency: its canonical spelling,
-# every spelling ICE printed for it, and every alias verdict
+# keys naming each agency: canonical spelling, ICE's spellings and aliases
 agency_registry <- function(agencies, spellings, aliases) {
   bind_rows(
     agencies |> transmute(state_key, key = canonical_agency, agency_id, tier = "canonical"),
@@ -76,10 +69,8 @@ agency_registry <- function(agencies, spellings, aliases) {
     distinct(state_key, key, .keep_all = TRUE)
 }
 
-# resolve (state, agency[, signed]) rows to agency ids, one row in, one row
-# out, by tiers: the registry within the state, a name that starts exactly one
-# agency in the state, a name unique across the country, a signing date
-# unique in the state, and, for a source that may mint, a new agency
+# resolve rows to agency ids by tiers: registry, unique prefix, unique nationally,
+# unique signing date, then minting
 resolve_agency <- function(state, agency, may_mint, registry, agencies, identities, xwalk, aliases,
                                 signed = as.Date(rep(NA, length(agency)))) {
   rows <- tibble(state, agency, may_mint, signed) |>
@@ -97,8 +88,7 @@ resolve_agency <- function(state, agency, may_mint, registry, agencies, identiti
                   shape_ok = validate_agency_shape(agency_clean),
                   key = canonical_agency(agency_clean, coalesce(state_abbr, ""), coalesce(state, ""))) |>
     left_join(registry, by = c("state_key", "key"))
-  # an alias may turn a bare place name into an agency name, so mintability is
-  # judged on the key the alias table leaves
+  # mintability is judged on the key after aliasing
   same <- aliases |> filter(relation == "same") |> distinct(state_key, alias_key, target_key)
   rows <- rows |>
     left_join(same, by = c("state_key", "key" = "alias_key")) |>
@@ -106,8 +96,7 @@ resolve_agency <- function(state, agency, may_mint, registry, agencies, identiti
                   mintable = shape_ok & str_count(mint_key, "\\S+") >= 2) |>
     select(-target_key)
 
-  # a name that begins exactly one agency's canonical name in the state, or
-  # failing that exactly one in the country
+  # a name that begins exactly one agency's name in the state, else in the country
   prefix_all <- rows |>
     filter(is.na(agency_id), shape_ok, nchar(key) >= 4) |>
     select(.row, state_key, key) |>
@@ -120,8 +109,7 @@ resolve_agency <- function(state, agency, may_mint, registry, agencies, identiti
       prefix_ambiguous = n_distinct(cand_id[cand_state == state_key]) > 1,
       prefix_national_id = if_else(n_distinct(cand_id) == 1, dplyr::first(cand_id), NA_character_),
       .by = .row)
-  # a name unique across every state, or a name and signing date unique across
-  # every state: the source printed the wrong state
+  # a name (or name and signing date) unique nationally: the source printed the wrong state
   national <- registry |>
     distinct(key, agency_id) |>
     add_count(key, name = "n_states") |>

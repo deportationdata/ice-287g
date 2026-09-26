@@ -60,8 +60,7 @@ response_validators <- function(response) {
   c(etag = pick("etag"), last_modified = pick("last-modified"))
 }
 
-# xlsx and pdf are the only bodies we save; a 200 that is really an HTML block
-# page must not be archived as either
+# check magic bytes so an HTML block page returned as 200 is not saved as xlsx or pdf
 body_has_magic <- function(raw_bytes, kind = c("zip", "pdf")) {
   kind <- match.arg(kind)
   magic <- if (kind == "zip") as.raw(c(0x50, 0x4b)) else charToRaw("%PDF")

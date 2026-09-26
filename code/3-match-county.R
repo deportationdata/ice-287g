@@ -15,7 +15,7 @@ manual_judicial <- arrow::read_parquet("data/intermediate/manual-judicial-distri
 
 YEAR <- 2024
 
-# both NAMELSAD and the ICE county field keep the legal suffix ("X County", "X Parish", "X city"), hence norm_county
+# NAMELSAD and the ICE county field both keep the legal suffix ("X County", "X Parish", "X city"), hence norm_county
 counties_sf <- counties_reference(YEAR) |>
   select(county, state_key, county_key, statefp, countyfp, geometry_vintage, geometry)
 
@@ -77,7 +77,7 @@ county_agreements_sf <- agreements |>
     ),
     # duplicates county_fips on purpose: admin code vs census geoid downstream
     geoid = county_fips,
-    # keep-all: unmatched agreements ride along with empty geometries
+    # unmatched agreements ride along with empty geometries
     geometry_unmatched = is.na(geometry) | st_is_empty(geometry)
   ) |>
   select(
@@ -95,8 +95,7 @@ county_agreements_sf <- agreements |>
   ) |>
   st_as_sf()
 
-# a judicial district or circuit is the union of its counties, one row per county from the
-# hand list, unioned at the agreement level like a regional department's members
+# a judicial district is the union of its listed counties, unioned at the agreement level
 judicial_members <- manual_judicial |>
   mutate(state_key = norm_state(state), county_key = norm_county(county)) |>
   left_join(

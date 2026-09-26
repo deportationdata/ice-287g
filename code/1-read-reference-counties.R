@@ -1,5 +1,4 @@
-# The Census counties as a plain table, for scripts that need county names and codes
-# without loading geometry -> data/intermediate/reference-counties.parquet
+# Census counties as a plain table, without geometry -> data/intermediate/reference-counties.parquet
 library(tidyverse)
 library(sf)
 library(tigris)

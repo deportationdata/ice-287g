@@ -6,7 +6,7 @@ source("code/functions.R")
 
 sf_use_s2(FALSE)
 
-# FGDL's 2016 aviation facility boundaries cover Florida only, where every port authority ICE lists is
+# FGDL's 2016 aviation boundaries cover Florida only, where every port authority ICE lists is
 airport_boundaries <- st_read(
   "inputs/2016-florida-aviation-facility-boundaries/gc_aviationbnd_jan16.shp",
   quiet = TRUE

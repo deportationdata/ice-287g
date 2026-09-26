@@ -1,5 +1,4 @@
-# DHS OIG-10-63 Appendix E, Table 3: every 287(g) jurisdiction as of 28 Oct 2009
-# with model, original signing date and signed/pending status
+# DHS OIG-10-63 Appendix E, Table 3: 287(g) jurisdictions as of 28 Oct 2009 with model, signing date and status
 # -> data/historical-oig-2009.csv
 suppressPackageStartupMessages({
   library(dplyr)
@@ -32,8 +31,7 @@ last <- last[last > first][1]
 blk <- L[first:last]
 
 states <- c(state.name, "District of Columbia")
-# a mark in the Jail or Task Force column is a glyph pdftotext cannot name; its
-# position against the header decides which column it sits in
+# Jail/Task Force marks are unnamed glyphs, so their position under the header picks the column
 header <- blk[str_detect(blk, "\\bJail\\b")][1]
 force_header <- blk[str_detect(blk, "\\bForce\\b")][1]
 jail_at <- str_locate(header, "Jail")[1, 1]

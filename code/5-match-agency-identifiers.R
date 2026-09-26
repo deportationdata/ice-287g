@@ -3,10 +3,8 @@ library(tidyverse)
 
 source("code/functions.R")
 
-# tiers: exact state+county+agency, then statewide full name, then statewide key.
-# Candidates fan out and the pick is a total order: the full name first, an
-# agency-level ORI (…0000) over a sub-unit, then the lowest ORI; several ORIs
-# tied at the top are reported as ambiguous rather than silently resolved
+# tiers: exact state+county+agency, statewide full name, statewide key; the pick prefers the full
+# name, then an agency-level ORI (…0000), then the lowest ORI; ties at the top are reported ambiguous
 match_agency_source <- function(
   agreements,
   lookup,
@@ -100,11 +98,8 @@ match_agency_source <- function(
       )
     )
 
-  # a roster name that begins with the sheet's and adds a suffix (Kennard PD New Castle, Kinney
-  # County Constable Precinct 1, Utah Department of Corrections Law Enforcement Bureau): only
-  # where no roster row carries the sheet's key exactly, only when the candidates agree on one
-  # ORI, the same county's first. Tested 2026-09-13: 13 hand ORIs reproduced, none changed
-  # letters the roster name adds to the sheet's
+  # a roster name that begins with the sheet's and adds a suffix: only where no roster row has
+  # the exact key and the candidates agree on one ORI, same county first
   extra_col <- paste0(ori_col, "_prefix_extra")
   still <- by_key |>
     filter(is.na(.data[[match_type_col]])) |>
@@ -146,8 +141,7 @@ match_agency_source <- function(
     arrange(agreement_id)
 }
 
-# keys are built here, not read from the roster parquets, so both sides share one
-# normalization: a town marshal is the town's police outside Louisiana
+# keys are built here so both sides share one normalization
 roster_keys <- function(roster) {
   roster |>
     mutate(agency_key = norm_ori_agency(marshal_as_police(name, state_key)),
@@ -257,10 +251,8 @@ agreement_identifiers <- arrow::read_parquet("data/intermediate/agreements.parqu
         (!is.na(lear_ori) & !is.na(crime_ori) & lear_ori != crime_ori),
       FALSE
     ),
-    # tier outranks roster; ties by recency: crime 2025, lear 2016, leaic 2012.
-    # An exact match that could not tell two ORIs apart yields to another
-    # roster's unique full-name match, but still beats the aggressive key
-    # prefix ties go to fewer added letters
+    # tier outranks roster, ties by recency (crime 2025, lear 2016, leaic 2012); an ambiguous exact match yields to
+    # another roster's unique full-name match but beats the aggressive key; prefix ties go to fewer added letters
     crime_rank = match_tier_rank(crime_match_type) + 1.5 * (crime_ori_ambiguous & crime_match_type == "exact_state_county_agency_name") + coalesce(crime_ori_prefix_extra, 0L) / 1000,
     lear_rank = match_tier_rank(lear_match_type) + 1.5 * (lear_ori_ambiguous & lear_match_type == "exact_state_county_agency_name") + coalesce(lear_ori_prefix_extra, 0L) / 1000,
     leaic_rank = match_tier_rank(leaic_match_type) + 1.5 * (leaic_ori_ambiguous & leaic_match_type == "exact_state_county_agency_name") + coalesce(leaic_ori_prefix_extra, 0L) / 1000,

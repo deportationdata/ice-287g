@@ -18,28 +18,21 @@ clean_moa_urls <- function(url) {
     str_replace("^http://", "https://")
 }
 
-# one manifest.csv per snapshot folder; 0-acquire-manifests.R writes one for any folder
-# without it, from a download_path_log.csv where the folder has one, else from its files.
-# The validator columns let a later pass ask the origin "changed?" without a body.
+# one manifest.csv per snapshot folder; validators let a later pass ask "changed?" without a body
 manifest_columns <- c(
   "saved_path", "file_hash", "url", "retrieved_at",
   "state", "agency", "original_filename", "note",
   "etag", "last_modified", "capture_time"
 )
 
-# one comparable key per document: the decoded file name, with case, punctuation and any
-# 12-hex hash suffix before .pdf all ignored
+# a document's key: decoded file name, ignoring case, punctuation and any 12-hex hash suffix
 doc_key <- function(x) {
   x |> str_remove("\\?.*$") |> basename() |> map_chr(\(n) tryCatch(URLdecode(n), error = \(e) n)) |>
     str_to_lower() |> str_remove("_[0-9a-f]{12}(?=\\.pdf$)") |> str_replace_all("[^a-z0-9]", "")
 }
 
-# ICE names each MOA PDF after the agency, state, model and signing date
-# (LoudonCoSOTN_TFM_MOA_06222026.pdf); these forms reproduce 84% of 2026 filenames, most
-# productive first (a backtest on every MOA posted for agreements signed since June 2025):
-# County -> Co, Department -> Dept, then the SO/PD/SD abbreviations and two-digit or dotted
-# dates. The probe asks ice.gov for them; the build looks a pending agreement's up among the
-# PDFs already held, and a name built from one agreement can be no other's
+# candidate MOA PDF names from agency, state, model and signing date, most productive form first;
+# County -> Co, Department -> Dept, SO/PD/SD, two-digit or dotted dates cover 84% of 2026 filenames
 moa_candidate_files <- function(agency, st, model, signed) {
   words <- agency |> str_replace_all("[’']", "") |> str_replace_all("&", "and") |>
     str_replace_all("[^A-Za-z0-9 ]", " ") |> str_squish() |> str_split(" ") |> unlist()
@@ -69,13 +62,11 @@ append_manifest <- function(folder, rows) {
   write_csv(rows[manifest_columns], path, na = "")
 }
 
-# every manifest under a snapshot root, with its folder and the path the row resolves to
-# today (saved_path is root-relative for scraped rows, folder-relative for reconstructed ones)
+# every manifest under a snapshot root, with its folder and each row's resolved path
 snapshot_manifests <- function(root = "agreements") {
   m <- list.files(root, "^manifest\\.csv$", recursive = TRUE, full.names = TRUE) |>
     map(\(p) read_manifest(p) |> mutate(folder = dirname(p), .before = 1)) |>
     list_rbind()
-  # a manifest missing any column gets it as NA
   for (col in manifest_columns) if (!col %in% names(m)) m[[col]] <- NA_character_
   m |>
     mutate(
@@ -84,8 +75,7 @@ snapshot_manifests <- function(root = "agreements") {
     )
 }
 
-# The newest participating-agencies workbook, by the manifest's note, else by its header
-# row (only participating lists have SIGNED); never by filename, which ICE changes
+# the newest participating-agencies workbook by manifest note or header, never by filename
 newest_sheet_snapshot <- function(root = "sheets") {
   has_roster_header <- function(path) {
     hdr <- tryCatch(names(readxl::read_excel(path, n_max = 0)), error = function(e) character())
@@ -105,8 +95,7 @@ newest_sheet_snapshot <- function(root = "sheets") {
   stop("no participating-agencies workbook in any sheets snapshot")
 }
 
-# url -> the bytes we hold for it, their validators, and where one copy still lives;
-# derived from the manifests every run, so it can never disagree with the files
+# url -> the bytes held for it, their validators and where a copy lives, from the manifests
 moa_validator_map <- function(m = snapshot_manifests("agreements")) {
   kept <- m |>
     filter(on_disk) |>
@@ -114,8 +103,7 @@ moa_validator_map <- function(m = snapshot_manifests("agreements")) {
     select(file_hash, on_disk_path = path_now)
   m |>
     filter(!is.na(url), url != "") |>
-    # the sheet links plain https urls; the archive may hold the same document
-    # under a Wayback-prefixed or http:// url, and those bytes count as held
+    # bytes held under a Wayback-prefixed or http:// url count as held
     mutate(url = str_remove(url, "^https?://web\\.archive\\.org/web/\\d+id_/") |>
                     str_replace("^http://", "https://")) |>
     arrange(url, retrieved_at) |>
@@ -129,8 +117,7 @@ moa_validator_map <- function(m = snapshot_manifests("agreements")) {
     left_join(kept, by = "file_hash", relationship = "many-to-one")
 }
 
-# a manifest row whose file dedupe removed keeps its row but must say where the
-# identical bytes live; without this a 1,888-row manifest over an empty folder is a lie
+# a manifest row whose file dedupe removed records where the identical bytes live
 annotate_ghost_rows <- function(root = "agreements", folders = NULL) {
   m <- snapshot_manifests(root)
   if (!nrow(m)) return(invisible(0L))

@@ -1,6 +1,4 @@
-# Recover MOA PDFs the Wayback Machine archived under ICE's /doclib/287gMOA/ folder that no
-# snapshot folder holds: documents ICE linked and replaced before the MOA pass saved them.
-# Run by hand when the archive needs completing; the MOA pass keeps current links whole.
+# Recover MOA PDFs Wayback archived under ICE's /doclib/287gMOA/ that no snapshot folder holds; run by hand.
 # -> agreements/agreements_wayback_<today>/ (created only when something is recovered)
 suppressPackageStartupMessages({
   library(httr); library(stringr); library(purrr); library(dplyr); library(tidyr); library(readr); library(digest)
@@ -8,7 +6,7 @@ suppressPackageStartupMessages({
 source("code/functions.R")
 
 out_dir <- file.path("agreements", paste0("agreements_wayback_", format(Sys.Date(), "%Y%m%d")))
-# ICE files non-MOA documents here too (monthly encounter reports, program applications)
+# ICE files non-MOA documents here too
 not_moa <- "encounterreport|application"
 
 # every url the CDX index holds under the folder, earliest 200 capture of each

@@ -1,8 +1,4 @@
-# One record per agency across every era. ICE's own record comes from the
-# identities; ICE's other records (undated lists, MOA archive index, press
-# releases) and the OIG appendix are reduced to typed claims, resolved to
-# agencies by rule, and arbitrated against ICE with the winning source beside
-# each value; where a source and ICE differ the difference is recorded, never averaged
+# One record per agency; other sources become claims arbitrated against ICE, differences recorded
 # -> data/agencies.parquet, data/intermediate/historical-source-claims.csv,
 #    data/intermediate/historical-source-claims-unresolved.csv, data/agency-disagreements.csv,
 #    data/qa/historical-summary.md
@@ -20,14 +16,12 @@ spellings <- arrow::read_parquet("data/intermediate/identity-agency-spellings.pa
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet")
 pubs <- arrow::read_parquet("data/intermediate/sheet-publications.parquet")
 obs_ids <- arrow::read_parquet("data/intermediate/sheet-row-agreements.parquet")
-# the published geography, for each agency's county
 geography <- arrow::read_parquet(
   "data/agreements-sf.parquet",
   col_select = c("agreement_id", "county_fips")
 )
 
-# only an agreement ICE announced in a press release may add an agency; every
-# other source attests to agencies ICE's sheets already carry
+# only an ICE press release may add an agency; other sources attest to existing ones
 MINTING_SOURCES <- "ICE press release"
 
 # --- claims: each source reduced to (state, agency, field, value, as_of) --------
@@ -110,8 +104,7 @@ ice_record <- identities |>
   mutate(terminated = n_active == 0,
          terminated_basis = if_else(n_active > 0, "listed on the current ICE sheet", "absent from the current ICE sheet"))
 
-# the earliest signing date any source gives wins; ICE's own sheet names the
-# source when it shares the date
+# the earliest signing date wins; ICE's sheet is named as source when it ties
 signed_claims <- bind_rows(
   identities |> transmute(agency_id, source_id = "ICE sheet", value_date = signed),
   pa |> filter(field == "signed", !is.na(value_date)) |> select(agency_id, source_id, value_date)
@@ -128,7 +121,6 @@ signing_dates <- signed_claims |>
             latest_signed = max(value_date), .by = agency_id)
 
 # --- what every source attests: the widest window the evidence speaks to --------
-# a listing speaks to the source's as-of date, a signing or rescission to its own date
 attested <- pa |>
   mutate(spoken_to = case_when(field %in% c("listed", "pending") ~ as_of,
                                field %in% c("signed", "rescinded") ~ value_date,
@@ -149,8 +141,7 @@ moa <- bind_rows(
   agreements |> filter(str_detect(coalesce(moa, ""), "^https?://")) |> transmute(agency_id, moa_file = basename(moa))
 ) |>
   distinct(agency_id, moa_file)
-# archived MOA pdfs live in every agreements/ folder; a manifest row whose bytes
-# were kept elsewhere still counts
+# a manifest row whose bytes were kept in another folder still counts
 archive <- snapshot_manifests("agreements") |>
   filter(file.exists(path_now) | str_detect(coalesce(note, ""), "retained at")) |>
   transmute(file = str_to_lower(basename(coalesce(url, path_now))), url) |>
@@ -165,10 +156,7 @@ moa_summary <- moa |>
   mutate(moa_archived_url = na_if(moa_archived_url, ""))
 
 # --- jurisdiction and county --------------------------------------------------------
-# The agency takes its active or latest agreement's level (2-make-agreements.R) and the
-# counties of that agreement's jurisdiction (6-make-agreement-level-sf.R: several with
-# semicolons, none for a state agency); an agency ICE never listed (a press-release
-# agreement) takes the level its name gives
+# the agency takes its active or latest agreement's level and counties ("; "-joined, none for a state agency); one ICE never listed takes its name's level
 level_modern <- agreements |>
   arrange(desc(status == "Active"), desc(last_appeared)) |>
   distinct(agency_id, .keep_all = TRUE) |>
@@ -246,8 +234,7 @@ dis_model <- pa |>
   transmute(agency_id, kind = "model", field = "model", value_a = value, source_a = source_id,
             value_b = map_chr(ice_models, paste, collapse = "; "), source_b = "ICE sheet",
             published_value = value_b, resolution_rule = "models are ICE's; a source's differing model is recorded only")
-# a dated list's members against ICE's nearest publication at or before its date:
-# is each agency there or not, on both sides
+# a dated list's members against ICE's nearest publication at or before its date
 pub_members <- obs_ids |>
   filter(!is.na(agency_id)) |>
   distinct(publication_id, agency_id) |>
@@ -275,9 +262,7 @@ dis_ambiguous <- claims |>
   transmute(agency_id = NA_character_, kind = "ambiguous_resolution", field = "name", value_a = agency_raw,
             source_a = source_id, value_b = state, source_b = "registry", published_value = NA_character_,
             resolution_rule = "the name begins more than one agency in the state; left unresolved")
-# one MOA file linked for two agencies: ICE's sheet points one of them at another
-# agency's agreement (from Aug 2025 Montour County Sheriff PA links Manheim Borough
-# PD's); recorded for review, never reassigned
+# one MOA file linked for two agencies is recorded for review, never reassigned
 moa_keys <- moa |> transmute(agency_id, moa_file, file_key = str_to_lower(moa_file))
 dis_moa <- moa_keys |>
   inner_join(moa_keys |> select(file_key, other = agency_id), by = "file_key", relationship = "many-to-many") |>

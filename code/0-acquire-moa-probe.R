@@ -1,10 +1,7 @@
-# Find MOAs ICE has posted to ice.gov but not yet linked from its sheet. ICE names each PDF
-# after the agency, state, model and signing date (LoudonCoSOTN_TFM_MOA_06222026.pdf), so for
-# every agreement the sheet has shown "link pending" for weeks, ask ice.gov for the few names
-# that pattern allows (moa_candidate_files). A hit is kept only when the PDF's text carries
-# the signing date or the agency's name. Verified PDFs land in agreements/agreements_probe_<today>/
-# with a manifest row, for review in a PR; 2-make-agreements.R then links the agreement to the
-# held PDF by the same names until ICE's sheet links it.
+# Find MOAs ICE posted but hasn't linked by probing the filenames its naming pattern allows
+# (LoudonCoSOTN_TFM_MOA_06222026.pdf) for long-pending
+# agreements; keep a PDF only if its text has the signing date or agency name.
+# -> agreements/agreements_probe_<today>/ with a manifest row
 #   MOA_PROBE_MIN_DAYS      probe agreements pending at least this many days (default 21)
 #   MOA_PROBE_MAX_REQUESTS  stop after this many requests (default 3000)
 #   MOA_PROBE_SLEEP         seconds between requests (default 1)

@@ -1,6 +1,4 @@
-# Revalidate every MOA/addendum url the newest committed sheet links, without
-# re-downloading it: ask the origin whether the document changed since we fetched
-# it and store only what did. A snapshot folder is created only when something did.
+# Revalidate every MOA/addendum url the newest sheet links with conditional requests; store only what changed.
 #   MOA_FULL=1        revalidate every url (the sheet changed, or failures are outstanding)
 #   MOA_SHARD=k       otherwise revalidate the k-th of MOA_SHARDS (default 6) url shards
 #   MOA_RETRY_DEAD=1  re-ask urls already recorded as gone, even on a shard pass
@@ -35,8 +33,7 @@ links <- xlsx_hyperlinks(sheet) |>
   distinct(url, .keep_all = TRUE)
 
 held <- moa_validator_map()
-# zero links is the easy case; a few dozen where there were two thousand is the
-# dangerous one, and only a floor against the archive catches it
+# only a floor against the archive catches a sheet that suddenly links far fewer documents
 if (nrow(links) == 0 || nrow(links) < 0.5 * nrow(held)) {
   stop(sprintf("only %d MOA links found where the archive holds %d urls; sheet layout drift?",
                nrow(links), nrow(held)))
@@ -107,8 +104,7 @@ save_body <- function(r, w, note) {
          etag = v[["etag"]], last_modified = v[["last_modified"]])
 }
 
-# a dead sheet link is usually a mistyped one: the archive index knows the spelling
-# the origin served, and failing that holds the bytes itself
+# a dead sheet link is usually mistyped: try the archive index's spelling, then its held bytes
 # two urls name the same document when their filenames agree letter for letter
 same_stem <- function(a, b) {
   k <- \(x) str_to_lower(str_remove_all(URLdecode(basename(x)), "[^A-Za-z0-9]"))
@@ -165,8 +161,7 @@ for (i in seq_len(nrow(work))) {
       bump("n_new")
       save_body(r, w, sprintf("new url in sheet %s", substr(sheet_hash, 1, 12)))
     } else if (!is.na(w$last_modified)) {
-      # the origin honours If-Modified-Since (304, no body) but ignores If-None-Match,
-      # so the ETag is recorded as evidence and never sent
+      # the origin honours If-Modified-Since (304, no body) but ignores If-None-Match, so the ETag is only recorded
       r <- fetch(w$url, add_headers(`If-Modified-Since` = w$last_modified))
       if (status_code(r) == 304) { bump("n_304"); NULL } else {
         stop_for_status(r)
@@ -182,8 +177,7 @@ for (i in seq_len(nrow(work))) {
         }
       }
     } else {
-      # no validator yet: a HEAD settles it when the origin dates the document
-      # at or before our fetch; otherwise compare bodies once and record the validator
+      # no validator yet: a HEAD settles it if the origin dates the document by our fetch, else compare bodies once
       h <- HEAD(w$url, user_agent("Mozilla/5.0"), timeout(60))
       if (status_code(h) %in% c(404L, 410L)) stop(structure(class = c("unreachable", "error", "condition"),
                                                        list(message = paste("HTTP", status_code(h)), call = NULL)))
@@ -227,8 +221,7 @@ if (length(manifest_rows) || length(failed) || nrow(newly_dead)) {
 }
 dead <- c(known_dead, if (length(unreachable)) bind_rows(unreachable)$url)
 
-# a failure recorded by an earlier run is retired once its url is held, or the
-# workflow's check for outstanding failures would force a full pass every tick forever
+# retire a recorded failure once its url is held, or the outstanding-failures check forces a full pass forever
 if (any(tally[c("n_new", "n_changed", "n_unreachable")] > 0) || length(failed) == 0) {
   now_held <- moa_validator_map() |> filter(!is.na(on_disk_path)) |> pull(url)
   for (f in list.files("agreements", "^failed_downloads\\.txt$", recursive = TRUE, full.names = TRUE)) {

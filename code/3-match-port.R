@@ -93,7 +93,7 @@ fallback_points <- fallback |>
     manual_note,
     geometry
   )
-# keep-all: a port with neither rides along with an empty geometry
+# a port with neither rides along with an empty geometry
 fallback_unmatched <- fallback |>
   filter(is.na(latitude) | is.na(longitude)) |>
   transmute(
