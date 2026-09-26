@@ -35,7 +35,7 @@ county_agreements_sf <- agreements |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "county" |
-      (geom_class == "county_polygon" & is.na(manual_match_layer))
+      (geometry_type == "polygon" & jurisdiction_level == "County" & is.na(manual_match_layer))
   ) |>
   mutate(
     # manual_polygons is shared by every layer, so blank a name aimed elsewhere
@@ -108,7 +108,7 @@ stopifnot(
   "every judicial-district county must match one census county" =
     all(!is.na(judicial_members$statefp)) && nrow(judicial_members) == nrow(manual_judicial)
 )
-judicial_agreements <- agreements |> filter(geom_class == "judicial_district_polygon")
+judicial_agreements <- agreements |> filter(geometry_type == "polygon", jurisdiction_level == "Judicial District")
 judicial_sf <- judicial_agreements |>
   inner_join(judicial_members |> select(agency, state, match_name, statefp, countyfp, geometry_vintage, source, geometry),
              by = c("agency", "state"), relationship = "many-to-many") |>

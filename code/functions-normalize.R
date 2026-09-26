@@ -56,6 +56,7 @@ norm_place <- function(x) {
     str_replace_all("'", "") |>
     str_replace_all("\\bste\\.?\\b", "sainte") |>
     str_replace_all("\\bst\\.?\\b", "saint") |>
+    str_replace_all("\\bmt\\.?\\b", "mount") |>
     str_replace_all("\\btwp\\.?\\b", "township") |>
     str_replace_all(
       "\\b(county|city|town|village|borough|township|municipality)\\b",

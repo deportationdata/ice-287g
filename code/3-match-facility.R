@@ -78,7 +78,7 @@ doc_pattern <- paste(
 )
 
 fac_287g <- agreements |>
-  filter(geom_class == "facility_point") |>
+  filter(geometry_type == "point") |>
   anti_join(manual_polygons, by = c("agency", "state", "county")) |>
   transmute(
     agreement_id,

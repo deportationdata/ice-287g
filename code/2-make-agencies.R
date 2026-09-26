@@ -156,7 +156,7 @@ moa_summary <- moa |>
          archived_url = archive$url[match(str_to_lower(moa_file), archive$file)]) |>
   summarise(moa_files = paste(sort(unique(moa_file)), collapse = "; "),
             moa_pdf_present = any(present),
-            moa_archived_url = paste(unique(na.omit(archived_url)), collapse = "; "),
+            moa_archived_url = paste(sort(unique(na.omit(archived_url))), collapse = "; "),
             .by = agency_id) |>
   mutate(moa_archived_url = na_if(moa_archived_url, ""))
 

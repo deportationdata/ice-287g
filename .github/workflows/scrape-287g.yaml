@@ -58,12 +58,10 @@ jobs:
             git checkout -B "$open_branch" "origin/$open_branch"
             echo "Continuing open update branch: $open_branch"
             echo "branch=$open_branch" >> "$GITHUB_OUTPUT"
-            echo "existing_pr=true" >> "$GITHUB_OUTPUT"
           else
             branch="agreements-update-$(date +%Y-%m-%d-%H%M%S)"
             git checkout -b "$branch"
             echo "branch=$branch" >> "$GITHUB_OUTPUT"
-            echo "existing_pr=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check whether the ICE sheet changed (quick check)
@@ -214,12 +212,18 @@ jobs:
           if [ "$(wc -c < "$RUNNER_TEMP/pr-body.txt")" -gt 60000 ]; then
             printf "\n\n_...truncated at 60k chars._\n" >> "$RUNNER_TEMP/pr-body.trimmed.txt"
           fi
-          if [ "${{ steps.update_branch.outputs.existing_pr }}" = "true" ]; then
-            pr_num=$(gh pr list --state open \
-              --head "${{ steps.update_branch.outputs.branch }}" \
-              --json number --jq '.[0].number')
+          # the acquisition takes minutes, so look the PR up again now: the one that
+          # was open at the start may have been merged or closed meanwhile
+          pr_num=$(gh pr list --state open \
+            --head "${{ steps.update_branch.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$pr_num" ]; then
             gh pr comment "$pr_num" --body-file "$RUNNER_TEMP/pr-body.trimmed.txt"
-            gh pr edit "$pr_num" --title "287(g) update through $(date +%Y-%m-%d)"
+            # the REST endpoint rather than `gh pr edit`: that command also asks for
+            # the PR's classic-project cards, an API GitHub has retired, and gh
+            # versions before 2.82.1 (Debian ships 2.46) fail on the refusal
+            gh api -X PATCH "repos/${{ github.repository }}/pulls/$pr_num" \
+              -f title="287(g) update through $(date +%Y-%m-%d)" --jq .title
           else
             pr_url=$(gh pr create \
               --title "287(g) update $(date +%Y-%m-%d)" \

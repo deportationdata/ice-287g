@@ -60,7 +60,7 @@ state_agreements_sf <- agreements |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "state" |
-      (geom_class == "state_polygon" & is.na(manual_match_layer))
+      (geometry_type == "polygon" & jurisdiction_level == "State" & is.na(manual_match_layer))
   ) |>
   mutate(
     # manual_polygons is shared by every layer, so blank a name aimed elsewhere

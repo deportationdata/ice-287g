@@ -52,8 +52,9 @@ a pull request shows what moved.
 
 | file | contents |
 |---|---|
-| **`data/agreements.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (its TYPE as printed is `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, identifiers, `geom_class`, `geometry_vintage`, `match_quality`, `review_reason`, geometry. The file the slicer consumes. |
+| **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's SUPPORT TYPE and TYPE as printed are `ice_support_type` and `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9`, where it sits (`place`, `county` and `state` with their census codes, looked up around the geometry: a municipality is its own place, a jail or campus takes the town and county around it, boundaries in several counties list them all with semicolons, and a multi-unit body keeps a place only when all its units share one; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit it is when it is one (`geoid`, `geoid_type`), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` names that file under `sheets/` and `latest_sheet_url` serves it from GitHub. The file the slicer consumes. |
 | **`data/agencies.parquet`** | One row per agency across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to, MOA archive status and which sources attest it. |
+| `data/agreements.{parquet,xlsx,dta,sav}`, `data/agencies.{xlsx,dta,sav}`, `data/agreements-shp.zip` | The two published files in other formats, written by `8-write-formats.R`: the agreements without geometry, and a shapefile zip with a point layer (facility agreements) and a polygon layer (jurisdiction agreements). Shapefile field names stop at 10 characters, so the zip's `fields.csv` maps each back to its full name. |
 | `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window. |
 | `data/intermediate/identity-agreements.parquet`, `data/intermediate/sheet-publications.parquet`, `data/intermediate/sheet-publication-files.parquet`, `data/intermediate/sheet-row-agreements.parquet`, `data/intermediate/identity-agency-spellings.parquet` | The identity layer: every distinct sheet ever published, every row of every sheet resolved to an agreement, and every spelling ICE printed for each agency. |
 | `data/intermediate/historical-source-claims.csv`, `data/intermediate/historical-source-claims-unresolved.csv` | Every claim a non-sheet source (ICE's undated lists, ICE's MOA archive index, DHS OIG's Oct 2009 appendix, ICE press releases) makes about an agency — listed, pending, signed, model, MOA file, rescinded — with the rule that resolved it; what no rule resolves is listed, never dropped. |
@@ -77,7 +78,7 @@ reads them with `sf::st_read()` (GDAL ≥ 3.12); `arrow::read_parquet()` plus
 and sf's GDAL each carry their own libarrow, and one system allocator keeps the
 two copies from freeing each other's memory, which corrupts a GDAL Parquet write.
 Unmatched agreements are never dropped: they ride along with empty geometries
-and `review_reason = "no geometry matched"`.
+(`review_reason = "no geometry matched"` in `match-all-features.parquet`).
 
 ## How it works
 
@@ -157,20 +158,38 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   cartographic vintage except Connecticut, whose legacy counties come from
   2021 because the sources name them. A judicial-district office is the union
   of its counties (`inputs/manual-judicial-district-counties.csv`), a regional
-  department the union of its member municipalities, a port authority a point
-  at its airport, and a constable district stays unplaced: no statewide layer
-  of justice precincts or justice court districts exists.
+  department the union of its member municipalities, a port authority the
+  union of its airports' property (`inputs/manual-port-airports.csv`, drawn
+  from FGDL's 2016 Florida aviation facility boundaries; an authority with no
+  airport list keeps a point at its airport), and a constable district stays
+  unplaced: no statewide layer of justice precincts or justice court districts
+  exists.
 - **`4-match-non-facility.R`** stacks the non-facility layers and asserts
-  every placed feature carries a geoid.
+  every placed census-unit feature carries a geoid.
 - **`5-match-agency-identifiers.R`** matches each agreement against the four rosters
   (exact state+county+name, then a unique statewide full name, then a guarded
   key, then a roster name that begins with the agency's whole name where
   nothing else matched) and writes the identifier annotations, with `ori_ambiguous` where a
   roster offered more than one ORI. ORIs are annotations, not match inputs.
+- **`5-locate-features.R`** binds the facility and non-facility layers into
+  one feature layer, names the census unit each placed feature is
+  (`geoid_type`) and finds the county and place around it: a county or state
+  polygon is its own county, a county subdivision names its county in its
+  geoid, and a jail, campus, airport or municipality takes the county around
+  it, listing every county holding over one percent of it with semicolons,
+  largest first, when it straddles a county line, and the place it lies in (a
+  census place, else the county subdivision with a working government around
+  it; in New England the town outranks the same-named place) with the type the
+  Census gives it (`place_type`: city, township, CDP). The county the layer
+  itself set stays beside it as `layer_county_fips` for QA.
 - **`6-make-agreement-level-sf.R`** joins everything by `agreement_id`,
-  judges roster-county disagreements per agreement, composes `review_reason`
-  from one vocabulary of flags, derives `needs_review` and `match_quality`,
-  and writes the two shipped datasets.
+  asserts every placed feature lies in ICE's state, judges roster-county
+  disagreements per agreement, composes `review_reason` from one vocabulary of
+  flags, derives `needs_review` and `match_quality`, unions each agreement's
+  features (its counties are the union of theirs; a unit code or place is kept
+  only when its features agree; an agreement with no boundaries takes ICE's
+  county), and writes the two shipped datasets,
+  leaving the three review columns in `match-all-features.parquet`.
 - **`7-match-missing-identifiers.R`** writes the exception report and
   **`7-make-qa-report.R`** the QA tables; `QA_STRICT=1` (set by CI) makes any
   failing check fatal.
@@ -214,6 +233,20 @@ QA diff.
   fact-sheet era, which printed no TYPE, from the name alone;
   `jurisdiction_level_source` says which, and `ice_type` carries ICE's TYPE as
   printed. An agency takes the level of its latest agreement.
+- `inputs/manual-port-airports.csv` — the airports a port authority polices,
+  one row per airport with its FAA location identifier and the source
+  documenting the authority's operation of it. The authority's agreement-level
+  geometry is the union of their property polygons from
+  `inputs/2016-florida-aviation-facility-boundaries/` (UF GeoPlan Center for
+  FDOT, January 2016), which covers Florida only; an authority not listed
+  keeps the reference point recorded for it in
+  `inputs/manual-facility-points.csv`.
+- `inputs/2024-census-gazetteer-county-subdivisions/` — the Census Bureau's
+  2024 county subdivision gazetteer, read for its FUNCSTAT: a subdivision is a
+  candidate jurisdiction or surrounding place only when it has a working
+  government, which drops the nonfunctioning townships of North Carolina,
+  Arkansas and most of Missouri (survey lines with no officials) and the
+  statistical census county divisions.
 - `inputs/manual-regional-municipalities.csv` — the member municipalities of
   regional police departments, one row per member with the source documenting
   the membership. A regional department gets one feature row per member and its
@@ -226,7 +259,8 @@ QA diff.
   corrects it. A county fix with an `agency` applies to that agency only (a real
   county ICE assigned to the wrong place); without one it fixes a misspelled
   county wherever it is printed. A blank `county_fixed` removes a county that
-  does not exist. `inputs/renewal-date-fixes.csv` re-dates an agreement ICE
+  does not exist; a blank `county` with a `county_fixed` fills one ICE never
+  printed. `inputs/renewal-date-fixes.csv` re-dates an agreement ICE
   renewed without changing its signing date, from the first list that links the
   new MOA, so the old agreement ends where the renewal begins.
   `inputs/moa-link-fixes.csv` supplies an agency's own MOA where the sheet links
@@ -249,7 +283,8 @@ regenerable.
 
 ## Caveats
 
-- `review_reason` names every reason a row deserves a look — no geometry, a
+- In `data/intermediate/match-all-features.parquet`, `review_reason` names
+  every reason a row deserves a look — no geometry, a
   fuzzy or fallback match, several candidates, a roster placing the agency in
   another county, disagreeing or ambiguous ORIs, a row ICE printed twice —
   and `needs_review` is simply whether it is set. A pending MOA link or an

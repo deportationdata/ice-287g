@@ -1,15 +1,11 @@
-# Assemble the per-feature layer (intermediate/all_agreements_sf) and the
+# Assemble the per-feature layer (intermediate/match-all-features) and the
 # published agreement-level-sf
 library(tidyverse)
 library(sf)
 
 source("code/functions.R")
 
-non_facility_sf <- st_read(
-  "data/intermediate/match-non-facility.parquet",
-  quiet = TRUE
-)
-facility_sf <- st_read("data/intermediate/match-facility.parquet", quiet = TRUE)
+features_sf <- st_read("data/intermediate/match-features.parquet", quiet = TRUE)
 
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet")
 
@@ -35,45 +31,13 @@ agreement_identifiers <-
     hifld_county_fips
   )
 
-stopifnot(
-  "non-facility layer file must arrive in EPSG:4326" = st_crs(
-    non_facility_sf
-  ) ==
-    st_crs(4326),
-  "facility layer file must arrive in EPSG:4326" = st_crs(facility_sf) ==
-    st_crs(4326)
-)
-
-# the layers partition the agreements: every agreement sits in exactly one layer, and only a
-# facility agreement, a regional department or a judicial district fans out
-non_facility_ids <- non_facility_sf |>
-  st_drop_geometry() |>
-  filter(coalesce(
-    !match_type %in%
-      c("regional_member_municipality", "judicial_district_member_county"),
-    TRUE
-  )) |>
-  pull(agreement_id)
-stopifnot(
-  "every agreement is in exactly one layer" = setequal(
-    c(non_facility_sf$agreement_id, facility_sf$agreement_id),
-    agreements$agreement_id
-  ) &&
-    !any(facility_sf$agreement_id %in% non_facility_sf$agreement_id),
-  "only regional departments and judicial districts fan out in the non-facility layers" = !anyDuplicated(
-    non_facility_ids
-  ),
-  "the facility layer holds exactly the facility-point agreements" = setequal(
-    facility_sf$agreement_id,
-    agreements$agreement_id[agreements$geom_class == "facility_point"]
-  )
-)
+state_codes <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
 
 # the review vocabulary: every flag a layer or roster stage sets, and the one
 # wording it gets; a flag outside this table cannot reach the published files
 review_vocabulary <- tribble(
   ~flag                         , ~reason                                          ,
-  "geom_class_unknown"          , "agreement type cannot be placed"                ,
+  "geometry_type_unknown"       , "agreement type cannot be placed"                ,
   "geometry_unmatched"          , "no geometry matched"                            ,
   "fuzzy_match"                 , "fuzzy name match"                               ,
   "weak_match"                  , "placed by a police-station fallback"            ,
@@ -100,29 +64,25 @@ compose_review_reason <- function(flags) {
   })
 }
 
-# unmatched agreements ride along with empty geometries; nothing is dropped
-all_agreements_sf <-
-  bind_rows(
-    non_facility_sf,
-    facility_sf |>
-      mutate(match_layer = "facility")
-  ) |>
-  st_make_valid() |>
+all_agreements_sf <- features_sf |>
   left_join(
     agreements |>
       select(
         agreement_id,
         agency_id,
         status,
-        sheet_row,
+        latest_sheet_row,
+        latest_sheet,
+        latest_sheet_url,
         n_sheet_rows,
         state,
-        county,
+        ice_county = county,
         agency,
         ice_type,
         jurisdiction_level,
         jurisdiction_level_source,
         support_type,
+        ice_support_type,
         signed,
         moa,
         addendum,
@@ -132,27 +92,26 @@ all_agreements_sf <-
         removed_by,
         removed_by_source,
         removal_flag,
-        geom_class
+        geometry_type
       ),
     by = "agreement_id"
   ) |>
   left_join(agreement_identifiers, by = "agreement_id") |>
   mutate(
-    # facility rows have no polygon; the published geoid contract is county fips
-    geoid = if_else(match_layer == "facility", county_fips, geoid),
-    # only county/municipal matches can be cross-checked against roster counties
+    # only county/municipal matches are checked against roster counties; a roster agrees
+    # when its county is among the feature's
     checkable_layer = match_layer %in% c("county", "municipal"),
     leaic_fips_mismatch = case_when(
       match_layer == "county" ~ coalesce(
         !is.na(leaic_county_fips) &
           !is.na(county_fips) &
-          leaic_county_fips != county_fips,
+          !among(leaic_county_fips, county_fips),
         FALSE
       ),
       match_layer == "municipal" ~ coalesce(
         (!is.na(leaic_county_fips) &
           !is.na(county_fips) &
-          leaic_county_fips != county_fips) |
+          !among(leaic_county_fips, county_fips)) |
           (!is.na(leaic_place_fips) &
             leaic_place_fips != "00000" &
             !is.na(place_fips) &
@@ -166,18 +125,21 @@ all_agreements_sf <-
       coalesce(
         !is.na(lear_county_fips) &
           !is.na(county_fips) &
-          lear_county_fips != county_fips,
+          !among(lear_county_fips, county_fips),
         FALSE
       ),
       NA
     ),
-    # CDE can list several counties ("01081;01087"), so test membership
     crime_fips_mismatch = if_else(
       checkable_layer,
       coalesce(
         !is.na(crime_county_fips) &
           !is.na(county_fips) &
-          !str_detect(crime_county_fips, fixed(county_fips)),
+          !map2_lgl(
+            coalesce(crime_county_fips, ""),
+            coalesce(county_fips, ""),
+            \(codes, listed) any(among(str_split_1(codes, ";"), listed))
+          ),
         FALSE
       ),
       NA
@@ -187,7 +149,7 @@ all_agreements_sf <-
       coalesce(
         !is.na(hifld_county_fips) &
           !is.na(county_fips) &
-          hifld_county_fips != county_fips,
+          !among(hifld_county_fips, county_fips),
         FALSE
       ),
       NA
@@ -219,7 +181,7 @@ all_agreements_sf <-
     .by = agreement_id
   ) |>
   mutate(
-    geom_class_unknown = geom_class == "unknown",
+    geometry_type_unknown = is.na(geometry_type),
     duplicate_sheet_row = coalesce(n_sheet_rows > 1, FALSE),
     ambiguous_candidates = coalesce(ambiguous_candidates, FALSE) &
       !leaic_place_confirmed,
@@ -241,10 +203,22 @@ all_agreements_sf <-
       \(x) coalesce(x, FALSE)
     ),
     moa_pending = coalesce(moa == "pending", FALSE),
-    has_addendum = !is.na(addendum)
+    has_addendum = !is.na(addendum),
+    ice_state_fips = state_codes$state_fips[match(state, state_codes$state_full)]
   )
+stopifnot(
+  "every ICE state resolves to a census state code" = !any(
+    is.na(all_agreements_sf$ice_state_fips)
+  ),
+  "every feature with a state code lies in ICE's state" = !any(
+    !is.na(all_agreements_sf$state_fips) &
+      all_agreements_sf$state_fips != all_agreements_sf$ice_state_fips
+  )
+)
+
 all_agreements_sf <- all_agreements_sf |>
   mutate(
+    state_fips = ice_state_fips,
     review_reason = compose_review_reason(st_drop_geometry(all_agreements_sf)[
       review_vocabulary$flag
     ]),
@@ -270,14 +244,17 @@ all_agreements_sf <- all_agreements_sf |>
     agreement_id,
     agency_id,
     status,
-    sheet_row,
+    latest_sheet_row,
+    latest_sheet,
+    latest_sheet_url,
     state,
-    county,
+    ice_county,
     agency,
     ice_type,
     jurisdiction_level,
     jurisdiction_level_source,
     support_type,
+    ice_support_type,
     signed,
     moa,
     addendum,
@@ -287,7 +264,7 @@ all_agreements_sf <- all_agreements_sf |>
     removed_by,
     removed_by_source,
     removal_flag,
-    geom_class,
+    geometry_type,
     match_layer,
     match_name,
     match_type,
@@ -305,8 +282,14 @@ all_agreements_sf <- all_agreements_sf |>
     longitude,
     state_fips,
     county_fips,
+    county,
+    layer_county_fips,
     place_fips,
+    place_geoid,
+    place,
+    place_type,
     geoid,
+    geoid_type,
     vtd_code,
     geometry_vintage,
     ORI9,
@@ -349,10 +332,15 @@ sf::st_write(
   quiet = TRUE
 )
 
-# an agreement can span several features, so a code is kept only when unique
+# an agreement can span several features, so a unit code is kept only when unique and
+# its counties are listed
 single_or_na <- function(x) {
   ux <- unique(x[!is.na(x)])
   if (length(ux) == 1) ux else NA_character_
+}
+union_codes <- function(lists) {
+  cs <- unique(unlist(str_split(lists[!is.na(lists)], ";")))
+  if (length(cs)) paste(cs, collapse = ";") else NA_character_
 }
 quality_order <- c(
   "unmatched",
@@ -363,15 +351,25 @@ quality_order <- c(
   "exact"
 )
 
+# ICE's county as a census code, for the agreements with no geometry
+reference_counties <- arrow::read_parquet("data/intermediate/reference-counties.parquet")
+ice_county_codes <- reference_counties |>
+  distinct(state, county_key, .keep_all = TRUE) |>
+  select(state, county_key, ice_county_fips = county_fips)
+county_names <- reference_counties |> distinct(county_fips, county) |> deframe()
+
 agreement_level_sf <- all_agreements_sf |>
   group_by(
     agreement_id,
     agency_id,
     status,
-    sheet_row,
+    latest_sheet_row,
+    latest_sheet,
+    latest_sheet_url,
     agency,
     state,
-    county,
+    state_fips,
+    ice_county,
     signed,
     moa,
     addendum,
@@ -383,18 +381,20 @@ agreement_level_sf <- all_agreements_sf |>
     removal_flag,
     ORI9,
     support_type,
+    ice_support_type,
     ice_type,
     jurisdiction_level,
     jurisdiction_level_source,
-    geom_class,
-    state_fips
+    geometry_type
   ) |>
   summarize(
     match_layer = paste(sort(unique(match_layer)), collapse = "+"),
-    county_fips = single_or_na(county_fips),
-    place_fips = single_or_na(place_fips),
+    county_fips = union_codes(county_fips),
+    place_geoid = single_or_na(place_geoid),
+    place = single_or_na(place),
+    place_type = single_or_na(place_type),
     geoid = single_or_na(geoid),
-    vtd_code = single_or_na(vtd_code),
+    geoid_type = single_or_na(geoid_type),
     geometry_vintage = as.integer(single_or_na(as.character(geometry_vintage))),
     across(all_of(review_vocabulary$flag), any),
     match_quality = quality_order[min(match(match_quality, quality_order))],
@@ -408,42 +408,58 @@ agreement_level_sf <- agreement_level_sf |>
     ]),
     needs_review = !is.na(review_reason),
     has_addendum = !is.na(addendum),
-    moa_pending = coalesce(moa == "pending", FALSE)
+    moa_pending = coalesce(moa == "pending", FALSE),
+    # a type goes with its code
+    geoid_type = if_else(is.na(geoid), NA_character_, geoid_type),
+    place_type = if_else(is.na(place_geoid), NA_character_, place_type),
+    county_key = norm_county(ice_county)
   ) |>
-  arrange(sheet_row, agreement_id) |>
+  left_join(ice_county_codes, by = c("state", "county_key")) |>
+  # an agreement without boundaries is still in ICE's county
+  mutate(
+    county_fips = if_else(st_is_empty(geometry) & is.na(county_fips), ice_county_fips, county_fips),
+    county = name_codes(county_fips, county_names)
+  ) |>
+  select(-county_key, -ice_county_fips) |>
+  arrange(desc(last_appeared), latest_sheet_row, agreement_id) |>
   select(
-    # the sheet's own order first, then derived and spatial fields
+    # the agency and where it is, the agreement's history, its geography, then ICE's values as printed
     agreement_id,
     agency_id,
-    status,
-    sheet_row,
-    state,
     agency,
-    ice_type,
-    jurisdiction_level,
-    jurisdiction_level_source,
+    ORI9,
+    place,
+    place_type,
+    place_geoid,
     county,
+    county_fips,
+    state,
+    state_fips,
+    status,
     support_type,
     signed,
     moa,
+    moa_pending,
     addendum,
+    has_addendum,
     first_appeared,
     first_appeared_source,
     last_appeared,
     removed_by,
     removed_by_source,
     removal_flag,
-    ORI9,
-    state_fips,
-    county_fips,
-    place_fips,
+    jurisdiction_level,
+    jurisdiction_level_source,
+    geometry_type,
     geoid,
-    vtd_code,
-    geom_class,
+    geoid_type,
     geometry_vintage,
-    has_addendum,
-    moa_pending,
-    match_layer,
+    ice_county,
+    ice_type,
+    ice_support_type,
+    latest_sheet_row,
+    latest_sheet,
+    latest_sheet_url,
     match_quality,
     review_reason,
     needs_review,
@@ -455,11 +471,21 @@ stopifnot(
     agreement_level_sf$agreement_id,
     agreements$agreement_id
   ) &&
-    !anyDuplicated(agreement_level_sf$agreement_id)
+    !anyDuplicated(agreement_level_sf$agreement_id),
+  "a county name travels with its code" = all(
+    is.na(agreement_level_sf$county) == is.na(agreement_level_sf$county_fips)
+  ),
+  "a place name travels with its code" = all(
+    is.na(agreement_level_sf$place) == is.na(agreement_level_sf$place_geoid)
+  ),
+  "a place type never outlives its place" = !any(
+    is.na(agreement_level_sf$place) & !is.na(agreement_level_sf$place_type)
+  )
 )
 
+# the review columns stay in match-all-features.parquet for the QA report and the PR diff
 sf::st_write(
-  agreement_level_sf,
+  agreement_level_sf |> select(-match_quality, -review_reason, -needs_review),
   dsn = "data/agreements-sf.parquet",
   driver = "Parquet",
   layer_options = "USE_PARQUET_GEO_TYPES=ONLY",

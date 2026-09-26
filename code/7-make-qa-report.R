@@ -58,9 +58,10 @@ census_counties <- counties_reference(2024) |> st_drop_geometry() |> pull(geoid)
 ori_ok <- str_detect(coalesce(ids$ORI9, "AA0000000"), "^[A-Z]{2}[A-Z0-9]{7}$")
 county_ok <- with(
   all_sf,
+  # a straddling boundary lists its counties
   is.na(county_fips) |
-    (str_detect(county_fips, "^\\d{5}$") &
-      str_sub(county_fips, 1, 2) == state_fips)
+    (str_detect(county_fips, "^\\d{5}(;\\d{5})*$") &
+      map2_lgl(str_split(county_fips, ";"), state_fips, \(codes, state) all(str_sub(codes, 1, 2) == state)))
 )
 
 # one row per check; `expected` NA means the row is a tracked count, not a test
@@ -215,7 +216,8 @@ summary <- bind_rows(
     list_rbind(),
   check(
     "active agreements flagged needs_review",
-    sum(level_sf$needs_review[level_sf$status == "active"])
+    # an agreement is flagged when any of its features is
+    n_distinct(active_features$agreement_id[active_features$needs_review])
   ),
   check("active features with a pending MOA", sum(active_features$moa_pending)),
   check("active features with an addendum", sum(active_features$has_addendum)),
@@ -257,8 +259,28 @@ summary <- bind_rows(
   check("ORI9 sentinel -1 shipped", sum(coalesce(ids$ORI9, "") == "-1"), 0),
   check("ori_conflict flagged", sum(coalesce(ids$ori_conflict, FALSE))),
   check("county_fips malformed or outside its state", sum(!county_ok), 0),
+  # a layer county outside the counties around the feature is a geocoding or sheet question
   features |>
-    filter(!empty, is.na(geoid), match_layer != "facility") |>
+    filter(
+      !empty,
+      !is.na(layer_county_fips),
+      !is.na(county_fips),
+      !among(layer_county_fips, county_fips)
+    ) |>
+    count(match_layer, name = "n") |>
+    pmap(\(match_layer, n) {
+      check("placed features whose layer county is not among the counties around them", n, scope = match_layer)
+    }) |>
+    list_rbind(),
+  features |>
+    filter(!empty, str_detect(coalesce(county_fips, ""), ";")) |>
+    count(match_layer, name = "n") |>
+    pmap(\(match_layer, n) {
+      check("placed features straddling counties", n, scope = match_layer)
+    }) |>
+    list_rbind(),
+  features |>
+    filter(!empty, is.na(geoid), !match_layer %in% c("facility", "university", "port")) |>
     count(match_layer, name = "n") |>
     pmap(\(match_layer, n) {
       check("placed features with no geoid", n, 0, scope = match_layer)
@@ -268,14 +290,14 @@ summary <- bind_rows(
     "Connecticut features carrying a legacy county fips",
     sum(
       features$state == "Connecticut" &
-        str_detect(coalesce(features$county_fips, ""), "^090(0[1-9]|1[0-5])$")
+        str_detect(coalesce(features$county_fips, ""), "(^|;)090(0[1-9]|1[0-5])(;|$)")
     )
   ),
   check(
     "Connecticut features carrying a planning-region fips",
     sum(
       features$state == "Connecticut" &
-        str_detect(coalesce(features$county_fips, ""), "^091")
+        str_detect(coalesce(features$county_fips, ""), "(^|;)091")
     ),
     0
   ),
@@ -350,7 +372,7 @@ write_csv(summary, "data/qa/qa-summary.csv")
 
 # why rows are flagged: the review vocabulary, one column per flag
 flag_cols <- c(
-  "geom_class_unknown",
+  "geometry_type_unknown",
   "geometry_unmatched",
   "fuzzy_match",
   "weak_match",

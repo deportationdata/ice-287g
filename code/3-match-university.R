@@ -51,7 +51,7 @@ university_sf <- agreements |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "university" |
-      (geom_class == "university_polygon" & is.na(manual_match_layer))
+      (geometry_type == "polygon" & jurisdiction_level == "Campus" & is.na(manual_match_layer))
   ) |>
   mutate(
     manual_university_match = if_else(
@@ -169,8 +169,8 @@ university_sf <- university_sf |>
   mutate(
     place_fips = overlap_place_fips,
     county_fips = coalesce(overlap_county_fips, county_fips),
-    # a campus is not a census unit; the published geoid is its county, as for facilities
-    geoid = county_fips,
+    # not a census unit; 5-locate-features.R finds its county and place
+    geoid = NA_character_,
     # city is never compared: the postal city routinely differs from the census place
     university_address_mismatch = coalesce(
       university_county_fips != overlap_county_fips,

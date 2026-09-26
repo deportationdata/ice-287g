@@ -13,6 +13,11 @@ lear_value <- function(x) {
   if_else(x %in% c("", "-1", "-2", "-3", "-8", "-9"), NA_character_, x)
 }
 
+real_counties <- with(
+  tigris::fips_codes,
+  paste(norm_state(state_name), str_remove_all(norm_ori_county(county), " "))
+)
+
 lear <- read_dta("inputs/ICPSR_36697/DS0001/36697-0001-Data.dta") |>
   transmute(
     name = str_squish(NAME),
@@ -30,9 +35,19 @@ lear <- read_dta("inputs/ICPSR_36697/DS0001/36697-0001-Data.dta") |>
     state_xwalk |> select(state_abbr, state_full),
     by = "state_abbr"
   ) |>
+  left_join(
+    tigris::fips_codes |> transmute(county_fips = paste0(state_code, county_code), fips_county = county),
+    by = "county_fips"
+  ) |>
   mutate(
     state_key = norm_state(coalesce(state_full, state_abbr)),
     county_key = norm_ori_county(county),
+    # FIPS fills in only where COUNTY names no real county
+    county_key = if_else(
+      paste(state_key, str_remove_all(county_key, " ")) %in% real_counties,
+      county_key,
+      coalesce(norm_ori_county(fips_county), county_key)
+    ),
     agency_key = norm_ori_agency(name),
     fullname_key = norm_ori_fullname(name)
   ) |>

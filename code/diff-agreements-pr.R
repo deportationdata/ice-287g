@@ -35,7 +35,7 @@ read_clean <- function(path) {
 main_df <- read_clean(main_path)
 pr_df <- read_clean(pr_path)
 
-id_cols <- c("agreement_id", "agency_id", "agreement_lineage_id", "succeeded_by", "sheet_row")
+id_cols <- c("agreement_id", "agency_id", "agreement_lineage_id", "succeeded_by", "latest_sheet_row", "latest_sheet", "latest_sheet_url")
 # the roster end date moves on every active row whenever ICE posts a new sheet;
 # it is reported as one line, not counted as a modified cell
 roster_cols <- c("last_appeared")
@@ -44,11 +44,11 @@ make_key <- function(df) {
   base_key_cols <- intersect(
     c(
       "state",
-      "county",
+      "ice_county",
       "agency",
       "support_type",
       "jurisdiction_level",
-      "geom_class",
+      "geometry_type",
       "match_layer",
       "match_name",
       "facility_city",
@@ -161,7 +161,7 @@ if (all(c("agreement_id_main", "agreement_id_pr") %in% names(churn))) {
               sum(as.character(churn$agreement_id_main) != as.character(churn$agreement_id_pr), na.rm = TRUE)))
 }
 
-summary_cols <- c("state", "county", "agency", "support_type", "jurisdiction_level", "match_layer")
+summary_cols <- c("state", "ice_county", "county", "agency", "support_type", "jurisdiction_level", "match_layer")
 
 cat("### Added\n\n")
 cat(md_table(added, summary_cols))

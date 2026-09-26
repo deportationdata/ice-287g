@@ -6,17 +6,17 @@ library(tidyverse)
 source("code/functions.R")
 
 state_xwalk <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
-# a county typo is fixed for every agency printing it; a real county ICE assigned to the
-# wrong agency names that agency; a blank fix removes a county that does not exist
+# a county typo is fixed wherever printed, a fix naming an agency applies to it alone, a blank
+# fix removes the county and a blank county fills one ICE never printed
 county_name_fixes <- read_csv("inputs/county-name-fixes.csv", col_types = "ccccc", na = character()) |>
-  transmute(state, agency = na_if(agency, ""), county, county_fixed)
+  transmute(state, agency = na_if(agency, ""), county = na_if(county, ""), county_fixed)
 # ICE's TYPE for an agency, keyed on the erroneous value so a fix does nothing once ICE corrects it
 agency_type_fixes <- read_csv("inputs/agency-type-fixes.csv", col_types = "ccccc") |>
   transmute(state, agency, type_clean = str_to_lower(type), type_fixed = str_to_lower(type_fixed))
 # the agency's own MOA where the sheet links another agency's, used only while it links that
 # file (with moa_linked blank, while the sheet says link pending); a row does nothing once ICE fixes it
 moa_link_fixes <- read_csv("inputs/moa-link-fixes.csv", col_types = "cccDccc") |>
-  select(state, agency, support_type, signed, moa_linked, moa_url)
+  transmute(state, agency, support_type = str_to_title(norm_support_key(support_type)), signed, moa_linked, moa_url)
 # every MOA PDF held under agreements/, by the ice.gov url it was fetched from
 held_moas <- snapshot_manifests("agreements") |>
   filter(on_disk, str_detect(coalesce(url, ""), "^https://www\\.ice\\.gov/doclib/287gMOA/")) |>
@@ -118,8 +118,9 @@ agreements <- bind_rows(active, gone) |>
       TRUE ~ NA_character_
     ),
     addendum = addendum_link,
-    support_type = str_squish(raw_support),
-    # ICE's TYPE as printed, beside the level we assign
+    # ICE's SUPPORT TYPE and TYPE as printed
+    ice_support_type = str_squish(raw_support),
+    support_type = str_to_title(norm_support_key(raw_support)),
     ice_type = str_squish(raw_type),
     type_clean = str_to_lower(str_squish(raw_type)),
     support_clean = str_to_lower(norm_support_key(raw_support))
@@ -217,41 +218,31 @@ agreements <- agreements |>
       !is.na(jurisdiction_level) ~ "agency_name",
       TRUE ~ NA_character_
     ),
-    # geometry follows the level: a jail agreement is a point at the jail whatever the body,
-    # and a task-force agreement is the body's territory. Constable precincts have no boundary
-    # layer and stay unplaced; a port is a point at its airport
-    geom_class = case_when(
-      support_clean %in% c("jail enforcement model", "warrant service officer", "jail & task force") ~ "facility_point",
-      support_clean != "task force model" | is.na(jurisdiction_level) ~ "unknown",
-      jurisdiction_level == "Campus" ~ "university_polygon",
-      jurisdiction_level == "State" ~ "state_polygon",
-      jurisdiction_level == "County" ~ "county_polygon",
-      jurisdiction_level == "Municipal" ~ "municipal_polygon",
-      jurisdiction_level == "Regional" ~ "regional_polygon",
-      jurisdiction_level == "Judicial District" ~ "judicial_district_polygon",
-      jurisdiction_level == "Constable District" ~ "precinct_polygon",
-      jurisdiction_level == "Port" ~ "facility_point",
-      TRUE ~ "unknown"
+    # jail models are a point at the jail; a task force is the body's territory
+    geometry_type = case_when(
+      support_clean %in% c("jail enforcement model", "warrant service officer", "jail & task force") ~ "point",
+      support_clean == "task force model" & !is.na(jurisdiction_level) ~ "polygon",
+      TRUE ~ NA_character_
     )
   ) |>
   # identity-level concerns only; the geometry, roster and document flags are
   # composed into review_reason by 6-make-agreement-level-sf.R
-  mutate(needs_review = geom_class == "unknown") |>
+  mutate(needs_review = is.na(geometry_type)) |>
   left_join(
     identities |>
       select(agreement_id, agreement_lineage_id, succeeded_by,
              first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source,
-             removal_flag, sheet_row, n_sheet_rows, identity_resolution),
+             removal_flag, latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows, identity_resolution),
     by = "agreement_id", relationship = "one-to-one"
   ) |>
   select(
-    agreement_id, status, state, county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, signed,
-    moa, addendum, geom_class, needs_review,
+    agreement_id, status, state, county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, ice_support_type, signed,
+    moa, addendum, geometry_type, needs_review,
     first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source, removal_flag,
-    agency_id, agreement_lineage_id, succeeded_by, sheet_row, n_sheet_rows,
+    agency_id, agreement_lineage_id, succeeded_by, latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows,
     identity_resolution
   ) |>
-  arrange(sheet_row, first_appeared, agreement_id)
+  arrange(desc(last_appeared), latest_sheet_row, first_appeared, agreement_id)
 
 stopifnot(
   "every jurisdiction level is one of the eight" =

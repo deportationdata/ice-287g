@@ -15,6 +15,8 @@ identities by resolution,typo,28,NA,info
 superseded agreements name a successor,all,0,0,pass
 sheet publications,all,455,NA,info
 sheet publications dated by ICE's filename,all,232,NA,info
+sheet publications dated by ICE's Last-Modified,all,0,NA,info
+newest ICE sheet without a filename date,all,0,NA,info
 sheet publications dated by an archive capture,all,223,NA,info
 sheet publications out of date order,all,0,0,pass
 sheet publications with a date flag,online before its ICE filename date,1,NA,info
@@ -46,50 +48,51 @@ agency disagreements by kind,state,1,NA,info
 active agreements == newest sheet rows,all,2539,2539,pass
 duplicate identity rows in agreements,all,0,0,pass
 distinct states in agreements,all,47,NA,info
-feature rows,all,5019,NA,info
+feature rows,all,5020,NA,info
 agreement-level rows == agreements rows,all,2961,2961,pass
 agreements with no feature row,all,0,0,pass
 feature rows by layer,county,696,NA,info
-feature rows by layer,facility,3055,NA,info
-feature rows by layer,municipal,1108,NA,info
-feature rows by layer,pa_constable,23,NA,info
+feature rows by layer,facility,3051,NA,info
+feature rows by layer,municipal,1131,NA,info
+feature rows by layer,port,5,NA,info
 feature rows by layer,precinct,48,NA,info
 feature rows by layer,state,69,NA,info
 feature rows by layer,university,20,NA,info
 empty-geometry features by layer,facility,9,NA,info
-empty-geometry features by layer,municipal,6,NA,info
-empty-geometry features by layer,pa_constable,3,NA,info
+empty-geometry features by layer,municipal,9,NA,info
 empty-geometry features by layer,precinct,48,NA,info
 empty-geometry features by layer,university,1,NA,info
-active features flagged needs_review,all,132,NA,info
-active features by match quality,exact,3725,NA,info
-active features by match quality,exact_flagged,42,NA,info
+active features flagged needs_review,all,123,NA,info
+active features by match quality,exact,3739,NA,info
+active features by match quality,exact_flagged,33,NA,info
 active features by match quality,fuzzy,7,NA,info
-active features by match quality,manual,99,NA,info
+active features by match quality,manual,95,NA,info
 active features by match quality,unmatched,54,NA,info
 active features by match quality,weak,11,NA,info
-active agreements flagged needs_review,all,116,NA,info
+active agreements flagged needs_review,all,107,NA,info
 active features with a pending MOA,all,614,NA,info
 active features with an addendum,all,93,NA,info
 county geoids outside the census county list,all,0,NA,info
 DOC agreements fanned out to state prisons,all,37,NA,info
 agreement-identifiers rows == agreements rows,all,2961,2961,pass
 active agreements with an ORI9,all,2421,NA,info
-ORI9 by source,crime,2589,NA,info
-ORI9 by source,leaic,58,NA,info
-ORI9 by source,lear,102,NA,info
+ORI9 by source,crime,2592,NA,info
+ORI9 by source,leaic,39,NA,info
+ORI9 by source,lear,118,NA,info
 ORI9 by source,manual,62,NA,info
 ORI9 by source,none,150,NA,info
 malformed ORI9 values,all,0,0,pass
 ORI9 sentinel -1 shipped,all,0,0,pass
 ori_conflict flagged,all,24,NA,info
 county_fips malformed or outside its state,all,0,0,pass
+placed features straddling counties,municipal,56,NA,info
+placed features straddling counties,port,1,NA,info
 Connecticut features carrying a legacy county fips,all,1,NA,info
 Connecticut features carrying a planning-region fips,all,0,0,pass
+placed features by geometry vintage,2016,5,NA,info
 placed features by geometry vintage,2021,2,NA,info
-placed features by geometry vintage,2024,1886,NA,info
-placed features by geometry vintage,2026,18,NA,info
-placed features by geometry vintage,NA,3046,NA,info
+placed features by geometry vintage,2024,1904,NA,info
+placed features by geometry vintage,NA,3042,NA,info
 missing identifiers by type,missing_both,9,NA,info
 missing identifiers by type,missing_fips,45,NA,info
 missing identifiers by type,missing_ori,109,NA,info

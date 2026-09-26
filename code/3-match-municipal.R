@@ -18,7 +18,7 @@ manual_regional <- arrow::read_parquet("data/intermediate/manual-regional-munici
 stopifnot(
   "agreements.parquet must carry the columns the municipal matcher uses" =
     all(
-      c("agreement_id", "state", "county", "agency", "geom_class", "needs_review") %in%
+      c("agreement_id", "state", "county", "agency", "jurisdiction_level", "geometry_type", "needs_review") %in%
         names(agreements)
     ),
   "manual-polygons.parquet must carry the manual override columns" =
@@ -26,17 +26,6 @@ stopifnot(
       c("agency", "state", "county", "match_layer", "match_name", "reason", "note") %in%
         names(manual_polygons)
     )
-)
-
-# Census LSAD codes carry the legal entity type
-lsad_type <- c(
-  "21" = "borough",
-  "25" = "city",
-  "35" = "township",
-  "43" = "town",
-  "44" = "township",
-  "47" = "village",
-  "49" = "township"
 )
 
 places_sf <- places(cb = TRUE, year = YEAR, class = "sf") |>
@@ -50,18 +39,8 @@ places_sf <- places(cb = TRUE, year = YEAR, class = "sf") |>
     geometry
   )
 
-# tigris serves county subdivisions one state at a time
-cousubs_sf <-
-  tigris::states(cb = TRUE, year = YEAR, class = "sf")$STATEFP |>
-  unique() |>
-  map_dfr(function(fp) {
-    county_subdivisions(
-      state = fp,
-      cb = TRUE,
-      year = YEAR,
-      class = "sf"
-    )
-  }) |>
+# only subdivisions with a working government can be a police department's jurisdiction
+cousubs_sf <- county_subdivisions_reference(YEAR) |>
   transmute(
     state = str_to_title(STATE_NAME),
     place_guess = str_to_title(NAME),
@@ -73,16 +52,6 @@ cousubs_sf <-
     geometry
   )
 
-# in New England the town (cousub) is the municipal government, so it outranks the same-named CDP
-new_england <- c(
-  "connecticut",
-  "maine",
-  "massachusetts",
-  "newhampshire",
-  "rhodeisland",
-  "vermont"
-)
-
 places_lookup <-
   bind_rows(
     places_sf |> mutate(src = "place"),
@@ -92,8 +61,8 @@ places_lookup <-
     state_key = norm_state(state),
     place_key = norm_place(place_guess),
     src_rank = case_when(
-      state_key %in% new_england & src == "cousub" ~ 1L,
-      state_key %in% new_england ~ 2L,
+      statefp %in% new_england_fips & src == "cousub" ~ 1L,
+      statefp %in% new_england_fips ~ 2L,
       src == "place" ~ 1L,
       TRUE ~ 2L
     )
@@ -194,7 +163,7 @@ stopifnot(
 )
 
 regional_sf <- agreements |>
-  filter(geom_class == "regional_polygon") |>
+  filter(geometry_type == "polygon", jurisdiction_level == "Regional") |>
   inner_join(regional_members, by = c("agency", "state", "county")) |>
   st_as_sf() |>
   transmute(
@@ -220,7 +189,7 @@ stopifnot(
 # a regional body with no member list rides along unplaced, saying why, rather than being
 # read as a town by the city matcher
 regional_unmatched <- agreements |>
-  filter(geom_class == "regional_polygon") |>
+  filter(geometry_type == "polygon", jurisdiction_level == "Regional") |>
   anti_join(regional_members, by = c("agency", "state", "county")) |>
   transmute(
     agreement_id,
@@ -252,7 +221,7 @@ municipal_base <- agreements |>
   ) |>
   # exact complement of 3-match-pa-constable.R's inclusion filter; constables must not land here
   filter(
-    !(state == "Pennsylvania" & geom_class == "municipal_polygon" &
+    !(state == "Pennsylvania" & geometry_type == "polygon" & jurisdiction_level == "Municipal" &
       str_detect(
         str_to_lower(agency),
         "\\bconstables?\\b"
@@ -261,7 +230,7 @@ municipal_base <- agreements |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "municipal" |
-      (geom_class == "municipal_polygon" & is.na(manual_match_layer))
+      (geometry_type == "polygon" & jurisdiction_level == "Municipal" & is.na(manual_match_layer))
   ) |>
   mutate(
     manual_city_match = if_else(

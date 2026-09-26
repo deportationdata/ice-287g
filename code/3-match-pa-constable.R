@@ -1,16 +1,18 @@
-# Matches PA constable agreements to PASDA municipalities and LRC wards/precincts -> data/intermediate/match-pa-constable.parquet
+# Matches PA constable agreements to Census county subdivisions and LRC wards/precincts -> data/intermediate/match-pa-constable.parquet
 
 library(tidyverse)
 library(sf)
+library(tigris)
 
 sf_use_s2(FALSE)
+options(tigris_use_cache = TRUE)
 
 source("code/functions.R")
 
-pasda_municipalities <- st_read(
-  "inputs/2026-pennsylvania-municipalities/PaMunicipalities2026_04.shp",
-  quiet = TRUE
-)
+YEAR <- 2024
+
+pa_county_subdivisions <- county_subdivisions_reference(YEAR) |>
+  filter(STATEFP == "42")
 
 lrc_voting_districts <- st_read(
   "inputs/2021-pennsylvania-lrc-voting-district-boundaries/WP_VotingDistricts.shp",
@@ -29,15 +31,6 @@ lrc_counties <- st_read(
 ) |>
   st_drop_geometry() |>
   transmute(FIPS, county_name = str_to_title(NAME20))
-
-muni_type_from_pasda <- function(x) {
-  case_when(
-    str_detect(x, "TWP") ~ "township",
-    x == "BORO" ~ "borough",
-    x == "CITY" ~ "city",
-    TRUE ~ NA_character_
-  )
-}
 
 muni_type_from_lrc <- function(x) {
   case_when(
@@ -71,20 +64,16 @@ pa_county_key <- function(x) {
     norm_place()
 }
 
-pasda_lookup <- pasda_municipalities |>
+cousub_lookup <- pa_county_subdivisions |>
   st_transform(4326) |>
-  # PASDA FIPS fields are numeric, so pad back to 2/3 digits
   mutate(
-    state_fips = str_pad(as.character(FIPS_STATE), 2, pad = "0"),
-    county_fips = paste0(
-      state_fips,
-      str_pad(as.character(FIPS_COUNT), 3, pad = "0")
-    ),
-    place_fips = as.character(FIPS_MUN_C),
-    geoid = as.character(GEOID),
-    municipality_match = str_to_title(MUNICIPAL1),
-    municipality_type = muni_type_from_pasda(CLASS_OF_M),
-    resolved_county_key = pa_county_key(COUNTY_NAM),
+    state_fips = STATEFP,
+    county_fips = paste0(STATEFP, COUNTYFP),
+    place_fips = COUSUBFP,
+    geoid = GEOID,
+    municipality_match = str_to_title(NAME),
+    municipality_type = unname(lsad_type[LSAD]),
+    resolved_county_key = pa_county_key(NAMELSADCO),
     municipality_key = norm_place(municipality_match)
   ) |>
   select(
@@ -166,7 +155,8 @@ ward_lookup <- lrc_wards |>
 pa_constables <- arrow::read_parquet("data/intermediate/agreements.parquet") |>
   filter(
     state == "Pennsylvania",
-    geom_class == "municipal_polygon",
+    geometry_type == "polygon",
+    jurisdiction_level == "Municipal",
     str_detect(str_to_lower(agency), "\\bconstables?\\b")
   ) |>
   select(agreement_id, county, agency)
@@ -229,12 +219,12 @@ precinct_matches <- pa_constables |>
 municipality_matches <- pa_constables |>
   filter(pa_constable_jurisdiction == "municipality") |>
   inner_join(
-    pasda_lookup,
+    cousub_lookup,
     by = "municipality_key",
     relationship = "many-to-many"
   ) |>
   filter_candidates() |>
-  select_unique_matches("pasda_municipality")
+  select_unique_matches("census_county_subdivision")
 
 pa_matches <- bind_rows(
   ward_matches,
@@ -262,15 +252,14 @@ ambiguous <- unique(c(
                              relationship = "many-to-many") |>
                   filter_candidates()),
   ambiguous_ids(pa_constables |> filter(pa_constable_jurisdiction == "municipality") |>
-                  inner_join(pasda_lookup, by = "municipality_key", relationship = "many-to-many") |>
+                  inner_join(cousub_lookup, by = "municipality_key", relationship = "many-to-many") |>
                   filter_candidates())
 ))
 
 matched <- pa_constables |>
   select(agreement_id) |>
   inner_join(pa_matches, by = "agreement_id") |>
-  # PASDA municipalities are the 2026 release; the LRC ward and precinct layers are 2021
-  mutate(geometry_vintage = if_else(match_type == "pasda_municipality", 2026L, 2021L),
+  mutate(geometry_vintage = if_else(match_type == "census_county_subdivision", as.integer(YEAR), 2021L),
          geometry_unmatched = FALSE, ambiguous_candidates = FALSE)
 
 # keep-all: constables with no unique candidate ride along with empty geometries

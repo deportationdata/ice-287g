@@ -4,8 +4,8 @@ library(tidyverse)
 required_fips <- function(match_layer, state_fips, county_fips, place_fips) {
   case_when(
     match_layer == "state" ~ state_fips,
-    match_layer %in% c("county", "university", "facility") ~ county_fips,
-    match_layer %in% c("municipal", "pa_constable") ~ place_fips,
+    match_layer %in% c("county", "university", "port", "facility") ~ county_fips,
+    match_layer == "municipal" ~ place_fips,
     TRUE ~ NA_character_
   )
 }
@@ -53,7 +53,7 @@ missing_identifiers <- agreements |>
     agency,
     jurisdiction_level,
     support_type,
-    geom_class,
+    geometry_type,
     ORI9,
     ori_source,
     missing_identifier_type

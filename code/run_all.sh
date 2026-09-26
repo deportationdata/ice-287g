@@ -16,6 +16,7 @@ run 1-read-facility-list-jails-prisons.R
 run 1-read-manual-inputs.R
 run 1-read-facility-list-ice-detention.R
 run 1-read-reference-university-campuses.R
+run 1-read-reference-airport-boundaries.R
 
 # every archived ICE sheet -> publications -> identities -> the agreements dataset
 run 1-read-sheets.R
@@ -35,11 +36,16 @@ run 3-match-county.R
 run 3-match-municipal.R
 run 3-match-pa-constable.R
 run 3-match-university.R
+run 3-match-port.R
 run 3-match-facility.R
 
-# bind the non-facility layers, annotate with roster identifiers, format
+# bind the non-facility layers, locate every feature, annotate with roster identifiers, format
 run 4-match-non-facility.R
 run 5-match-agency-identifiers.R
+run 5-locate-features.R
 run 6-make-agreement-level-sf.R
 run 7-match-missing-identifiers.R
 run 7-make-qa-report.R
+
+# the published files in Excel, Stata, SPSS and shapefile formats
+run 8-write-formats.R

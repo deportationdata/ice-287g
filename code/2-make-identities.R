@@ -20,6 +20,8 @@ current_seq <- pubs$pub_seq[pubs$is_current]
 
 # each publication's date: ICE's filename date, else its archive capture's (1-read-sheets.R)
 pub_dates <- pubs |> select(pub_seq, published_on, published_on_source)
+# every sheet is committed under sheets/; this serves it as ICE posted it
+SHEET_URL_BASE <- "https://github.com/deportationdata/ice-287g/raw/refs/heads/main/"
 
 xwalk <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
 aliases <- read_agency_aliases(xwalk)
@@ -342,7 +344,7 @@ identities <- obs_ids |>
     first_seq = min(pub_seq), last_seq = max(pub_seq),
     n_pub = n_distinct(publication_id),
     n_sheet_rows = max(table(publication_id)),
-    sheet_row = if (any(is_current)) min(sheet_row[is_current]) else NA_integer_,
+    latest_sheet_row = min(sheet_row[pub_seq == max(pub_seq)]),
     raw_state_last = last(raw_state), raw_agency_last = last(raw_agency),
     raw_support_last = last(raw_support), raw_type_last = last(raw_type),
     raw_county_last = last(raw_county), raw_moa_last = last(raw_moa),
@@ -355,6 +357,10 @@ identities <- obs_ids |>
   left_join(pub_dates |> select(first_seq = pub_seq, first_appeared = published_on,
                                 first_appeared_source = published_on_source), by = "first_seq") |>
   left_join(pub_dates |> select(last_seq = pub_seq, last_appeared = published_on), by = "last_seq") |>
+  left_join(pubs |> select(last_seq = pub_seq, publication_id) |>
+              inner_join(pub_files, by = "publication_id") |>
+              transmute(last_seq, latest_sheet = path), by = "last_seq") |>
+  mutate(latest_sheet_url = paste0(SHEET_URL_BASE, map_chr(latest_sheet, utils::URLencode))) |>
   # the first publication without it; none while the current sheet still lists it
   left_join(pub_dates |> transmute(last_seq = pub_seq - 1L, removed_by = published_on,
                                    removed_by_source = published_on_source), by = "last_seq")
@@ -423,7 +429,7 @@ identities <- identities |>
          canonical_agency, support_key, signed, status, succeeded_by,
          first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source,
          removal_flag, first_seq, last_seq, n_pub,
-         sheet_row, n_sheet_rows, identity_resolution, n_spellings,
+         latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows, identity_resolution, n_spellings,
          starts_with("raw_"))
 
 agencies <- identities |>

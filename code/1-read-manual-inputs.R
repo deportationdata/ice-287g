@@ -56,7 +56,15 @@ manual_judicial <- read_csv(
 ) |>
   transmute(agency, state, county, source, note)
 
+# a port authority's airports, one per row, keyed on the FAA location identifier
+manual_ports <- read_csv(
+  "inputs/manual-port-airports.csv",
+  col_types = cols(.default = col_character())
+) |>
+  transmute(agency, state, faa_code, airport, source, note)
+
 arrow::write_parquet(manual_points, "data/intermediate/manual-facility-points.parquet")
+arrow::write_parquet(manual_ports, "data/intermediate/manual-port-airports.parquet")
 arrow::write_parquet(manual_polygons, "data/intermediate/manual-non-facility-polygons.parquet")
 arrow::write_parquet(manual_regional, "data/intermediate/manual-regional-municipalities.parquet")
 arrow::write_parquet(manual_judicial, "data/intermediate/manual-judicial-district-counties.parquet")
