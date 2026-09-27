@@ -1,0 +1,181 @@
+Bibliography
+National Jail Census Series
+
+This bibliography includes published and unpublished works that are
+related to ICPSR series 68. It includes works that are based on
+primary or secondary analysis of the data, or which describe or critique
+those data or the collection methodology. This list represents all items
+known to ICPSR as of 2019-05-21.
+
+If you publish a work or know of other works that are based on these data,
+please send the complete citation and name of the ICPSR series used to:
+icpsr-biblio-notify@umich.edu 
+
+
+1. Bhaduri, Budhendra; Bright, Edward; Coleman, Phillip; Urban, Marie L.,
+"LandScan USA: A high-resolution geospatial and temporal modeling approach
+for population distribution and dynamics." GeoJournal. 2007, 69, (1-2), 103
+- 117. DOI: 10.1007/s10708-007-9105-9
+
+2. Dinsmore, Ellen, "From blue lines to black bars: Does police
+militarization predict local incarceration rates?." Presented at the PAA
+2017 Annual Meeting, Population Association of America, Chicago, IL, Apr
+29, 2017.
+Abstract: https://paa.confex.com/paa/2017/meetingapp.cgi/Paper/16027
+Full text PDF: https://paa.confex.com/paa/2017/mediafile/ExtendedAbstract/Paper16027/Dinsmore%20-%20Police%20Militarization%20and%20Local%20Incarceration.pdf
+
+3. Gao, Yihe N., "What Gets Measured (Gets Done): Essays on Healthcare,
+Policy, and Perils of the Subjective Made Objective." Dissertation,
+University of Chicago, 2018.
+Abstract: https://paa.confex.com/paa/2017/meetingapp.cgi/Paper/16027
+Full text PDF: https://paa.confex.com/paa/2017/mediafile/ExtendedAbstract/Paper16027/Dinsmore%20-%20Police%20Militarization%20and%20Local%20Incarceration.pdf
+
+4. Glaze, Lauren E.; Herberman, Erinn J., "Correctional Populations in the
+United States, 2012." Bulletin. NCJ 243936, Washington, DC: United States
+Department of Justice, Office of Justice Programs, Bureau of Justice
+Statistics, Dec 2013.
+Abstract: http://www.bjs.gov/index.cfm?ty=pbdetail&iid=4843
+Full text: http://www.bjs.gov/content/pub/ascii/cpus12.txt
+Full text PDF: http://www.bjs.gov/content/pub/pdf/cpus12.pdf
+Summarizes data from various correctional collections to provide statistics
+on the number of offenders supervised by the adult correctional systems in
+the United States. Adult correctional systems include offenders supervised
+in the community under the authority of probation or parole agencies and
+inmates held in state and federal prisons or local jails. The report
+examines the size and change in the total correctional population, the
+impact of changes in the community supervision and incarcerated populations
+during 2012, and the declining rate of offenders under correctional
+supervision over the past 5 years. The report also describes the impact of
+the California Public Safety Realignment Act of 2011 on changes in
+California's correctional populations and its broader impact on the U.S.
+correctional populations. Appendix tables provide additional information on
+other correctional populations, including prisoners under military
+jurisdiction, inmates held by correctional authorities in the U.S.
+territories and commonwealths, and jail inmates held in Indian country
+facilities.
+
+5. Kaeble, Danielle; Glaze, Lauren, "Correctional Populations in the United
+States, 2015." Bulletin. NCJ 250374, Washington, DC: United States
+Department of Justice, Office of Justice Programs, Bureau of Justice
+Statistics, Dec 2016.
+Full text PDF: https://www.bjs.gov/content/pub/pdf/cpus15.pdf?utm_source=juststats-122916&utm_campaign=juststats&utm_medium=email&utm_content=CPUS15_ButtonB&ed2f26df2d9c416fbddddd2330a778c6=kvbljjsvjk-kvjbsjilm
+This report presents statistics on persons supervised by adult correctional
+systems in the United States at yearend 2015, including persons supervised
+in the community on probation or parole and those incarcerated in state or
+federal prison or local jail. The report describes the size and change in
+the total correctional population during 2015. Appendix tables provide
+statistics on other correctional populations and jurisdiction-level
+estimates of the total correctional population by correctional status and
+sex for selected years.
+
+6. Kang-Brown, Jacob; Hinds, Oliver; Heiss, Jasmine; Lu, Olive, "The New
+Dynamics of Mass Incarceration." New York, NY: Vera Institute of Justice,
+Jun 2018.
+Abstract: https://www.vera.org/publications/the-new-dynamics-of-mass-incarceration
+Full text PDF: https://storage.googleapis.com/vera-web-assets/downloads/Publications/the-new-dynamics-of-mass-incarceration/legacy_downloads/the-new-dynamics-of-mass-incarceration-report.pdf
+
+7. Krisberg, Barry A.; Thornberry, Terence P.; Austin, James, "Juveniles
+Taken Into Custody: Developing National Statistics." Washington, DC: Office
+of Juvenile Justice and Delinquency Prevention, Mar 1990.
+Abstract: https://www.ncjrs.gov/App/Publications/abstract.aspx?ID=139225
+Full text PDF: https://www.ncjrs.gov/pdffiles1/Digitization/139225NCJRS.pdf
+The variables used to compare statistics include regional variations,
+gender, age, ethnicity, and offense type. On any given day, there are up to
+100,000 juveniles in custody; of the 11,000 different facilities that might
+hold juveniles, only 30 percent are specifically designed for youthful
+offenders, while the remainder are adult jails, police lockups, and State
+correctional institutions. The findings reported here show that the highest
+rate of juveniles in custody is in the Western U.S., while the South has
+the highest rate of juveniles in adult facilities. One-day counts of youths
+in juvenile facilities indicate that minority youths have higher rates of
+confinement than whites, and males higher rates than females. Females are
+more likely to be confined for status offenses and as non- offenders.
+Between 1977 and 1987, declining juvenile admissions to public facilities
+were counterbalanced by a large increase in admissions to private juvenile
+correctional facilities; the data also suggest that length of stay
+increased during that period. Currently available data provide little
+insight into key policy questions regarding length of confinement,
+recidivism rates, and costs of various juvenile correctional alternatives.
+The report examines data collected through national juvenile court
+statistics and the National Survey of Youth in Custody. It recommends
+upgrading national data on youths in custody by improving sampling
+strategies, data collection techniques, and future data analysis
+procedures. 16 tables, 6 figures, and 2 appendixes
+
+8. McCall, Michael A., "Urban Policing Levels and the Localization of Law-
+and-Order Politics." Dissertation, Washington University, 2004.
+Abstract: https://www.ncjrs.gov/App/Publications/abstract.aspx?ID=139225
+Full text PDF: https://www.ncjrs.gov/pdffiles1/Digitization/139225NCJRS.pdf
+The variables used to compare statistics include regional variations,
+gender, age, ethnicity, and offense type. On any given day, there are up to
+100,000 juveniles in custody; of the 11,000 different facilities that might
+hold juveniles, only 30 percent are specifically designed for youthful
+offenders, while the remainder are adult jails, police lockups, and State
+correctional institutions. The findings reported here show that the highest
+rate of juveniles in custody is in the Western U.S., while the South has
+the highest rate of juveniles in adult facilities. One-day counts of youths
+in juvenile facilities indicate that minority youths have higher rates of
+confinement than whites, and males higher rates than females. Females are
+more likely to be confined for status offenses and as non- offenders.
+Between 1977 and 1987, declining juvenile admissions to public facilities
+were counterbalanced by a large increase in admissions to private juvenile
+correctional facilities; the data also suggest that length of stay
+increased during that period. Currently available data provide little
+insight into key policy questions regarding length of confinement,
+recidivism rates, and costs of various juvenile correctional alternatives.
+The report examines data collected through national juvenile court
+statistics and the National Survey of Youth in Custody. It recommends
+upgrading national data on youths in custody by improving sampling
+strategies, data collection techniques, and future data analysis
+procedures. 16 tables, 6 figures, and 2 appendixes
+
+9. Pettit, Becky; Gutierrez, Carmen, "Mass incarceration and racial
+inequality." American Journal of Economics and Sociology. May-Sep 2018, 77,
+(3-4), 1153 - 1182. DOI: 10.1111/ajes.12241
+Abstract: https://www.ncjrs.gov/App/Publications/abstract.aspx?ID=139225
+Full text PDF: https://www.ncjrs.gov/pdffiles1/Digitization/139225NCJRS.pdf
+The variables used to compare statistics include regional variations,
+gender, age, ethnicity, and offense type. On any given day, there are up to
+100,000 juveniles in custody; of the 11,000 different facilities that might
+hold juveniles, only 30 percent are specifically designed for youthful
+offenders, while the remainder are adult jails, police lockups, and State
+correctional institutions. The findings reported here show that the highest
+rate of juveniles in custody is in the Western U.S., while the South has
+the highest rate of juveniles in adult facilities. One-day counts of youths
+in juvenile facilities indicate that minority youths have higher rates of
+confinement than whites, and males higher rates than females. Females are
+more likely to be confined for status offenses and as non- offenders.
+Between 1977 and 1987, declining juvenile admissions to public facilities
+were counterbalanced by a large increase in admissions to private juvenile
+correctional facilities; the data also suggest that length of stay
+increased during that period. Currently available data provide little
+insight into key policy questions regarding length of confinement,
+recidivism rates, and costs of various juvenile correctional alternatives.
+The report examines data collected through national juvenile court
+statistics and the National Survey of Youth in Custody. It recommends
+upgrading national data on youths in custody by improving sampling
+strategies, data collection techniques, and future data analysis
+procedures. 16 tables, 6 figures, and 2 appendixes
+
+10. Riley, Rachael; Kang-Brown, Jacob; Mulligan, Chris; Valsalam, Vinod;
+Chakraborty, Soumyo; Henrichson, Christian, "Exploring the urban-rural
+incarceration divide: Drivers of local jail incarceration rates in the
+U.S.." Presented at the Data for Good Exchange 2017, Bloomberg, Sep 24,
+2017.
+Abstract: https://arxiv.org/abs/1710.02453
+Full text PDF: https://arxiv.org/pdf/1710.02453
+
+11. Riley, Rachael; Kang-Brown, Jacob; Mulligan, Chris; Valsalam, Vinod;
+Chakraborty, Soumyo; Henrichson, Christian, "Exploring the urban-rural
+incarceration divide: Drivers of local jail incarceration rates in the
+United States." Journal of Technology in Human Services. 2018, 36, (1), 76
+- 88. DOI: 10.1080/15228835.2017.1417955
+Abstract: https://arxiv.org/abs/1710.02453
+Full text PDF: https://arxiv.org/pdf/1710.02453
+
+12. Yoon, Jangho; Luck, Jeff, "Intersystem return on investment in public
+mental health: Positive externality of public mental health expenditure for
+the jail system in the U.S.." Social Science and Medicine. Dec 2016, 170,
+133 - 142. DOI: 10.1016/j.socscimed.2016.10.015
+Abstract: https://arxiv.org/abs/1710.02453
+Full text PDF: https://arxiv.org/pdf/1710.02453

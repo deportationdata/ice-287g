@@ -1,0 +1,49 @@
+File Manifest for ICPSR 26602
+
+United States Department of Justice. Office of Justice Programs. Bureau of
+Justice Statistics. Census of Jail Facilities, 2006. ICPSR26602-v1. Ann
+Arbor, MI: Inter-university Consortium for Political and Social Research
+[distributor], 2010-01-26. http://doi.org/10.3886/ICPSR26602.v1
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    26602-descriptioncitation.pdf       -       -         -       2014-07-04  -
+
+    26602-related_literature.txt        -       -         -       daily       -
+
+    26602-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 Census of Jail Facilities, 2006
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    26602-0001-Codebook.pdf             -       -         -       2010-01-26  6eace62da29da2a0099725d4a3b15eac
+
+    26602-0001-Data.dta                 -       2,949     640     2010-01-26  4d52ad46b84d1028cfd4504e779291ec
+
+    26602-0001-Data.sav                 -       2,949     640     2010-01-26  ea86ed84934eea557148c3887c390ad0
+
+    26602-0001-Data.stc                 -       2,949     640     2010-01-26  e84e6d303d43ba92d9faed84bdef4f46
+
+    26602-0001-Data.tsv                 -       2,949     640     2010-01-26  750a9ef4c3bfe91ef45d49f7ff4b5142
+
+    26602-0001-Data.txt                 5406    2,949     640     2010-01-26  ad7b60493a4d61a468cb36c4c141982c
+
+    26602-0001-Setup.dct                -       -         -       2010-01-26  80ad77c7db9ee49df134436abace3576
+
+    26602-0001-Setup.do                 -       -         -       2010-01-26  4447d4262407bf2da8b814ba145d8958
+
+    26602-0001-Setup.sas                -       -         -       2010-01-26  7cbf4cb1430df534c46cdb61e592fa04
+
+    26602-0001-Setup.sps                -       -         -       2010-01-26  8236dee3e93963e94540f29df0beae81
+
+    26602-0001-Supplemental_syntax.do   -       -         -       2010-01-26  adc678b802f57c973202abb933a23e97
+
+    26602-0001-Supplemental_syntax.sas  -       -         -       2010-01-26  1b6ded9218e00cb2b58ce889764254ed
+
