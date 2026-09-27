@@ -64,16 +64,16 @@ empty-geometry features by layer,facility,339,NA,info
 empty-geometry features by layer,municipal,2,NA,info
 empty-geometry features by layer,precinct,50,NA,info
 empty-geometry features by layer,university,1,NA,info
-active features flagged needs_review,all,118,NA,info
+active features flagged needs_review,all,117,NA,info
 active features by match quality,exact,2552,NA,info
 active features by match quality,exact_flagged,33,NA,info
-active features by match quality,fuzzy,6,NA,info
-active features by match quality,manual,664,NA,info
+active features by match quality,fuzzy,5,NA,info
+active features by match quality,manual,665,NA,info
 active features by match quality,unmatched,52,NA,info
 active features by match quality,weak,9,NA,info
-active agreements flagged needs_review,all,102,NA,info
+active agreements flagged needs_review,all,101,NA,info
 active features with a pending MOA,all,574,NA,info
-active features with an addendum,all,206,NA,info
+active features with an addendum,all,207,NA,info
 county geoids outside the census county list,all,0,NA,info
 DOC agreements fanned out to state prisons,all,0,NA,info
 agreement-identifiers rows == agreements rows,all,3049,3049,pass

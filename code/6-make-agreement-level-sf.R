@@ -383,6 +383,17 @@ regional_jail_counties <- regional_jail_counties |>
   summarize(member_county_fips = paste(county_fips, collapse = "; "), .by = c(agency, state))
 
 agreement_level_sf <- all_agreements_sf |>
+  # HIFLD prints facility names in capitals; recase those for the facilities list only
+  mutate(facility_name = if_else(
+    match_layer == "facility" & match_name == toupper(match_name),
+    match_name |>
+      str_to_title() |>
+      str_replace_all("(?<=[^A-Za-z]|^)(Ii|Iii|Iv|Vi|Vii)(?=$|[^A-Za-z])", toupper) |>
+      str_replace_all("(?<=.)\\b(And|Of|The|For|At|In|On)\\b", tolower) |>
+      str_replace_all("\\bMc([a-z])", \(m) paste0("Mc", toupper(str_sub(m, 3)))) |>
+      str_replace_all(c("\\bDekalb\\b" = "DeKalb", "\\bDesoto\\b" = "DeSoto", "\\bDewitt\\b" = "DeWitt")),
+    match_name
+  )) |>
   group_by(
     agreement_id,
     agency_id,
@@ -414,6 +425,9 @@ agreement_level_sf <- all_agreements_sf |>
   ) |>
   summarize(
     match_layer = paste(sort(unique(match_layer)), collapse = "+"),
+    # the names of an agreement's matched facilities, "; "-separated, NA when none
+    facilities = facility_name[match_layer == "facility" & !is.na(facility_name)] |>
+      unique() |> sort() |> paste(collapse = "; ") |> na_if(""),
     county_fips = union_codes(county_fips),
     place_geoid = single_or_na(place_geoid),
     place = single_or_na(place),
@@ -514,6 +528,7 @@ agreement_level_sf <- agreement_level_sf |>
     match_quality,
     review_reason,
     needs_review,
+    facilities,
     geometry_type,
     geometry_vintage,
     geometry

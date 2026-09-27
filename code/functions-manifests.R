@@ -37,13 +37,21 @@ moa_candidate_files <- function(agency, st, model, signed) {
   words <- agency |> str_replace_all("[’']", "") |> str_replace_all("&", "and") |>
     str_replace_all("[^A-Za-z0-9 ]", " ") |> str_squish() |> str_split(" ") |> unlist()
   camel <- paste0(toupper(substr(words, 1, 1)), substring(words, 2), collapse = "")
-  co <- str_replace_all(camel, "County", "Co")
-  dept <- str_replace_all(co, "Department", "Dept")
-  forms <- list(c(dept, "%m%d%Y"), c(str_replace(dept, "PoliceDept$", "PD"), "%m%d%Y"),
-                c(str_replace(co, "SheriffsOffice$", "SO"), "%m%d%Y"), c(str_replace(dept, "PoliceDept$", "PD"), "%m%d%y"),
-                c(str_replace(co, "SheriffsOffice$", "SO"), "%m%d%y"), c(str_replace(dept, "SheriffsDept$", "SD"), "%m%d%Y"),
-                c(dept, "%m.%d.%Y"), c(co, "%m%d%Y"))
-  unique(map_chr(forms, \(f) paste0(f[1], st, "_", model, "_MOA_", format(signed, f[2]), ".pdf")))
+  # ICE's filename can name a sheriff's office a department or the reverse
+  # (LoganCoSheriffsOfficeKS for the sheet's Logan County Sheriff's Department),
+  # so the other spelling's names follow the sheet's own
+  swapped <- if (str_detect(camel, "SheriffsOffice$")) str_replace(camel, "Office$", "Department")
+             else if (str_detect(camel, "SheriffsDepartment$")) str_replace(camel, "Department$", "Office")
+  files <- map(c(camel, swapped), \(camel) {
+    co <- str_replace_all(camel, "County", "Co")
+    dept <- str_replace_all(co, "Department", "Dept")
+    forms <- list(c(dept, "%m%d%Y"), c(str_replace(dept, "PoliceDept$", "PD"), "%m%d%Y"),
+                  c(str_replace(co, "SheriffsOffice$", "SO"), "%m%d%Y"), c(str_replace(dept, "PoliceDept$", "PD"), "%m%d%y"),
+                  c(str_replace(co, "SheriffsOffice$", "SO"), "%m%d%y"), c(str_replace(dept, "SheriffsDept$", "SD"), "%m%d%Y"),
+                  c(dept, "%m.%d.%Y"), c(co, "%m%d%Y"))
+    map_chr(forms, \(f) paste0(f[1], st, "_", model, "_MOA_", format(signed, f[2]), ".pdf"))
+  })
+  unique(unlist(files))
 }
 
 read_manifest <- function(path) {

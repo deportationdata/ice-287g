@@ -7,9 +7,9 @@ facility,exact_municipal_pattern_facility,FALSE,4
 facility,exact_operator_facility,FALSE,56
 facility,exact_operator_facility,TRUE,3
 facility,exact_state_county_facility_name,FALSE,4
-facility,fuzzy_county_facility,TRUE,6
+facility,fuzzy_county_facility,TRUE,5
 facility,hifld_law_enforcement_location,TRUE,9
-facility,manual,FALSE,4
+facility,manual,FALSE,5
 facility,manual_doc_facility_list,FALSE,563
 facility,not_active,FALSE,329
 facility,not_active,TRUE,9

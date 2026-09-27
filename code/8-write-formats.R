@@ -11,7 +11,11 @@ agencies <- arrow::read_parquet("data/agencies.parquet")
 
 arrow::write_parquet(agreements, "data/agreements.parquet")
 writexl::write_xlsx(agreements, "data/agreements.xlsx")
-haven::write_dta(agreements, "data/agreements.dta")
+# Stata strings have no missing value, and haven fails on NA in a long (strL) string such as facilities
+haven::write_dta(
+  agreements |> mutate(across(where(is.character), \(x) coalesce(x, ""))),
+  "data/agreements.dta"
+)
 haven::write_sav(agreements, "data/agreements.sav")
 writexl::write_xlsx(agencies, "data/agencies.xlsx")
 haven::write_dta(agencies, "data/agencies.dta")
