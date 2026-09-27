@@ -14,7 +14,11 @@ agency_type_fixes <- read_csv("inputs/agency-type-fixes.csv", col_types = "ccccc
 # the agency's own MOA, used only while the sheet links the wrong file (blank moa_linked: link pending)
 moa_link_fixes <- read_csv("inputs/moa-link-fixes.csv", col_types = "cccDccc") |>
   transmute(state, agency, support_type = str_to_title(norm_support_key(support_type)), signed, moa_linked, moa_url)
-held_moas <- snapshot_manifests("agreements") |>
+# an addendum changes an agreement without replacing it; ICE links some, others are pages of the MOA's own PDF (#page=)
+moa_addenda <- read_csv("inputs/moa-addenda.csv", col_types = "cccDciDcc") |>
+  transmute(state, agency, support_type = str_to_title(norm_support_key(support_type)), signed, addendum_url, moa_page, addendum_signed)
+moa_manifest <- snapshot_manifests("agreements")
+held_moas <- moa_manifest |>
   filter(on_disk, str_detect(coalesce(url, ""), "^https://www\\.ice\\.gov/doclib/287gMOA/")) |>
   distinct(url) |>
   mutate(file = basename(str_remove(url, "[?#].*$")))
@@ -145,6 +149,8 @@ agreements <- agreements |>
   mutate(moa_fixed = !is.na(moa_url) & coalesce(moa, "pending") == coalesce(moa_linked, "pending"),
          moa = if_else(moa_fixed, moa_url, moa)) |>
   select(-moa_url, -moa_linked) |>
+  # a sheet that links a standalone addendum in the MOA cell links no MOA
+  mutate(moa = if_else(moa %in% moa_addenda$addendum_url, NA_character_, moa)) |>
   # the county an agency names is the county it is in, overriding the sheet
   mutate(county_named = county_from_agency_name(agency, state, counties_ref),
          county_from_name = !is.na(county_named) & (is.na(county) | county_named != county),
@@ -211,19 +217,153 @@ agreements <- agreements |>
   mutate(needs_review = is.na(geometry_type)) |>
   left_join(
     identities |>
-      select(agreement_id, agreement_lineage_id, succeeded_by,
+      select(agreement_id, signed_source, agreement_lineage_id, succeeded_by,
              first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source,
              removal_flag, latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows, identity_resolution),
     by = "agreement_id", relationship = "one-to-one"
   ) |>
   select(
-    agreement_id, status, state, county, raw_county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, signed,
+    agreement_id, status, state, county, raw_county, agency, ice_type, jurisdiction_level, jurisdiction_level_source, support_type, signed, signed_source,
     moa, addendum, geometry_type, needs_review,
     first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source, removal_flag,
     agency_id, agreement_lineage_id, succeeded_by, latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows,
     identity_resolution
   ) |>
   arrange(desc(last_appeared), latest_sheet_row, first_appeared, agreement_id)
+
+# every addendum of an agreement, dated from inputs/moa-addenda.csv; one found but not in the file is published undated
+listed_addenda <- agreements |>
+  select(agreement_id, state, agency, support_type, signed, moa) |>
+  inner_join(moa_addenda, by = c("state", "agency", "support_type", "signed"), relationship = "one-to-many")
+unmatched_addenda <- anti_join(moa_addenda, listed_addenda, by = c("state", "agency", "support_type", "signed", "addendum_url"))
+if (nrow(unmatched_addenda)) {
+  message(nrow(unmatched_addenda), " addend(a) in inputs/moa-addenda.csv match no agreement; kept as the record")
+}
+# an addendum amends the agreement in force: signed on or after it, before the next signing of the same agency and model
+misdated_addenda <- listed_addenda |>
+  left_join(agreements |> select(agreement_id, succeeded_by), by = "agreement_id") |>
+  left_join(agreements |> select(succeeded_by = agreement_id, next_signed = signed), by = "succeeded_by") |>
+  filter(addendum_signed < signed | coalesce(addendum_signed >= next_signed, FALSE))
+if (nrow(misdated_addenda)) {
+  stop("addenda in inputs/moa-addenda.csv signed outside their agreement's term: ",
+       paste(misdated_addenda$agreement_id, misdated_addenda$addendum_signed, collapse = ", "))
+}
+
+# ICE binds some addenda into the MOA's own PDF: find such pages in every held copy of an agreement's MOA.
+# Each file is read once and cached by hash.
+addendum_pages_cache <- "data/intermediate/cache-moa-addendum-pages.parquet"
+# a copy belongs to an MOA by the full url it came from, less any Wayback prefix, or by the name it was saved under.
+# Not by the url's file name: ICE reused names across folders (r_287gazdeptofcorrections.pdf is the 2013 MOA
+# under foia/ and, in 2020, the 2016 one under 287gMOA/, which we saved as the 2016 MOA).
+url_key <- \(u) u |> str_remove("^https?://web\\.archive\\.org/web/[^/]+/") |> str_remove("^https?://") |>
+  str_remove("[?#].*$") |> map_chr(\(x) tryCatch(URLdecode(x), error = \(e) x)) |> str_to_lower()
+moa_links <- agreements |> filter(!is.na(moa), moa != "pending") |> transmute(agreement_id, agency, moa, key = url_key(moa))
+held_pdfs <- moa_manifest |>
+  filter(on_disk, !is.na(file_hash), str_detect(path_now, regex("\\.pdf$", ignore_case = TRUE))) |>
+  transmute(file_hash, path_now, key = url_key(na_if(url, "")), name = doc_key(path_now))
+moa_copies <- bind_rows(
+  held_pdfs |> filter(!is.na(key)) |> select(-name) |> inner_join(moa_links, by = "key", relationship = "many-to-many"),
+  held_pdfs |> select(-key) |> inner_join(moa_links |> mutate(name = doc_key(moa)), by = "name", relationship = "many-to-many") |>
+    select(-name)
+) |>
+  distinct(file_hash, agreement_id, .keep_all = TRUE)
+# pages without a text layer (scans) are read by tesseract when it is installed; `ocr` records whether a file's
+# scanned pages were read, so a file cached without OCR is read again once tesseract is available
+has_ocr <- nzchar(Sys.which("tesseract"))
+page_cache <- if (file.exists(addendum_pages_cache)) arrow::read_parquet(addendum_pages_cache) else
+  tibble(file_hash = character(), page = integer(), text = character(), ocr = logical())
+if (!"ocr" %in% names(page_cache)) page_cache$ocr <- NA
+ocr_done <- page_cache |> summarise(ocr = all(coalesce(ocr, FALSE)), .by = file_hash)
+# every held PDF, not only current MOA copies, so CI knows exactly which new files to pull from LFS
+unread <- held_pdfs |>
+  distinct(file_hash, .keep_all = TRUE) |>
+  left_join(ocr_done, by = "file_hash") |>
+  filter(is.na(ocr) | (has_ocr & !ocr)) |>
+  mutate(lfs_pointer = map_lgl(path_now, \(p) identical(readBin(p, "raw", 24), charToRaw("version https://git-lfs."))))
+if (any(unread$lfs_pointer)) {
+  message(sum(unread$lfs_pointer), " held PDF(s) are Git LFS pointers and were not checked for addenda; `git lfs pull` them")
+}
+unread <- filter(unread, !lfs_pointer)
+if (nrow(unread) && !requireNamespace("pdftools", quietly = TRUE)) {
+  message("pdftools is not installed; ", nrow(unread), " held PDF(s) were not checked for addenda")
+  unread <- unread[0, ]
+}
+if (nrow(unread)) {
+  read_addendum_pages <- \(p) {
+    # a file too damaged to read (truncated Wayback captures) has no pages and is cached as read
+    text <- tryCatch(pdftools::pdf_text(p), error = \(e) character())
+    # a scan can still carry a few words of text layer, such as a digital-signature stamp
+    scanned <- which(str_count(text, "[A-Za-z]{3,}") < 40)
+    if (has_ocr) {
+      for (pg in scanned) {
+        png <- tempfile(fileext = ".png")
+        text[pg] <- tryCatch({
+          suppressWarnings(pdftools::pdf_convert(p, format = "png", pages = pg, dpi = 200, filenames = png, verbose = FALSE))
+          paste(system2("tesseract", c(shQuote(png), "stdout"), stdout = TRUE, stderr = FALSE), collapse = "\n")
+        }, error = \(e) text[pg])
+        unlink(png)
+      }
+    }
+    text <- str_to_lower(text)
+    hits <- which(str_detect(text, "addendum\\s+to\\s+(modify|extend)|hereby\\s+agree\\s+to\\s+(modify|extend)"))
+    ocr <- has_ocr || !length(scanned)
+    # a file with no addendum page is cached with page NA
+    if (length(hits)) tibble(page = hits, text = text[hits], ocr = ocr) else tibble(page = NA_integer_, text = NA_character_, ocr = ocr)
+  }
+  pages <- parallel::mclapply(unread$path_now, read_addendum_pages, mc.cores = max(1, parallel::detectCores() - 1))
+  page_cache <- unread |>
+    select(file_hash) |>
+    mutate(pages = pages) |>
+    unnest(pages) |>
+    bind_rows(page_cache |> anti_join(unread, by = "file_hash"))
+  arrow::write_parquet(page_cache, addendum_pages_cache)
+}
+if (!has_ocr && any(!page_cache$ocr, na.rm = TRUE)) {
+  message(n_distinct(page_cache$file_hash[!page_cache$ocr]), " held PDF(s) have scanned pages not checked for addenda; install tesseract")
+}
+# a recorded addendum covers its own #page= and the MOA page it is also bound as (moa_page)
+recorded_pages <- bind_rows(
+  listed_addenda |>
+    filter(str_detect(addendum_url, "#page=\\d+$")) |>
+    transmute(agreement_id, key = url_key(addendum_url), page = as.integer(str_extract(addendum_url, "\\d+$"))),
+  listed_addenda |>
+    filter(!is.na(moa_page)) |>
+    transmute(agreement_id, key = url_key(moa), page = moa_page)
+)
+# the page must name the agency: ICE's Terrell County TX 2018 PDF carries Teller County CO's addendum.
+# Letters only and one letter's slack, since scanned text reads "f loyd" and "l{orry"
+agency_word <- \(agency) coalesce(str_extract(str_to_lower(agency), "\\b(?!(?:city|town|village|county|state|the)\\b)[a-z]{4,}\\b"), "")
+names_agency <- \(text, agency) map2_lgl(str_remove_all(text, "[^a-z]"), agency_word(agency), \(t, w) agrepl(w, t, max.distance = 1, fixed = TRUE))
+found_addenda <- moa_copies |>
+  inner_join(page_cache |> filter(!is.na(page)), by = "file_hash", relationship = "many-to-many") |>
+  filter(names_agency(text, agency)) |>
+  distinct(agreement_id, moa, key, page) |>
+  anti_join(recorded_pages, by = c("agreement_id", "key", "page")) |>
+  transmute(agreement_id, addendum_url = str_c(moa, "#page=", page), found_in = "MOA PDF page")
+linked_addenda <- agreements |>
+  filter(!is.na(addendum)) |>
+  select(agreement_id, addendum_url = addendum) |>
+  anti_join(listed_addenda, by = c("agreement_id", "addendum_url")) |>
+  mutate(found_in = "Sheet link")
+undated_addenda <- bind_rows(linked_addenda, found_addenda)
+# a review list for the update PR: each needs its signature dates read into inputs/moa-addenda.csv
+write_csv(undated_addenda, "data/qa/undated-addenda.csv", na = "")
+if (nrow(undated_addenda)) {
+  message(nrow(undated_addenda), " addend(a) not in inputs/moa-addenda.csv are published undated (data/qa/undated-addenda.csv)")
+}
+
+agreements <- agreements |>
+  select(-addendum) |>
+  left_join(
+    bind_rows(listed_addenda |> select(agreement_id, addendum_url, addendum_signed), undated_addenda |> select(-found_in)) |>
+      arrange(agreement_id, addendum_signed) |>
+      summarise(addendum = str_c(addendum_url, collapse = "; "),
+                addendum_signed = if (all(is.na(addendum_signed))) NA_character_
+                                  else str_c(coalesce(as.character(addendum_signed), "Undated"), collapse = "; "),
+                .by = agreement_id),
+    by = "agreement_id", relationship = "one-to-one"
+  ) |>
+  relocate(addendum, addendum_signed, .after = moa)
 
 stopifnot(
   "every jurisdiction level is one of the eight" =

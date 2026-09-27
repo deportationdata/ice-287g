@@ -35,7 +35,9 @@ else. Citations for every file remain in `inputs/historical/SOURCES.csv`.
 | `prebuilt/` | The parsed outputs of the retired readers, as they last ran |
 | `notes/` | The research narrative: the annotated source guide, the completeness verdict, the gap audit and its status, the ACLU-NC appendix finding. Read them as a record of the search, with the corrections below |
 | `correspondence/` | A draft FOIA request to Yale WIRAC, never sent |
+| `ina287/` | Every distinct Wayback capture of ina287.org (2011–2016) and of the Scribd documents it linked: the 2010 agency chart with original and Oct 2009 MOA dates, and ICE's FOIA'd 287(g) applications file. See its README |
 | `scripts/` | Shell helpers used to fetch and OCR the gap-fill material |
+| `moa-signatures.csv` | What each MOA we hold from before 2019, and each held MOA no sheet row linked, says on its signature page (293 documents read 2026-09-27, plus the 12 original 2008 MOAs from J Cox's Scribd series): agency, functions, ICE's and the agency's signing dates, evidence and confidence. The review record behind `inputs/unlisted-signings.csv` and the 2026-09-27 rows of `inputs/moa-link-fixes.csv` |
 
 ## Corrections to the notes
 

@@ -1,0 +1,58 @@
+File Manifest for ICPSR 37294
+
+United States. Bureau of Justice Statistics. Census of State and Federal
+Adult Correctional Facilities, 2012. ICPSR37294-v2. Ann Arbor, MI: Inter-
+university Consortium for Political and Social Research [distributor],
+2020-09-15. http://doi.org/10.3886/ICPSR37294.v2
+
+Details on the version history can be found below the file listings.
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    37294-descriptioncitation.pdf       -       -         -       2020-09-15  -
+
+    37294-related_literature.txt        -       -         -       daily       -
+
+    37294-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 Census of State and Federal Adult Correctional Facilities, 2012
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    37294-0001-Codebook.pdf             -       -         -       2020-09-15  0c124d6ae8b78c15d9a6435c808df222
+
+    37294-0001-Data.dta                 -       2,005     31      2020-02-06  4a17eca5c288cf55957febcb34ddcafd
+
+    37294-0001-Data.rda                 -       2,005     31      2020-02-06  f8a5afc28911e5e1fd9ace3c421ba6fa
+
+    37294-0001-Data.sav                 -       2,005     31      2020-02-06  a595636f1254717aac1552b8e71ed75b
+
+    37294-0001-Data.stc                 -       2,005     31      2020-02-06  9e865accd04374d7db7096390133fb9a
+
+    37294-0001-Data.tsv                 -       2,005     31      2020-02-06  f4786942a4f6bfbf6eb62d888080434a
+
+    37294-0001-Data.txt                 1309    2,005     31      2020-02-06  cf3fd13d8404f73470587438f5fa0ec5
+
+    37294-0001-Setup.dct                -       -         -       2020-02-06  3f7cb672b672036b8f536741d04848d0
+
+    37294-0001-Setup.do                 -       -         -       2020-02-06  e8c94ce2cca999fae39ee9e76c63f1bb
+
+    37294-0001-Setup.sas                -       -         -       2020-02-06  fb13b7d2d7c5fbe75947cb20d5cfd526
+
+    37294-0001-Setup.sps                -       -         -       2020-02-06  4c24f9a8a506c062e01a4b0e7d19b352
+
+    37294-0001-Supplemental_syntax.do   -       -         -       2020-02-06  fdb01dcc86701159b15f5ddc56613447
+
+    37294-0001-Supplemental_syntax.sas  -       -         -       2020-02-06  628d6028e80e7976096d1634bebd4cb1
+
+
+Version History
+
+2020-09-15 Updated Series Information and Abstract sections of codebook to
+reflect changes requested by BJS data steward.

@@ -1,0 +1,70 @@
+File Manifest for ICPSR 3318
+
+United States Department of Justice. Bureau of Justice Statistics. National
+Jail Census, 1999. ICPSR03318-v3. Ann Arbor, MI: Inter-university
+Consortium for Political and Social Research [distributor], 2009-07-09.
+http://doi.org/10.3886/ICPSR03318.v3
+
+Details on the version history can be found below the file listings.
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    03318-descriptioncitation.pdf       -       -         -       2022-12-09  -
+
+    03318-related_literature.txt        -       -         -       daily       -
+
+    03318-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 National Jail Census, 1999
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    03318-0001-Codebook.pdf             -       -         -       2009-07-09  72d1d5610a7b313c718c8ff8b5deb158
+
+    03318-0001-Data.dta                 -       3,084     1178    2009-07-09  3d643c12c6894e056183da230cbd857b
+
+    03318-0001-Data.sav                 -       3,084     1178    2009-07-09  03bf8fc79923f43b067aa97647eeb2c1
+
+    03318-0001-Data.stc                 -       3,084     1178    2009-07-09  e92e263c3db9c0a36eff5b76e0f94236
+
+    03318-0001-Data.tsv                 -       3,084     1178    2009-07-09  53f06d46dfd444932e981fcf3e9d50dc
+
+    03318-0001-Data.txt                 5163    3,084     1178    2009-07-09  44650f8ab8f3291af5d15070e33efde1
+
+    03318-0001-Setup.dct                -       -         -       2009-07-09  c7047ae8a573126424da3541dcac1940
+
+    03318-0001-Setup.do                 -       -         -       2009-07-09  e13a1ebf48ac248fdc8a01f0109d8661
+
+    03318-0001-Setup.sas                -       -         -       2009-07-09  901f7b5342f5d551d1691c39ddb8e0a3
+
+    03318-0001-Setup.sps                -       -         -       2009-07-09  2efb744a62511a70876f06386b411505
+
+
+Version History
+
+2009-07-09 Data modifications for disclosure risk have been made. The
+following variables were masked using -1 as the code and "Masked" as the
+value label: V333 MALE ILLNESS/NATURAL CAUSES, V335 FEMALE ILLNESS/NATURAL
+CAUSES, V337 MALE AIDS, V339 FEMALE AIDS, V341 MALE SUICIDE, V343 FEMALE
+SUICIDE,V345 MALE HOMICIDE BY OTHER INMATE,V347 FEMALE HOMICIDE BY OTHER
+INMATE, V349 MALE OTHER HOMICIDE,V351 FEMALE OTHER HOMICIDE, V354 MALE
+OTHER CAUSES OF INMATE DEATH, and V356 FEMALE OTHER CAUSES OF INMATE DEATH.
+The following variable was masked using MASKED as the value: V353 OTHER
+CAUSES OF INMATE DEATH SPECIFY. The following variables were masked by
+assigning a blank (" ") for all cases: V16p NAME OF THE ENTITY THAT OWNS
+THIS FACILI and V17p NAME OF THE ENTITY THAT OPERATES THIS FA.  2005-11-04
+On 2005-03-14 new files were added to one or  more datasets.  These files
+included additional setup files as well as one or more of the following:
+SAS  program, SAS transport, SPSS portable, and Stata system files. The
+metadata record was revised  2005-11-04 to reflect these additions.  2003-
+12-02 The principal investigator supplied a revised dataset, which was
+fully processed and released as the second edition of the collection.
+Corresponding changes were made to the codebook and data definition
+statements.  2002-08-16 The first part of Appendix A, a statistical
+program, was deleted from the codebook.

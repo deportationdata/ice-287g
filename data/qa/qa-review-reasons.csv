@@ -2,10 +2,10 @@ match_layer,flag,n
 county,duplicate_sheet_row,1
 county,moa_pending,140
 county,ori_conflict,1
-facility,fuzzy_match,7
+facility,fuzzy_match,6
 facility,geometry_unmatched,1
-facility,has_addendum,93
-facility,moa_pending,271
+facility,has_addendum,206
+facility,moa_pending,179
 facility,ori_conflict,3
 facility,weak_match,9
 municipal,ambiguous_candidates,2

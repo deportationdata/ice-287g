@@ -307,7 +307,8 @@ jobs:
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           # udunits (units) and libuv (fs) are the only system libraries
           # renv.lock's packages need that GDAL and R don't already bring
-          brew install gdal r udunits libuv
+          # tesseract reads scanned MOA pages for the addendum check
+          brew install gdal r udunits libuv tesseract
           echo "$HOMEBREW_PREFIX/bin" >> "$GITHUB_PATH"
           # the package cache is keyed on these, so a GDAL or R upgrade recompiles
           echo "versions=$(brew list --versions r gdal apache-arrow | tr ' \n' '-_')" >> "$GITHUB_OUTPUT"
@@ -341,11 +342,51 @@ jobs:
           '
           ldd "$(Rscript -e 'cat(system.file("libs", "arrow.so", package = "arrow"))')" | grep -i arrow
 
+      # the addendum check reads MOA pdfs through a committed page cache; only pdfs it
+      # has not seen (normally this run's downloads) are pulled from LFS
+      - name: Pull the MOA pdfs the addendum check has not read
+        run: |
+          Rscript -e '
+            suppressMessages(library(tidyverse)); source("code/functions.R")
+            cache <- "data/intermediate/cache-moa-addendum-pages.parquet"
+            # a file cached before its scanned pages were read by tesseract is read again
+            seen <- if (file.exists(cache)) arrow::read_parquet(cache) |> filter(coalesce(ocr, FALSE)) |> pull(file_hash) else character()
+            snapshot_manifests("agreements") |>
+              filter(on_disk, !is.na(file_hash), str_detect(str_to_lower(path_now), "[.]pdf$"), !file_hash %in% seen) |>
+              distinct(file_hash, .keep_all = TRUE) |> pull(path_now) |> writeLines()
+          ' > "$RUNNER_TEMP/unread-pdfs.txt"
+          echo "$(wc -l < "$RUNNER_TEMP/unread-pdfs.txt") pdf(s) to read"
+          while IFS= read -r pdf; do
+            git lfs pull --include="$pdf"
+          done < "$RUNNER_TEMP/unread-pdfs.txt"
+
       - name: Build the datasets
         env:
           # a tripped invariant fails this job, and only this job
           QA_STRICT: "1"
         run: bash code/run_ci.sh
+
+      # published undated until someone reads the signature dates into inputs/moa-addenda.csv;
+      # comments only when the list changed, so hourly runs don't repeat it
+      - name: Comment on addenda that need dates
+        if: needs.acquire.outputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          list=data/qa/undated-addenda.csv
+          [ "$(wc -l < "$list")" -gt 1 ] || exit 0
+          if git cat-file -e "HEAD:$list" 2>/dev/null && git diff --quiet HEAD -- "$list"; then
+            echo "Undated addenda unchanged."
+            exit 0
+          fi
+          {
+            echo "📎 **Addenda published without dates.** Each is on this branch as \`Undated\`. Read both signature dates off the page and add a row to \`inputs/moa-addenda.csv\` (\`addendum_signed\` is the later date); an addendum that duplicates a recorded one gets \`moa_page\` on that row instead."
+            echo
+            echo "| agreement | addendum | found in |"
+            echo "|---|---|---|"
+            tail -n +2 "$list" | awk -F, '{print "| " $1 " | " $2 " | " $3 " |"}'
+          } > "$RUNNER_TEMP/addenda-comment.txt"
+          gh pr comment "${{ needs.acquire.outputs.pr_number }}" --body-file "$RUNNER_TEMP/addenda-comment.txt"
 
       - name: Commit and push the datasets
         run: |

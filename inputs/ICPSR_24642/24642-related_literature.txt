@@ -1,0 +1,499 @@
+Bibliography
+Census of State and Federal Adult Correctional Facilities, 2005
+
+This bibliography includes published and unpublished works that are related 
+to ICPSR study 24642. It includes works that are based on primary
+or secondary analysis of the data, or which describe or critique those
+data or the collection methodology. 
+
+If you publish a work or know of other works that are based on these data,
+please send the complete citation and name of the ICPSR study used to:
+icpsrbibliography@umich.edu
+
+
+1. Bacak, Valerio; Kennedy, Edward H., "Principled machine learning using
+the Super Learner: An application to predicting prison violence."
+Sociological Methods and Research. Aug 2019, 48, (3), 698 - 721. DOI:
+10.1177/0049124117747301
+Abstract: http://journals.sagepub.com/doi/abs/10.1177/0049124117747301
+
+2. Bacak, Valerio; Ridgeway, Greg, "Availability of health-related programs
+in private and public prisons." Journal of Correctional Health Care. Jan
+2018, 24, (1), 62 - 70. DOI: 10.1177/1078345817728078
+Abstract: https://www.ncbi.nlm.nih.gov/pubmed/28871838
+
+3. Beck, Allen J., "Staff sexual misconduct: Implications of PREA for women
+working in corrections." Justice Research and Policy. 2015, 16, (1), 8 -
+36. DOI: 10.1177/1525107115580785
+Abstract: https://www.ncbi.nlm.nih.gov/pubmed/28871838
+
+4. Beck, Allen J.; Berzofsky, Marcus; Caspar, Rachel; Krebs, Christopher,
+"Sexual Victimization in Prisons and Jails Reported by Inmates, 2011-12."
+National Inmate Survey, 2011-12. NCJ 241399, Washington, DC: Bureau of
+Justice Statistics, May 2013.
+Abstract: https://bjs.ojp.gov/library/publications/sexual-victimization-prisons-and-jails-reported-inmates-2011-12-update
+Full text: https://bjs.ojp.gov/redirect-legacy/content/pub/ascii/svpjri1112.txt
+Full text PDF: https://bjs.ojp.gov/redirect-legacy/content/pub/pdf/svpjri1112.pdf
+Presents data from the National Inmate Survey (NIS), 2011-12, conducted in
+233 state and federal prisons, 358 local jails, and 15 special correctional
+facilities (operated by U.S. Armed Forces, Indian tribes, or U.S.
+Immigration and Customs Enforcement (ICE)) between February 2011 and May
+2012, with a sample of 92,449 inmates age 18 or older and 1,738 inmates
+ages 16 to 17. The report ranks facilities according to the prevalence of
+sexual victimization, as required under the Prison Rape Elimination Act of
+2003 (P.L. 108-79). The prevalence of victimization, as reported by inmates
+during a personal interview, is based on sexual activity in the 12 months
+prior to the interview or since admission to the facility, if less than 12
+months. This report includes estimates of nonconsensual sexual acts,
+abusive sexual contacts, inmate-on-inmate and staff-on-inmate
+victimization, and level of coercion. It provides the first-ever national-
+level estimates of sexual victimization of juvenile inmates ages 16 to 17
+held in adult facilities. The report also presents findings on reported
+sexual victimization by selected demographic and other inmate
+characteristics, including measures of serious mental illness for the first
+time. Supplemental Tables (Transgender Victims) (PDF) (CSV) have been
+added.
+
+5. Beck, Allen J.; Harrison, Paige M.; Adams, Devon B., "Sexual Violence
+Reported by Correctional Authorities, 2006." Special Report. NCJ 218914,
+Washington, DC: Bureau of Justice Statistics, Aug 2007.
+Abstract: https://bjs.ojp.gov/library/publications/sexual-violence-reported-correctional-authorities-2006
+Full text: https://bjs.ojp.gov/redirect-legacy/content/pub/ascii/svrca06.txt
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/svrca06.pdf
+Presents data from the Survey on Sexual Violence, 2006, an administrative
+records collection of incidents of inmate-on-inmate and staff-on-inmate
+sexual violence reported to correctional authorities. The report provides
+counts of sexual violence, by type, for adult prisons, jails, and other
+adult correctional facilities. The report provides an in-depth analysis of
+substantiated incidents, including where the incidents occur, time of day,
+number and characteristics of victims and perpetrators, nature of the
+injuries, impact on the victims, and sanctions imposed on the perpetrators.
+The appendix tables include counts of sexual violence, by type, for all
+State systems, the Federal Bureau of Prisons, and sampled jail
+jurisdictions. The report also includes an update on BJS activities related
+to implementation of the data collections required under the Prison Rape
+Elimination Act of 2003 (Public Law 108-79).
+
+6. Berzofsky, Marcus, "Methods and Approaches for Evaluating the Validity
+of Latent Class Models with Applications." University of North Carolina at
+Chapel Hill, 2011.
+Abstract: https://bjs.ojp.gov/library/publications/sexual-violence-reported-correctional-authorities-2006
+Full text: https://bjs.ojp.gov/redirect-legacy/content/pub/ascii/svrca06.txt
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/svrca06.pdf
+Presents data from the Survey on Sexual Violence, 2006, an administrative
+records collection of incidents of inmate-on-inmate and staff-on-inmate
+sexual violence reported to correctional authorities. The report provides
+counts of sexual violence, by type, for adult prisons, jails, and other
+adult correctional facilities. The report provides an in-depth analysis of
+substantiated incidents, including where the incidents occur, time of day,
+number and characteristics of victims and perpetrators, nature of the
+injuries, impact on the victims, and sanctions imposed on the perpetrators.
+The appendix tables include counts of sexual violence, by type, for all
+State systems, the Federal Bureau of Prisons, and sampled jail
+jurisdictions. The report also includes an update on BJS activities related
+to implementation of the data collections required under the Prison Rape
+Elimination Act of 2003 (Public Law 108-79).
+
+7. Britton, Dana M., The Gender of Crime. New York, NY: Rowman and
+Littlefield Publishers, 2011.
+Abstract: https://bjs.ojp.gov/library/publications/sexual-violence-reported-correctional-authorities-2006
+Full text: https://bjs.ojp.gov/redirect-legacy/content/pub/ascii/svrca06.txt
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/svrca06.pdf
+Presents data from the Survey on Sexual Violence, 2006, an administrative
+records collection of incidents of inmate-on-inmate and staff-on-inmate
+sexual violence reported to correctional authorities. The report provides
+counts of sexual violence, by type, for adult prisons, jails, and other
+adult correctional facilities. The report provides an in-depth analysis of
+substantiated incidents, including where the incidents occur, time of day,
+number and characteristics of victims and perpetrators, nature of the
+injuries, impact on the victims, and sanctions imposed on the perpetrators.
+The appendix tables include counts of sexual violence, by type, for all
+State systems, the Federal Bureau of Prisons, and sampled jail
+jurisdictions. The report also includes an update on BJS activities related
+to implementation of the data collections required under the Prison Rape
+Elimination Act of 2003 (Public Law 108-79).
+
+8. Burkhardt, Brett C., "Does the public sector respond to private
+competition? An analysis of privatization and prison performance." Journal
+of Crime and Justice. 2019, 42, (2), 201 - 220. DOI:
+10.1080/0735648X.2018.1497524
+Abstract: https://bjs.ojp.gov/library/publications/sexual-violence-reported-correctional-authorities-2006
+Full text: https://bjs.ojp.gov/redirect-legacy/content/pub/ascii/svrca06.txt
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/svrca06.pdf
+Presents data from the Survey on Sexual Violence, 2006, an administrative
+records collection of incidents of inmate-on-inmate and staff-on-inmate
+sexual violence reported to correctional authorities. The report provides
+counts of sexual violence, by type, for adult prisons, jails, and other
+adult correctional facilities. The report provides an in-depth analysis of
+substantiated incidents, including where the incidents occur, time of day,
+number and characteristics of victims and perpetrators, nature of the
+injuries, impact on the victims, and sanctions imposed on the perpetrators.
+The appendix tables include counts of sexual violence, by type, for all
+State systems, the Federal Bureau of Prisons, and sampled jail
+jurisdictions. The report also includes an update on BJS activities related
+to implementation of the data collections required under the Prison Rape
+Elimination Act of 2003 (Public Law 108-79).
+
+9. Burkhardt, Brett C., "Private Corrections and Public Discourse: The
+Emergence and Legitimation of Modern Correctional Privatization in the
+United States, 1985-2008." Dissertation, University of Wisconsin, 2011.
+Abstract: https://search.library.wisc.edu/catalog/9910120627202121
+
+10. Burkhardt, Brett C., "Private Prisons in Public Discourse: Measuring
+Moral Legitimacy." Politics, Culture and Society Working Papers Series.
+2012-01, Corvallis, OR: Oregon State University, Jun 2012.
+Full text PDF: http://www.ssc.wisc.edu/soc/pcs/Working%20Papers/201201Burkhardt.pdf
+
+11. Burkhardt, Brett C., "Private prisons in public discourse: Measuring
+moral legitimacy." Sociological Focus. 2014, 47, 279 - 298. DOI:
+10.1080/00380237.2014.940264
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+12. Burkhardt, Brett C., "Where have all the (White and Hispanic) inmates
+gone? Comparing the racial composition of private and public adult
+correctional facilities." Race and Justice. Jan 2015, 5, (1), 33 - 57. DOI:
+10.1177/2153368714539355
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+13. Burkhardt, Brett C., "Who is in private prisons? Demographic profiles
+of prisoners and workers in American private prisons." International
+Journal of Law, Crime, and Justice. Dec 2017, 51, 24 - 33. DOI:
+10.1016/j.ijlcj.2017.04.004
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+14. Burkhardt, Brett C., "Who punishes whom?: Bifurcation of private and
+public responsibilities in criminal punishment." Journal of Crime and
+Justice. 2017, 40, (4), 512 - 527. DOI: 10.1080/0735648X.2016.1174619
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+15. Burkhardt, Brett C.; Connor, Brian T., "Durkheim, punishment, and
+prison privatization." Social Currents. Mar 2016, 3, (1), 84 - 99. DOI:
+10.1177/2329496515604641
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+16. Burkhardt, Brett C.; Jones, Alisha, "Judicial intervention into
+prisons: Comparing private and public prisons from 1990 to 2005." Justice
+System Journal. 2016, 37, (1), 39 - 52. DOI: 10.1080/0098261X.2015.1062738
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+17. Butler, H.D., "An examination of inmate adjustment stratified by time
+served in prison." Journal of Criminal Justice. Sep-Oct 2019, 64,. DOI:
+10.1016/j.jcrimjus.2019.101628
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+18. Butler, H.D.; Bouffard, Jeffrey A.; Beatty, Jennifer K.; Bouffard,
+Leana A., "Understanding the decision to officially report sexual assaults
+in prison." Criminal Justice and Behavior. Jun 2023, 50, (6), 849 - 869.
+DOI: 10.1177/00938548231162090
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+19. Butler, H.D.; Solomon, Starr J.; DeLisi, Matt, "Time served in prison,
+in-prison experiences, and perceptions of procedural justice." Justice
+Quarterly. 2021, 38, (7), 1519 - 1541. DOI: 10.1080/07418825.2021.1985159
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+20. Butler, H.D.; Tasca, Melinda, "Sexual victimization and official
+reporting behaviors among incarcerated women." Victims and Offenders. 2025,
+20, (5-6), 883 - 900. DOI: 10.1080/15564886.2025.2485121
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+21. Carroll, Leo; Calci, Sharon; Wilson, Amber, "Mass incarceration and
+conditions of confinement." In Wooldredge, John; Smith, Paula, The Oxford
+Handbook of Prisons and Imprisonment. 53 - 76, New York, NY: Oxford
+University Press,2018.
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+22. Chennault, Carrie; Sbicca, Joshua, "Prison agriculture in the United
+States: Racial capitalism and the disciplinary matrix of exploitation and
+rehabilitation." Agriculture and Human Values. 2023, 40, 175 - 191. DOI:
+10.1007/s10460-022-10346-x
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+23. Chirakijja, Janjala, "Essays in Labor and Public Economics."
+Dissertation, Northwestern University, 2018.
+Abstract: http://www.tandfonline.com/doi/abs/10.1080/00380237.2014.940264
+
+24. Chirakijja, Janjala, "The Local Economic Impacts of Prisons." Job
+Market Paper, Jan 25, 2018..
+Full text: https://cpb-us-e1.wpmucdn.com/sites.northwestern.edu/dist/4/1989/files/2017/10/Chirakijja_JMP_20180125-24gvgo3.pdf
+
+25. Crittenden, Courtney A.; Koons-Witt, Barbara A.; Kaminski, Robert J.,
+"Being assigned work in prison: do gender and race matter?." Feminist
+Criminology. Oct 2018, 13, (4), 359 - 381. DOI: 10.1177/1557085116668990
+Full text: https://cpb-us-e1.wpmucdn.com/sites.northwestern.edu/dist/4/1989/files/2017/10/Chirakijja_JMP_20180125-24gvgo3.pdf
+
+26. Crookston, Andrew; Hooks, Gregory, "Community colleges, budget cuts,
+and jobs: The impact of community colleges on employment growth in rural
+U.S. counties, 1976-2004." Sociology of Education. Oct 2012, 85, (4), 350 -
+372. DOI: 10.1177/0038040712441376
+Full text: https://cpb-us-e1.wpmucdn.com/sites.northwestern.edu/dist/4/1989/files/2017/10/Chirakijja_JMP_20180125-24gvgo3.pdf
+
+27. DeLisi, Matt; Butler, H.D., "Murder as importation: An empirical study
+of the continuity of homicide offending from community to confinement."
+Homicide Studies. Nov 2020, 24, (4), 398 - 416. DOI:
+10.1177/1088767920928106
+Full text: https://cpb-us-e1.wpmucdn.com/sites.northwestern.edu/dist/4/1989/files/2017/10/Chirakijja_JMP_20180125-24gvgo3.pdf
+
+28. Dippel, Christian; Poyker, Michael, "Do Private Prisons Affect Court
+Sentencing?." Sep 28, 2018..
+Full text PDF: http://www.anderson.ucla.edu/faculty_pages/christian.dippel/privateprisons_sentencing.pdf
+
+29. Dippel, Christian; Poyker, Michael, "Do Private Prisons Affect Criminal
+Sentencing?." NBER Working Paper 25715. Cambridge, MA: National Bureau of
+Economic Research, Jun 2019. DOI: 10.3386/w25715
+Abstract: https://www.nber.org/papers/w25715
+
+30. Eason, John M., "Prisons as panacea or pariah? The countervailing
+consequences of the prison boom on the political economy of rural towns."
+Social Sciences. 2017, 6, (7),. DOI: 10.3390/socsci6010007
+Abstract: https://www.nber.org/papers/w25715
+
+31. Eason, John M.; Zucker, Danielle; Wildeman, Christopher, "Mass
+imprisonment across the rural-urban interface." Annals of the American
+Academy of Political and Social Science. Jul 2017, 672, (1), 202 - 216.
+DOI: 10.1177/0002716217705357
+Abstract: https://www.nber.org/papers/w25715
+
+32. Emblom-Hooe, Allyson, "The Effect of Correctional and Rehabilitation
+Facilities on Property Values." Job market paper. Dec 8, 2024..
+Full text PDF: https://abemblom.github.io/AllysonEmblomHooe.github.io/assets/files/JMP_AEH.pdf
+
+33. Genter, Shaun; Hooks, Gregory; Clayton, Mosher, "Prisons, jobs and
+privatization: The impact of prisons on employment growth in rural US
+counties, 1997-2004." Social Science Research. May 2013, 42, (3), 596 -
+610. DOI: 10.1016/j.ssresearch.2012.12.008
+Full text PDF: https://abemblom.github.io/AllysonEmblomHooe.github.io/assets/files/JMP_AEH.pdf
+
+34. Green, Paige, "Psychological Counseling in Corrections: Liberal Versus
+Conservative State Emphasis." Thesis, California State University, 2017.
+Abstract: http://hdl.handle.net/10211.3/192449
+
+35. Johnston, Jocelyn M.; Holt, Stephen B., "Examining the influence of
+representative bureaucracy in public and private prisons." Policy Studies
+Journal. May 2021, 49, (2), 516 - 561. DOI: 10.1111/psj.12367
+Abstract: http://hdl.handle.net/10211.3/192449
+
+36. Jones, Alisha, "Education Behind Bars: Comparing Private and State
+Correctional Facilities." Thesis, Oregon State University, 2015.
+Abstract: http://hdl.handle.net/10211.3/192449
+
+37. Juan, Shao-Chiu, "The Impact of HIV-Specific Criminal Laws on HIV
+Serostatus Disclosure, Risk Behaviors, and HIV Testing." Dissertation,
+State University of New York, 2018.
+Abstract: http://hdl.handle.net/10211.3/192449
+
+38. Jung, Haeil, "Do prison work-release programs improve subsequent labor
+market outcomes? Evidence from the adult transition centers in Illinois."
+Journal of Offender Rehabilitation. 2014, 53, (5), 384 - 402. DOI:
+10.1080/10509674.2014.922158
+Abstract: http://hdl.handle.net/10211.3/192449
+
+39. Kelly, Thomas M., "The Politics of Prison Privatization: Political
+Strategies of Business and Labor." Dissertation, University of California,
+2019.
+Abstract: https://escholarship.org/uc/item/3qj7q63d
+
+40. Kelly, William R., Criminal Justice at the Crossroads: Transforming
+Crime and Punishment. New York, NY: Columbia University Press, 2015.
+Abstract: https://escholarship.org/uc/item/3qj7q63d
+
+41. Kirby, Jeri, "Rehabilitation in the Punitive State: An Oxymoron? An
+Examination of Rehabilitation and Punitive Practices in the United States."
+Dissertation, West Virginia University, 2017.
+Abstract: https://escholarship.org/uc/item/3qj7q63d
+
+42. Lee, Alice S.; Berendes, David M.; Seib, Katherine G.; Whitney, Ellen
+A.S.; Berkelman, Ruth L., "Receipt of A(H1N1)pdm09 vaccine by prisons and
+jails - United States, 2009-10 influenza season." Morbidity and Mortality
+Weekly Report. Jan 6, 2012, 60, (51/52), 1737 - 1740.
+Full text: https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6051a3.htm
+
+43. Lee, Alice S.; Berendes, David M.; Seib, Katherine; Whitney, Ellen
+A.S.; Chavez, R. Scott; Meyer, Patricia Lynn; Berkelman, Ruth L.; Omer,
+Saad B.; Spaulding, Anne C., "Distribution of A(H1N1)pdm09 influenza
+vaccine: Need for greater consideration of smaller jails." Journal of
+Correctional Health Care. Jul 2014, 20, (3), 228 - 239. DOI:
+10.1177/1078345814532223
+Full text: https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6051a3.htm
+
+44. Lee, C.C.; Joo, Seong-Jong, "Measuring the performance of the U.S.
+correctional systems at the state level." Journal of Applied Business and
+Economics. 2020, 22, (5), 97 - 110. DOI: 10.33423/jabe.v22i5.3052
+Full text: https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6051a3.htm
+
+45. Legere, Casey J., "Correctional Quackery: A Study of Program
+Availability and Inmate Assaults in Adult Correctional Facilities." Thesis,
+Portland State University, 2020.
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+46. Mason, Alissa L., "How Female Correctional Officers Influence the
+Security of an Institution." Thesis, Youngstown State University, 2015.
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+47. McGeever, Kelly, "Correctional facility establishments and neighborhood
+housing characteristics." Sociological Perspectives. Jun 2019, 62, (3), 383
+- 401. DOI: 10.1177/0731121418800271
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+48. Meade, Benjamin; Burrow, John D., "Untangling the dynamics of judicial
+decision making and inmates' free exercise claims." Prison Journal. Mar
+2015, 95, (1), 3 - 22. DOI: 10.1177/0032885514562757
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+49. Merola, Linda M.; Vovak, Heather, "The challenges of terrorist and
+extremist prisoners: A survey of U.S. prisons." Criminal Justice Policy
+Review. Nov 2013, 24, (6), 735 - 758. DOI: 10.1177/0887403412463048
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+50. Neumann, Marie L., "Evaluating the Sex Ratio Hypothesis: County-level
+Sex Ratios and Nonmarital Fertility for African Americans." Thesis,
+University of Washington, 2016.
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+51. O'Brien, Timothy L., "Arresting confidence: Mass incarceration and
+Black-White differences in perceptions of legal authorities." Social
+Science Quarterly. Sep 2020, 101, (5), 1905 - 1919. DOI: 10.1111/ssqu.12842
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+52. Peterson, Bryce E., "Inmate-, Incident-, and Facility-Level Factors
+Associated with Escapes from Custody and Violent Outcomes." Dissertation,
+City University of New York, 2015.
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+53. Phelps, Michelle S., "The place of punishment: Variation in the
+provision of inmate services staff across the punitive turn." Journal of
+Criminal Justice. Sep/Oct 2012, 40, (5), 348 - 357. DOI:
+10.1016/j.jcrimjus.2012.06.012
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+54. Phelps, Michelle S. , "Rehabilitation in the punitive era: The gap
+between rhetoric and reality in U.S. prison programs." Law and Society
+Review. 2011, 45, (1), 33 - 68. DOI: 10.1111/j.1540-5893.2011.00427.x
+Abstract: https://pdxscholar.library.pdx.edu/open_access_etds/5530/
+
+55. Poyker, Michael, "Economic Consequences of the U.S. Convict Labor
+System." Working Paper No. 91. New York, NY: Institute for New Economic
+Thinking, Feb 2019. DOI: 10.2139/ssrn.3347300
+Abstract: https://ssrn.com/abstract=3347300
+
+56. Poyker, Mikhail, "Essays on the Economic Effects of Convict Labor in
+Modern U.S. History." University of California, 2018.
+Abstract: https://escholarship.org/uc/item/62z0d9n0
+
+57. Randol, Blake M.; Campbell, Christopher M., "Macro-correlates of inmate
+violence: The importance of programming in prison order." Prison Journal.
+Sep 2017, 97, (4), 451 - 474. DOI: 10.1177/0032885517711975
+Abstract: https://escholarship.org/uc/item/62z0d9n0
+
+58. Ruddell, Rick; Leyton-Brown, Ken, "All in the family: The role of the
+sheriff's wife in 20th-century mom and pop jails." Women and Criminal
+Justice. 2013, 23, (4), 267 - 285. DOI: 10.1080/08974454.2012.733328
+Abstract: https://escholarship.org/uc/item/62z0d9n0
+
+59. Schlanger, Margo, "How Prisoners' Rights Lawyers Are Preserving the
+Role of the Courts." Public Law and Legal Theory Research Paper Series
+Paper No. 428. Aug 11, 2014. DOI: 10.2139/ssrn.2478884
+Abstract: https://ssrn.com/abstract=2478884
+
+60. Schlanger, Margo, "Incrementalist vs. maximalist reform: Solitary
+confinement case studies." Northwestern University Law Review. 2020, 115,
+(1), 273 - 309.
+Abstract: https://scholarlycommons.law.northwestern.edu/nulr/vol115/iss1/7/
+
+61. Schlanger, Margo, "Prison and Jail Civil Rights/Conditions Cases:
+Longitudinal Statistics, 1970-2021." University of Michigan Law and
+Economics Working Papers. Working paper. University of Michigan Law,.
+Abstract: https://scholarlycommons.law.northwestern.edu/nulr/vol115/iss1/7/
+
+62. Schlanger, Margo, "Prison segregation: Symposium introduction and
+preliminary data on racial disparities." Michigan Journal of Race and Law.
+Spr 2013, 18, (2), 241 - 250.
+Abstract: https://repository.law.umich.edu/articles/461/
+
+63. Schlanger, Margo, "Prisoners' rights lawyers' strategies for preserving
+the role of the courts." University of Miami Law Review. 2015, 69, 519 -
+558.
+Abstract: https://lawreview.law.miami.edu/prisoners-rights-lawyers-strategies-preserving-role-courts/
+Full text PDF: https://lawreview.law.miami.edu/wp-content/uploads/2015/04/Schlanger.pdf
+
+64. Schlanger, Margo, "Trends in prisoner litigation, as the PLRA enters
+adulthood." UC Irvine Law Review. 2015, 5, (1), 153 - 179.
+Abstract: https://scholarship.law.uci.edu/ucilr/vol5/iss1/6/
+
+65. Shames, Alison; Wilcox, Jessa; Subramanian, Ram, "Solitary Confinement:
+Common Misconceptions and Emerging Safe Alternatives." Vera Institute of
+Justice, May 2015.
+Abstract: https://www.vera.org/publications/solitary-confinement-common-misconceptions-and-emerging-safe-alternatives
+Full text PDF: https://storage.googleapis.com/vera-web-assets/downloads/Publications/solitary-confinement-common-misconceptions-and-emerging-safe-alternatives/legacy_downloads/solitary-confinement-misconceptions-safe-alternatives-report_1.pdf
+
+66. Stephan, James J., "Census of State and Federal Correctional
+Facilities, 2005." National Prisoner Statistics Program. NCJ 222182,
+Washington, DC: United States Department of Justice, Bureau of Justice
+Statistics, Oct 2008.
+Full text PDF: http://bjs.ojp.usdoj.gov/content/pub/pdf/csfcf05.pdf
+The report includes data on characteristics of facilities by type, size,
+security level, rated and design capacities, court orders, and use of
+private contractors. It provides data on custody populations by type of
+facility, gender, and facility security level. The report includes data on
+facility staff by gender, occupational categories, and inmate-to-staff
+ratios by type of facility. Program data include work activities of inmates
+inside prison and on work release; educational training such as basic
+literacy and college courses; and counseling programs such as drug and
+alcohol dependency and employment interviewing skills. It also compares
+selected findings to the 2000 Census.
+
+67. Stober, Emmanuel, "The race warfare and the United States justice
+system." Journal of Humanities and Social Sciences Studies. 2020, 2, (6), 1
+- 14. DOI: 10.32996/jhsss.2020.2.6.1
+Full text PDF: http://bjs.ojp.usdoj.gov/content/pub/pdf/csfcf05.pdf
+The report includes data on characteristics of facilities by type, size,
+security level, rated and design capacities, court orders, and use of
+private contractors. It provides data on custody populations by type of
+facility, gender, and facility security level. The report includes data on
+facility staff by gender, occupational categories, and inmate-to-staff
+ratios by type of facility. Program data include work activities of inmates
+inside prison and on work release; educational training such as basic
+literacy and college courses; and counseling programs such as drug and
+alcohol dependency and employment interviewing skills. It also compares
+selected findings to the 2000 Census.
+
+68. Summers, Monica E., "Speak Softly and Carry a Big Stick: The Effects of
+Women Correctional Officers on Prison Violence." Dissertation, Southern
+Illinois University, 2017.
+Abstract: https://opensiuc.lib.siu.edu/dissertations/1405/
+
+69. Theis, Bryan N., "Public vs. Private Prison Violence: An Empirical
+Study of Inmate-on-staff Assaults." Thesis, Oregon State University, 2015.
+Abstract: https://opensiuc.lib.siu.edu/dissertations/1405/
+
+70. Unah, Isaac, "Antecedents of Prison Violence." Nov 2013.
+Abstract: https://opensiuc.lib.siu.edu/dissertations/1405/
+
+71. Unah, Isaac; Baumgartner, Frank, "The hierarchy of victims in death
+penalty processing in North Carolina." Presented at the 2014 National
+Conference of Black Political Scientists Annual Meeting, National
+Conference of Black Political Scientists, Wilmington, DE, Mar 12-15, 2014.
+Abstract: https://opensiuc.lib.siu.edu/dissertations/1405/
+
+72. Walker, Caroline M., "Essays in Social Policy and Economic Well-Being."
+Cornell University, 2019.
+Abstract: https://opensiuc.lib.siu.edu/dissertations/1405/
+
+73. Weber, Emily A., "Essays in Labor Economics." Dissertation, Boston
+University, 2021.
+Abstract: https://opensiuc.lib.siu.edu/dissertations/1405/
+
+74. Williams, Jarred A., "A Quantitative Analysis of Prison Closures: 2006-
+2013." Thesis, Washington State University, 2015.
+Full text PDF: http://www.dissertations.wsu.edu/Thesis/Fall2015/J_Williams_010116.pdf
+
+75. Witherell, Wendi, "The Privatization of the Prison System in the United
+States: A Comparative Study of Rehabilitative Resources." Thesis, Californa
+State University, 2022.
+Full text PDF: https://scholarworks.lib.csusb.edu/cgi/viewcontent.cgi?article=2557&context=etd
+
+76. Zhang, Yiwen, "Did the prison industrial complex deliver on its
+promise? Prison proliferation and employment in rural America." British
+Journal of Criminology. Jan 2024, 64, (1), 229 - 247. DOI:
+10.1093/bjc/azad011
+Full text PDF: https://scholarworks.lib.csusb.edu/cgi/viewcontent.cgi?article=2557&context=etd

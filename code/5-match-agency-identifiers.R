@@ -219,7 +219,7 @@ manual_agency_ori <- read_csv(
   distinct(state, county, agency, .keep_all = TRUE)
 
 agreement_identifiers <- arrow::read_parquet("data/intermediate/agreements.parquet") |>
-  select(agreement_id, state, county, agency, jurisdiction_level) |>
+  select(agreement_id, agency_id, state, county, agency, jurisdiction_level) |>
   mutate(
     state_key = norm_state(state),
     county_key = norm_ori_county(county),
@@ -301,6 +301,10 @@ agreement_identifiers <- arrow::read_parquet("data/intermediate/agreements.parqu
     ),
     ORI9 = coalesce(manual_ori, ORI9)
   ) |>
+  # ORIs name agencies: an agreement printed under a spelling no roster knows takes the one ORI its agency's others carry
+  mutate(agency_ori = if (n_distinct(na.omit(ORI9)) == 1) first(na.omit(ORI9)) else NA_character_, .by = agency_id) |>
+  mutate(ori_source = if_else(is.na(ORI9) & !is.na(agency_ori), "agency", ori_source),
+         ORI9 = coalesce(ORI9, agency_ori)) |>
   select(
     agreement_id,
     ORI9,

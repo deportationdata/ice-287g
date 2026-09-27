@@ -84,8 +84,10 @@ all_agreements_sf <- features_sf |>
         jurisdiction_level_source,
         support_type,
         signed,
+        signed_source,
         moa,
         addendum,
+        addendum_signed,
         first_appeared,
         first_appeared_source,
         last_appeared,
@@ -222,6 +224,7 @@ all_agreements_sf <- all_agreements_sf |>
     ]),
     needs_review = !is.na(review_reason),
     match_quality = case_when(
+      coalesce(match_type == "not_active", FALSE) ~ "not_active",
       geometry_unmatched ~ "unmatched",
       str_detect(coalesce(match_type, ""), "^manual") |
         coalesce(
@@ -253,8 +256,10 @@ all_agreements_sf <- all_agreements_sf |>
     jurisdiction_level_source,
     support_type,
     signed,
+    signed_source,
     moa,
     addendum,
+    addendum_signed,
     first_appeared,
     first_appeared_source,
     last_appeared,
@@ -352,7 +357,7 @@ reference_counties <- arrow::read_parquet("data/intermediate/reference-counties.
 county_codes <- reference_counties |>
   distinct(state, county_key, .keep_all = TRUE) |>
   select(state, county_key, county_fips)
-county_names <- reference_counties |> distinct(county_fips, county) |> deframe()
+county_names <- reference_counties |> distinct(county_fips, county_name) |> deframe()
 # ICE's county, corrected, as a census code for the agreements with no geometry
 ice_county_codes <- agreements |>
   mutate(county_key = norm_county(county)) |>
@@ -390,8 +395,10 @@ agreement_level_sf <- all_agreements_sf |>
     state_fips,
     ice_county,
     signed,
+    signed_source,
     moa,
     addendum,
+    addendum_signed,
     first_appeared,
     first_appeared_source,
     last_appeared,
@@ -476,6 +483,7 @@ agreement_level_sf <- agreement_level_sf |>
     support_type,
     status,
     signed,
+    signed_source,
     first_appeared,
     first_appeared_source,
     last_appeared,
@@ -485,6 +493,7 @@ agreement_level_sf <- agreement_level_sf |>
     moa,
     moa_pending,
     addendum,
+    addendum_signed,
     has_addendum,
     place,
     place_type,

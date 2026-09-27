@@ -158,8 +158,7 @@ observations <- observations |>
   mutate(
     state_key = norm_state(state),
     canonical_agency = canonical_agency(raw_agency, coalesce(state_abbr, ""), coalesce(state, "")),
-    support_key = canonical_support(raw_support),
-    is_addendum = str_detect(str_to_lower(raw_agency), "\\s(addendum|amendment)$")
+    support_key = canonical_support(raw_support)
   )
 
 unmatched_fixes <- agency_name_fixes |>

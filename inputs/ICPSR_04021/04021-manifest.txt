@@ -1,0 +1,56 @@
+File Manifest for ICPSR 4021
+
+U.S. Dept. of Justice, Bureau of Justice Statistics. CENSUS OF STATE AND
+FEDERAL ADULT CORRECTIONAL FACILITIES, 2000. Conducted by U.S. Dept. of
+Commerce, Bureau of the Census. ICPSR ed. Ann Arbor, MI: Inter-university
+Consortium for Political and Social Research [producer and distributor],
+2004. http://doi.org/10.3886/ICPSR04021.v1
+
+Details on the version history can be found below the file listings.
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    04021-descriptioncitation.pdf       -       -         -       2014-07-03  -
+
+    04021-related_literature.txt        -       -         -       daily       -
+
+    04021-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 Census of State and Federal Adult Correctional Facilities, 2000
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    04021-0001-Codebook.pdf             -       -         -       2004-07-23  692413fd52fcf3e0a5977c55cf164c98
+
+    04021-0001-Data.dta                 -       1,668     478     2005-03-10  7ec24971bb23e04187c74e21c29868fd
+
+    04021-0001-Data.por                 -       1,668     477     2005-03-10  932970332cc9abe88e004506eb7f78d6
+
+    04021-0001-Data.txt                 2527    1,668     477     2004-07-09  06fc694ef72745a859b856fc69bff6bc
+
+    04021-0001-Data.xpt                 -       1,668     477     2005-03-10  c2545053f3c15f65d017f1fd22799b1c
+
+    04021-0001-Setup.dct                -       -         -       2005-03-10  3ab703be245247245c0092516f3af6c3
+
+    04021-0001-Setup.do                 -       -         -       2005-03-10  a1522e53ae940c9e0e6bdbad9b0b4284
+
+    04021-0001-Setup.sas                -       -         -       2004-07-14  17efee07773ee1a85dd783ef37eb361d
+
+    04021-0001-Setup.sps                -       -         -       2004-07-14  e7c08181e34384382a74a4d08294a6fb
+
+    04021-0001-Supplemental_syntax.sas  -       -         -       2005-03-10  699ac9cacce72793637079a6224c7727
+
+
+Version History
+
+2005-11-04  On 2005-03-14 new files were added to one  or  more datasets.
+These files included additional setup files as well  as one or more of the
+following: SAS  program, SAS transport, SPSS portable,   and Stata system
+files. The  metadata record was revised  2005-11-04 to  reflect these
+additions.

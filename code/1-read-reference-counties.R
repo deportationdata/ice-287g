@@ -9,5 +9,5 @@ source("code/functions.R")
 
 counties_reference(2024) |>
   st_drop_geometry() |>
-  transmute(state = state_name, state_key, county, county_key, county_fips = geoid) |>
+  transmute(state = state_name, state_key, county, county_name, county_key, county_fips = geoid) |>
   arrow::write_parquet("data/intermediate/reference-counties.parquet")

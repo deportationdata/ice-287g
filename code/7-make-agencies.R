@@ -98,7 +98,8 @@ ice_record <- identities |>
     removed_between_from = if (any(status == "Active")) as.Date(NA) else max(last_appeared),
     removed_between_to = if (any(status == "Active")) as.Date(NA) else max(removed_by, na.rm = TRUE),
     models = paste(unique(support_abbr(support_key)), collapse = "; "),
-    model_history = paste(sprintf("%s %s", support_abbr(support_key), signed), collapse = " -> "),
+    # in signing order; agreements ICE listed out of that order, or on the same sheet, would otherwise jumble it
+    model_history = paste(sprintf("%s %s", support_abbr(support_key), signed)[order(signed, first_seq)], collapse = " -> "),
     .groups = "drop"
   ) |>
   mutate(terminated = n_active == 0,
@@ -141,19 +142,6 @@ moa <- bind_rows(
   agreements |> filter(str_detect(coalesce(moa, ""), "^https?://")) |> transmute(agency_id, moa_file = basename(moa))
 ) |>
   distinct(agency_id, moa_file)
-# a manifest row whose bytes were kept in another folder still counts
-archive <- snapshot_manifests("agreements") |>
-  filter(file.exists(path_now) | str_detect(coalesce(note, ""), "retained at")) |>
-  transmute(file = str_to_lower(basename(coalesce(url, path_now))), url) |>
-  distinct(file, .keep_all = TRUE)
-moa_summary <- moa |>
-  mutate(present = str_to_lower(moa_file) %in% archive$file,
-         archived_url = archive$url[match(str_to_lower(moa_file), archive$file)]) |>
-  summarise(moa_files = paste(sort(unique(moa_file)), collapse = "; "),
-            moa_pdf_present = any(present),
-            moa_archived_url = paste(sort(unique(na.omit(archived_url))), collapse = "; "),
-            .by = agency_id) |>
-  mutate(moa_archived_url = na_if(moa_archived_url, ""))
 
 # --- jurisdiction and county --------------------------------------------------------
 # the agency takes its active or latest agreement's level and counties ("; "-joined, none for a state agency); one ICE never listed takes its name's level
@@ -174,7 +162,6 @@ agencies <- bind_rows(ice |> select(agency_id, state, state_abbr, state_key, can
   left_join(signing_dates, by = "agency_id") |>
   left_join(attested, by = "agency_id") |>
   left_join(rescinded, by = "agency_id") |>
-  left_join(moa_summary, by = "agency_id") |>
   left_join(level_modern, by = "agency_id") |>
   mutate(
     jurisdiction_level = coalesce(jurisdiction_level,
@@ -189,14 +176,13 @@ agencies <- bind_rows(ice |> select(agency_id, state, state_abbr, state_key, can
     attested_active_from = pmin(ice_listed_from, attested_active_from, na.rm = TRUE),
     attested_active_to = pmax(ice_listed_to, attested_active_to, na.rm = TRUE),
     source_ids = case_when(ice_published & !is.na(source_ids) ~ paste("ICE sheet", source_ids, sep = "; "),
-                           ice_published ~ "ICE sheet", TRUE ~ source_ids),
-    moa_pdf_present = coalesce(moa_pdf_present, FALSE)
+                           ice_published ~ "ICE sheet", TRUE ~ source_ids)
   ) |>
   select(agency_id, state, state_abbr, display_agency, jurisdiction_level, county_fips, ice_published, is_current,
          n_agreements, n_active, ice_listed_from, ice_listed_from_source, ice_listed_to, removed_between_from, removed_between_to,
          terminated, terminated_basis, attested_active_from, attested_active_to,
          first_signed, first_signed_source, latest_signed, signing_dates, models, model_history,
-         moa_files, moa_pdf_present, moa_archived_url, source_ids) |>
+         source_ids) |>
   arrange(state, display_agency)
 
 stopifnot("every jurisdiction level is one of the eight" =
@@ -268,7 +254,7 @@ dis_moa <- moa_keys |>
   inner_join(moa_keys |> select(file_key, other = agency_id), by = "file_key", relationship = "many-to-many") |>
   filter(other != agency_id) |>
   distinct(agency_id, moa_file, other) |>
-  transmute(agency_id, kind = "moa_file", field = "moa_files", value_a = moa_file, source_a = "moa_link",
+  transmute(agency_id, kind = "moa_file", field = "moa_file", value_a = moa_file, source_a = "moa_link",
             value_b = other, source_b = "moa_link", published_value = moa_file,
             resolution_rule = "the same MOA file is linked for another agency; recorded, not reassigned")
 disagreements <- bind_rows(dis_state, dis_date, dis_model, dis_presence, dis_ambiguous, dis_moa) |>

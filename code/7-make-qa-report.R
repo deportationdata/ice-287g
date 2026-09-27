@@ -132,8 +132,9 @@ summary <- bind_rows(
     list_rbind(),
   check(
     "agreements absent from a publication inside their listing window",
-    sum(identities$n_pub < identities$last_seq - identities$first_seq + 1)
+    sum(identities$n_pub < identities$last_seq - identities$first_seq + 1, na.rm = TRUE)
   ),
+  check("agreements ICE printed whose every listing went to a later signing it never listed", sum(identities$n_pub == 0)),
   check(
     "identity candidates awaiting a verdict",
     nrow(read_csv("data/qa/identity-candidates.csv", show_col_types = FALSE))

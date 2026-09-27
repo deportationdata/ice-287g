@@ -14,7 +14,9 @@ YEAR <- 2024
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet")
 facilities <- arrow::read_parquet("data/intermediate/facility-list-ice-detention.parquet")
 jails_prisons <- arrow::read_parquet("data/intermediate/facility-list-jails-prisons.parquet")
+censuses <- arrow::read_parquet("data/intermediate/facility-list-censuses.parquet")
 manual_points <- arrow::read_parquet("data/intermediate/manual-facility-points.parquet")
+manual_doc_facilities <- arrow::read_parquet("data/intermediate/manual-doc-facilities.parquet")
 manual_polygons <- arrow::read_parquet("data/intermediate/manual-non-facility-polygons.parquet")
 
 manual_facility_review <- read_csv(
@@ -64,12 +66,14 @@ manual_doc_exclusions <- manual_facility_review |>
   ) |>
   distinct(state_key, agency_key, facility_key)
 
-facility_sources_exact <- bind_rows(facilities, jails_prisons)
+# only active agreements are matched, so a facility HIFLD marks Closed is never a candidate; it stays a location
+# reference for placing a DOC's listed facilities and for dating the site around it
+facility_sources_exact <- bind_rows(facilities, jails_prisons |> filter(coalesce(facility_status, "") != "Closed"))
 # every pick ends in the same tiebreak, so no result depends on row order
 tiebreak <- c("facility_name", "latitude", "longitude")
 
 doc_pattern <- paste(
-  "department of corrections",
+  "department of corrections?",
   "correctional services",
   "public safety & corrections",
   "division of corrections",
@@ -113,9 +117,16 @@ fac_287g <- agreements |>
          str_detect(agency, "^[A-Z]{2} ")) &
       !str_detect(str_to_lower(agency), "\\b(county|parish|city|town|village|borough)\\b")
   )
+# only an active agreement is matched to facilities, and only to ones open now; every other jail-model agreement
+# keeps its row with no point
+active_ids <- agreements$agreement_id[agreements$status == "Active"]
+fac_all <- fac_287g
+fac_287g <- fac_287g |> filter(agreement_id %in% active_ids)
 
 # exact match tiers
 
+# each tier keeps one candidate per source for a facility name; the choice between sources waits until each
+# candidate's site has been checked open, so an old building under a stale HIFLD record gives way to the census's
 # a county agreement fans out to all its facilities; HIFLD STATE and FEDERAL prisons named
 # for the county are not its jail, so they stay out
 county_pattern_exact_matches <- fac_287g |>
@@ -137,7 +148,7 @@ county_pattern_exact_matches <- fac_287g |>
     match_type = "exact_county_pattern_all_facilities",
     match_score = 1.0
   ) |>
-  slice_best(source_rank, by = c("agreement_id", "facility_key"), tiebreak = tiebreak)
+  slice_best(source_rank, by = c("agreement_id", "facility_key", "source"), tiebreak = tiebreak)
 
 municipal_pattern_exact_matches <- fac_287g |>
   filter(!is_doc_agency, is_municipal_exact_agency) |>
@@ -164,7 +175,7 @@ municipal_pattern_exact_matches <- fac_287g |>
     match_type = "exact_municipal_pattern_facility",
     match_score = 1.0
   ) |>
-  slice_best(source_rank, by = c("agreement_id", "facility_key"), tiebreak = tiebreak)
+  slice_best(source_rank, by = c("agreement_id", "facility_key", "source"), tiebreak = tiebreak)
 
 pattern_exact_matches <- bind_rows(
   county_pattern_exact_matches,
@@ -229,7 +240,7 @@ facility_name_exact_matches <- fac_287g |>
     match_type = "exact_state_county_facility_name",
     match_score = 1.0
   ) |>
-  slice_best(source_rank, by = "agreement_id", tiebreak = tiebreak)
+  slice_best(source_rank, by = c("agreement_id", "source"), tiebreak = tiebreak)
 
 facility_exact_matches <- bind_rows(
   pattern_exact_matches,
@@ -382,6 +393,9 @@ doc_candidates <- fac_287g |>
         "doc_manual_state_facility",
       doc_is_named_facility ~
         "doc_named_facility",
+      # a youth agency's facility is not the DOC's; a DOC that runs one says so in its own list
+      str_detect(facility_name_clean, "\\b(youth|juvenile)\\b") ~
+        "doc_excluded_youth_facility",
       doc_is_state_prison_source ~
         "doc_exact_state_prison_source",
       doc_is_uncertain_prison_source ~
@@ -412,6 +426,120 @@ doc_matches <- doc_candidates |>
     match_type = doc_match_tier,
     match_score = 1
   )
+
+# a DOC's own facility list decides the facilities of every agreement it has running on the day
+# the list was read; its older agreements keep the matches above
+doc_list_matches <- fac_287g |>
+  filter(is_doc_agency) |>
+  inner_join(agreements |> select(agreement_id, signed, status, removed_by), by = "agreement_id") |>
+  inner_join(
+    manual_doc_facilities |> select(-note),
+    by = c("state", "agency"),
+    relationship = "many-to-many"
+  ) |>
+  filter(signed <= listed_on, status == "Active" | coalesce(removed_by > listed_on, FALSE), coalesce(program_site, TRUE)) |>
+  mutate(facility_key = norm_key(facility_name)) |>
+  # an address the geocoder cannot place takes a facility source's point of the same name
+  left_join(
+    facility_sources_exact |>
+      filter(!is.na(latitude), !is.na(longitude)) |>
+      arrange(source_rank) |>
+      distinct(state_key, facility_key, .keep_all = TRUE) |>
+      select(state_key, facility_key, source_latitude = latitude, source_longitude = longitude),
+    by = c("state_key", "facility_key")
+  ) |>
+  mutate(
+    latitude = coalesce(latitude, source_latitude),
+    longitude = coalesce(longitude, source_longitude),
+    facility_state = state,
+    source = "manual_doc_facility_list",
+    source_rank = 0L,
+    source_id = source_url,
+    match_type = "manual_doc_facility_list",
+    match_score = 1
+  ) |>
+  select(-signed, -status, -removed_by, -listed_on, -source_latitude, -source_longitude, -program_site, -program_site_source)
+
+# a listed facility takes the centre of HIFLD's prison grounds within 1.5 km over its street address when both give
+# the same house number: a neighbouring facility the DOC lists at its own address keeps that address
+hifld_state_prisons <- jails_prisons |>
+  filter(source == "hifld_prisons", str_to_upper(coalesce(type, "")) %in% c("STATE", "FEDERAL"), !is.na(latitude), !is.na(longitude))
+house_number <- \(a) str_to_lower(str_squish(coalesce(a, ""))) |>
+  str_remove("^#\\s*") |>
+  str_replace("^one\\b", "1") |>
+  str_replace("^two\\b", "2") |>
+  str_extract("^\\d+")
+doc_list_sf <- doc_list_matches |>
+  filter(!is.na(latitude), !is.na(longitude)) |>
+  distinct(state_key, facility_name, facility_address, latitude, longitude) |>
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |>
+  st_transform(5070)
+hifld_state_prisons_sf <- st_as_sf(hifld_state_prisons, coords = c("longitude", "latitude"), crs = 4326) |> st_transform(5070)
+nearest_prison <- st_nearest_feature(doc_list_sf, hifld_state_prisons_sf)
+nearest_snaps <- doc_list_sf |>
+  st_drop_geometry() |>
+  mutate(
+    snap_m = as.numeric(st_distance(doc_list_sf, hifld_state_prisons_sf[nearest_prison, ], by_element = TRUE)),
+    snap_id = hifld_state_prisons$source_id[nearest_prison],
+    snap_address = hifld_state_prisons$facility_address[nearest_prison],
+    snap_latitude = hifld_state_prisons$latitude[nearest_prison],
+    snap_longitude = hifld_state_prisons$longitude[nearest_prison]
+  ) |>
+  filter(snap_m <= 1500, coalesce(house_number(facility_address) == house_number(snap_address), FALSE)) |>
+  select(state_key, facility_name, snap_id, snap_latitude, snap_longitude)
+
+# a rural address can geocode kilometres down the road, so HIFLD's prison of the same name wins
+# within 10 km, and places a facility whose address could not be geocoded at all
+name_snaps <- doc_list_matches |>
+  distinct(state_key, facility_name, facility_key, latitude, longitude) |>
+  inner_join(
+    hifld_state_prisons |>
+      filter(!duplicated(paste(state_key, facility_key)) & !duplicated(paste(state_key, facility_key), fromLast = TRUE)) |>
+      select(state_key, facility_key, snap_id = source_id, snap_latitude = latitude, snap_longitude = longitude),
+    by = c("state_key", "facility_key")
+  ) |>
+  filter(
+    is.na(latitude) |
+      as.numeric(st_distance(
+        st_as_sf(tibble(x = coalesce(longitude, 0), y = coalesce(latitude, 0)), coords = c("x", "y"), crs = 4326) |> st_transform(5070),
+        st_as_sf(tibble(x = snap_longitude, y = snap_latitude), coords = c("x", "y"), crs = 4326) |> st_transform(5070),
+        by_element = TRUE
+      )) <= 10000
+  ) |>
+  select(state_key, facility_name, snap_id, snap_latitude, snap_longitude)
+
+# a facility pinned to a HIFLD record takes it whatever its name or address says
+pinned_snaps <- doc_list_matches |>
+  filter(!is.na(hifld_id)) |>
+  distinct(state_key, facility_name, hifld_id) |>
+  inner_join(
+    jails_prisons |> filter(source == "hifld_prisons") |> select(hifld_id = source_id, snap_latitude = latitude, snap_longitude = longitude),
+    by = "hifld_id"
+  ) |>
+  transmute(state_key, facility_name, snap_id = hifld_id, snap_latitude, snap_longitude)
+stopifnot("every hifld_id in inputs/manual-doc-facilities.csv names a HIFLD prison" =
+  nrow(pinned_snaps) == nrow(distinct(filter(doc_list_matches, !is.na(hifld_id)), state_key, facility_name)))
+
+doc_list_snaps <- bind_rows(
+  pinned_snaps,
+  name_snaps |> anti_join(pinned_snaps, by = c("state_key", "facility_name")),
+  nearest_snaps |> anti_join(bind_rows(pinned_snaps, name_snaps), by = c("state_key", "facility_name"))
+)
+
+doc_list_matches <- doc_list_matches |>
+  left_join(doc_list_snaps, by = c("state_key", "facility_name")) |>
+  mutate(
+    latitude = coalesce(snap_latitude, latitude),
+    longitude = coalesce(snap_longitude, longitude),
+    # the list is the source; the HIFLD record it sits on, when there is one, is the id
+    source_id = coalesce(snap_id, source_url)
+  ) |>
+  select(-snap_id, -snap_latitude, -snap_longitude, -source_url, -hifld_id)
+
+doc_matches <- bind_rows(
+  doc_matches |> anti_join(doc_list_matches, by = "agreement_id"),
+  doc_list_matches
+)
 
 # manual matches
 
@@ -487,7 +615,8 @@ non_doc_matches <- bind_rows(
   facility_fuzzy_county,
   facility_fuzzy_state
 ) |>
-  slice_best(source_rank, desc(match_score), by = c("agreement_id", "facility_key"), tiebreak = tiebreak)
+  slice_best(source_rank, desc(match_score), by = c("agreement_id", "facility_key", "source"), tiebreak = tiebreak) |>
+  mutate(source_choice_pending = TRUE)
 
 auto_matches <- bind_rows(non_doc_matches, doc_matches)
 
@@ -563,6 +692,187 @@ facility_all_matches <- bind_rows(
   hifld_fallback_matches
 )
 
+# whether each matched facility is open now
+
+# a census lists the facilities open on its reference day, taken as mid-year
+jail_census <- "Census of Jails"
+prison_census <- "Census of State and Federal Adult Correctional Facilities"
+census_sites <- censuses |>
+  filter(!is.na(latitude), !is.na(longitude)) |>
+  mutate(census_date = make_date(census_year, 6, 30), census_row = row_number())
+
+# manual placements and a DOC's own list are verdicts already, and police stations are not in any census
+matched_sites <- facility_all_matches |>
+  filter(!source %in% c("manual", "manual_doc_facility_list", "hifld_law_enforcement"), !is.na(latitude), !is.na(longitude)) |>
+  distinct(source, source_id, facility_name, facility_address, latitude, longitude, type, state_key, facility_status, facility_status_date) |>
+  mutate(
+    site = row_number(),
+    census = if_else(source == "hifld_prisons" & str_to_upper(coalesce(type, "")) %in% c("STATE", "FEDERAL"), prison_census, jail_census)
+  )
+
+as_5070 <- function(x) st_as_sf(x, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |> st_transform(5070)
+matched_sites_sf <- as_5070(matched_sites)
+census_sites_sf <- as_5070(census_sites)
+
+within_m <- function(near) tibble(i = rep(seq_along(near), lengths(near)), j = unlist(near))
+
+# census rows within 1 km of the site, with both house numbers and how many rows the census has for that
+# jurisdiction that round
+site_rows_nearby <- within_m(st_is_within_distance(matched_sites_sf, census_sites_sf, dist = 1000)) |>
+  transmute(
+    site = matched_sites$site[i],
+    census_row = census_sites$census_row[j],
+    near = as.numeric(st_distance(matched_sites_sf[i, ], census_sites_sf[j, ], by_element = TRUE)) <= 150,
+    site_number = house_number(matched_sites$facility_address[i]),
+    row_number = house_number(census_sites$facility_address[j])
+  ) |>
+  left_join(
+    census_sites |> filter(!is.na(jurisdiction_id)) |> add_count(jurisdiction_id, census_year, census, name = "n_jurisdiction_rows") |>
+      select(census_row, n_jurisdiction_rows),
+    by = "census_row"
+  )
+
+# census rows at the site: the same kind of facility, in the same state, within 150 m or within 1 km under the
+# same house number
+site_listings <- site_rows_nearby |>
+  filter(near | coalesce(site_number == row_number, FALSE)) |>
+  select(site, census_row) |>
+  inner_join(matched_sites |> select(site, census, state_key), by = "site") |>
+  inner_join(census_sites |> select(census_row, census, state_key, census_year, census_date, jurisdiction_id, year_built),
+             by = c("census_row", "census", "state_key"))
+
+# a round shows the site absent when a jurisdiction that ran it is listed there, every row of it
+# placed and none of them at the site; 2013 carries no addresses, so it never shows absence
+jurisdiction_rounds <- census_sites |>
+  filter(census == jail_census) |>
+  select(jurisdiction_id, census_year, census_date, census_row) |>
+  semi_join(
+    censuses |>
+      filter(census == jail_census, !is.na(jurisdiction_id)) |>
+      summarise(all_placed = all(!is.na(latitude)), .by = c(jurisdiction_id, census_year)) |>
+      filter(all_placed),
+    by = c("jurisdiction_id", "census_year")
+  )
+
+# a row within 1 km is not the site only when it gives another house number and is its jurisdiction's one jail that
+# round: a county that built its new jail down the road lists another number, while a county that lists several
+# buildings of one downtown complex lists each under its own
+site_rounds_nearby <- site_rows_nearby |>
+  filter(is.na(site_number) | is.na(row_number) | site_number == row_number | coalesce(n_jurisdiction_rows, 2L) > 1) |>
+  select(site, census_row)
+
+site_absences <- site_listings |>
+  filter(!is.na(jurisdiction_id)) |>
+  distinct(site, jurisdiction_id) |>
+  inner_join(jurisdiction_rounds, by = "jurisdiction_id", relationship = "many-to-many") |>
+  anti_join(site_rounds_nearby, by = c("site", "census_row")) |>
+  anti_join(site_listings, by = c("site", "census_year")) |>
+  # every row of the jurisdiction that round must be elsewhere, not just one of them
+  group_by(site, jurisdiction_id, census_year, census_date) |>
+  summarise(n_far = n(), .groups = "drop") |>
+  inner_join(
+    jurisdiction_rounds |> count(jurisdiction_id, census_year, name = "n_rows"),
+    by = c("jurisdiction_id", "census_year")
+  ) |>
+  filter(n_far == n_rows) |>
+  distinct(site, census_year, census_date)
+
+# HIFLD marks a closed facility; a jail census point takes the status of HIFLD's point at the same site
+hifld_sites <- jails_prisons |>
+  filter(source == "hifld_prisons", !is.na(latitude), !is.na(longitude), !is.na(facility_status))
+hifld_status_nearby <- within_m(st_is_within_distance(matched_sites_sf, as_5070(hifld_sites), dist = 150)) |>
+  transmute(site = matched_sites$site[i], nearby_status = hifld_sites$facility_status[j], nearby_status_date = hifld_sites$facility_status_date[j]) |>
+  summarise(
+    nearby_closed = any(nearby_status == "Closed") & !any(nearby_status == "Open"),
+    nearby_status_date = max(nearby_status_date),
+    .by = site
+  )
+
+site_windows <- matched_sites |>
+  select(site, facility_status, facility_status_date) |>
+  left_join(
+    site_listings |>
+      summarise(
+        listed_first = min(census_date),
+        listed_last = max(census_date),
+        census_years = paste(sort(unique(census_year)), collapse = "; "),
+        year_built = suppressWarnings(min(year_built, na.rm = TRUE)),
+        .by = site
+      ),
+    by = "site"
+  ) |>
+  left_join(hifld_status_nearby, by = "site") |>
+  left_join(
+    site_absences |>
+      left_join(site_listings |> summarise(listed_first = min(census_date), listed_last = max(census_date), .by = site), by = "site") |>
+      summarise(
+        absent_after = suppressWarnings(min(census_date[is.na(listed_last) | census_date > listed_last])),
+        absent_before = suppressWarnings(max(census_date[!is.na(listed_first) & census_date < listed_first])),
+        .by = site
+      ),
+    by = "site"
+  ) |>
+  mutate(
+    year_built = if_else(is.finite(year_built), year_built, NA_integer_),
+    absent_after = if_else(is.finite(absent_after), absent_after, as.Date(NA)),
+    absent_before = if_else(is.finite(absent_before), absent_before, as.Date(NA)),
+    hifld_closed_by = case_when(
+      facility_status == "Closed" ~ facility_status_date,
+      is.na(facility_status) & coalesce(nearby_closed, FALSE) ~ nearby_status_date
+    ),
+    # closed by the earliest round or snapshot that no longer has it, open from the latest that did not yet; HIFLD
+    # checking a site open does not outweigh a round that left it out, since HIFLD re-stamps records it never visited
+    closed_by = pmin(absent_after, hifld_closed_by, na.rm = TRUE),
+    open_from = pmax(absent_before, make_date(year_built, 1, 1), na.rm = TRUE)
+  ) |>
+  select(site, census_years, listed_last, closed_by, open_from)
+
+facility_all_matches <- facility_all_matches |>
+  left_join(
+    matched_sites |> select(source, source_id, facility_name, facility_address, latitude, longitude, site),
+    by = c("source", "source_id", "facility_name", "facility_address", "latitude", "longitude")
+  ) |>
+  left_join(site_windows, by = "site") |>
+  # every agreement matched here is active, so a facility any round or HIFLD shows closed leaves it, even its only one
+  filter(is.na(closed_by)) |>
+  mutate(facility_census_years = census_years) |>
+  select(-site, -census_years, -listed_last, -closed_by, -open_from)
+
+# of the open candidates for one facility name, the best-ranked source places it
+facility_all_matches <- bind_rows(
+  facility_all_matches |> filter(!coalesce(source_choice_pending, FALSE)),
+  facility_all_matches |>
+    filter(coalesce(source_choice_pending, FALSE)) |>
+    slice_best(source_rank, desc(match_score), by = c("agreement_id", "facility_key"), tiebreak = tiebreak)
+) |>
+  select(-source_choice_pending)
+
+# two sources can name one jail differently ("Tulsa County Jail", "David L. Moss Criminal Justice Center"): a candidate
+# within 150 m of a better-ranked one from another source, under the same house number, is that jail again. One
+# source's own records stay apart, and a DOC's list names each unit once, so its rows stay as listed
+merge_pool <- facility_all_matches |>
+  filter(source != "manual_doc_facility_list", !is.na(latitude), !is.na(longitude)) |>
+  arrange(source_rank, desc(match_score), across(all_of(tiebreak)))
+merge_numbers <- house_number(merge_pool$facility_address)
+same_jail <- within_m(st_is_within_distance(as_5070(merge_pool), as_5070(merge_pool), dist = 150)) |>
+  filter(
+    i < j,
+    merge_pool$agreement_id[i] == merge_pool$agreement_id[j],
+    merge_pool$source[i] != merge_pool$source[j],
+    coalesce(merge_numbers[i] == merge_numbers[j], FALSE)
+  ) |>
+  arrange(j, i)
+# in rank order, a candidate goes when it repeats one that stays
+repeats <- logical(nrow(merge_pool))
+for (p in seq_len(nrow(same_jail))) {
+  if (!repeats[same_jail$i[p]]) repeats[same_jail$j[p]] <- TRUE
+}
+facility_all_matches <- facility_all_matches |>
+  anti_join(
+    merge_pool[repeats, ] |> select(agreement_id, source, source_id, facility_name, latitude, longitude),
+    by = c("agreement_id", "source", "source_id", "facility_name", "latitude", "longitude")
+  )
+
 # facility point layer
 
 # a match without coordinates cannot be placed, so it re-enters below as unmatched
@@ -574,15 +884,15 @@ facility_matched_sf <- facility_all_matches |>
     remove = FALSE
   )
 
-# every agreement keeps a row, unmatched ones with an empty geometry
-facility_unmatched <- fac_287g |>
+# every agreement keeps a row with an empty geometry when it has no open facility or is not active
+facility_unmatched <- fac_all |>
   anti_join(
     facility_matched_sf |> st_drop_geometry(),
     by = "agreement_id"
   ) |>
   mutate(
     source = NA_character_,
-    match_type = "unmatched_facility",
+    match_type = if_else(agreement_id %in% active_ids, "unmatched_facility", "not_active"),
     match_score = NA_real_
   )
 
@@ -624,9 +934,13 @@ facility_sf <- facility_sf |>
   select(-containing_state_fips, -containing_county_fips) |>
   mutate(
     geometry_vintage = NA_integer_,
-    geometry_unmatched = st_is_empty(geometry),
+    # a point left empty because the agreement is not active is intended, not a failed match
+    geometry_unmatched = st_is_empty(geometry) & match_type != "not_active",
     fuzzy_match = coalesce(fuzzy_match, FALSE),
-    weak_match = coalesce(weak_match, FALSE)
+    weak_match = coalesce(weak_match, FALSE),
+    # HIFLD tags some records "(OLD)" without marking them Closed, and several are the county's current jail
+    # (Franklin KS, Osage KS); a point kept here passed the open check, so the tag would only mislead
+    facility_name = str_squish(str_remove(facility_name, regex("\\(old\\)\\s*$", ignore_case = TRUE)))
   ) |>
   select(
     agreement_id,
@@ -649,6 +963,7 @@ facility_sf <- facility_sf |>
     geometry_unmatched,
     fuzzy_match,
     weak_match,
+    facility_census_years,
     geometry
   )
 

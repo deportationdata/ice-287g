@@ -1,20 +1,14 @@
 kind,agency_id,field,value_a,source_a,value_b,source_b,published_value,resolution_rule
 date,AR-benton-county-sheriff-office,signed,2007-09-20,ICE archive index,2007-09-26,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
-date,AR-washington-county-sheriff-office,signed,2009-10-07,ICE archive index,2007-09-26,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
-date,AZ-pinal-county-sheriff-office,signed,2009-10-15,ICE archive index,2008-03-10,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
-date,AZ-yavapai-county-sheriff-office,signed,2009-10-15,ICE archive index,2008-03-10,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
-date,CA-san-bernardino-county-sheriff-office,signed,2005-10-19,OIG 2009 report,2005-11-19,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,GA-cobb-county-sheriff-office,signed,2007-01-31,ICE archive index,2007-02-13,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
-date,GA-hall-county-sheriff-office,signed,2009-10-15,ICE archive index,2008-02-29,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,MA-bristol-county-sheriff-office,signed,2017-02-08,ICE archive index,2017-01-18,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,MD-frederick-county-sheriff-office,signed,2008-02-01,ICE archive index,2008-02-06,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,NC-cabarrus-county-sheriff-office,signed,2007-07-10,ICE archive index,2007-08-02,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,NJ-cape-may-county-sheriff-office,signed,2017-10-04,ICE archive index,2017-04-10,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+date,NJ-monmouth-county-sheriff-office,signed,2019-03-08,ICE archive index,2016-06-08,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,NY-rensselaer-county-sheriff-office,signed,2018-02-09,ICE archive index,2018-01-30,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
-date,OK-tulsa-county-sheriff-office,signed,2009-10-05,ICE archive index,2007-08-06,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
-date,SC-york-county-sheriff-office,signed,2009-10-15,ICE archive index,2007-10-16,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
-date,VA-prince-william-manassas-regional-adult-detention-center,signed,2009-10-15,ICE archive index,2007-07-09,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
 date,WI-waukesha-county-sheriff-office,signed,2018-02-22,ICE archive index,2018-02-08,ICE sheet,,ICE's dates are published as identities; the earliest of all dates is first_signed
+model,AZ-florence-police-department,model,Task Force,OIG 2009 report,JTF,ICE sheet,JTF,models are ICE's; a source's differing model is recorded only
 model,AZ-mesa-police-department,model,Task Force,OIG 2009 report,JTF; JEM,ICE sheet,JTF; JEM,models are ICE's; a source's differing model is recorded only
 presence,AZ-florence-police-department,listed,listed,OIG 2009 report,absent,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded
 presence,CA-los-angeles-county-sheriff-office,listed,absent,OIG 2009 report,listed,pb_fc6b82aa1b22,,ICE publication nearest to 2009-10-28 decides ice_listed; the source's list is recorded

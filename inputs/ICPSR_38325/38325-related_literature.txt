@@ -1,0 +1,121 @@
+Bibliography
+Census of State and Federal Adult Correctional Facilities, 2019
+
+This bibliography includes published and unpublished works that are related 
+to ICPSR study 38325. It includes works that are based on primary
+or secondary analysis of the data, or which describe or critique those
+data or the collection methodology. 
+
+If you publish a work or know of other works that are based on these data,
+please send the complete citation and name of the ICPSR study used to:
+icpsrbibliography@umich.edu
+
+
+1. Bravo, Mauricio M., "The Effects of Prisons on Inmate Misconduct and
+Later Outcomes." Job market paper. Nov 17, 2024..
+Full text PDF: https://mcaceresb.github.io/assets/CaceresBravo_JMP.pdf
+
+2. Chennault, Carrie; Sbicca, Joshua, "Prison agriculture in the United
+States: Racial capitalism and the disciplinary matrix of exploitation and
+rehabilitation." Agriculture and Human Values. 2023, 40, 175 - 191. DOI:
+10.1007/s10460-022-10346-x
+Full text PDF: https://mcaceresb.github.io/assets/CaceresBravo_JMP.pdf
+
+3. Deckert, Antje, "Neo-colonial criminology 10 years on: The silence
+continues." International Journal for Crime, Justice and Social Democracy.
+2024, 13, (2), 20 - 32. DOI: 10.5204/ijcjsd.3076
+Full text PDF: https://mcaceresb.github.io/assets/CaceresBravo_JMP.pdf
+
+4. Dross, Megan M., "Education Through Incarceration: Access to Education
+Within Florida's Prisons." Dissertation, Florida State University, 2024.
+Full text PDF: https://mcaceresb.github.io/assets/CaceresBravo_JMP.pdf
+
+5. Emblom-Hooe, Allyson, "The Effect of Correctional and Rehabilitation
+Facilities on Property Values." Job market paper. Dec 8, 2024..
+Full text PDF: https://abemblom.github.io/AllysonEmblomHooe.github.io/assets/files/JMP_AEH.pdf
+
+6. Jackson, Lindsey, "An Analysis of Heat Exposure in North Carolina
+Correctional Facilities and Their Environmental Justice Implications."
+Thesis, University of North Carolina at Chapel Hill, 2024.
+Full text PDF: https://abemblom.github.io/AllysonEmblomHooe.github.io/assets/files/JMP_AEH.pdf
+
+7. Maruschak, Laura M.; Buehler, Emily D., "Census of State and Federal
+Adult Correctional Facilities, 2019." Statistical Tables. NCJ 301366,
+Washington, DC: Bureau of Justice Statistics, Nov 2021.
+Abstract: https://bjs.ojp.gov/library/publications/census-state-and-federal-adult-correctional-facilities-2019-statistical-tables
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/csfacf19st.pdf
+This report presents data collected from state, federal, and private adult
+correctional facilities on the characteristics of facilities by type,
+operator, size, physical security level, capacity, court orders, and
+programs. Data on the prison custody population is presented for
+demographic characteristics, sentence length, and custody security level by
+facility type and operator. Also, the report includes data on facility
+security staff by sex and prisoner-to-security-staff ratios.
+
+8. Morgan Bustamante, Brittany L.; May, Larissa; Fejerman, Laura; Martínez-
+Lopez, Beatriz, "A Bayesian multilevel analysis exploring population-level
+effects mediating the relationship between area-level poverty and
+community-acquired Methicillin-resistant Staphylococcus aureus (CA-MRSA)
+infection across California communities." Health and Place. Sep 2023, 83,.
+DOI: 10.1016/j.healthplace.2023.103094
+Abstract: https://bjs.ojp.gov/library/publications/census-state-and-federal-adult-correctional-facilities-2019-statistical-tables
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/csfacf19st.pdf
+This report presents data collected from state, federal, and private adult
+correctional facilities on the characteristics of facilities by type,
+operator, size, physical security level, capacity, court orders, and
+programs. Data on the prison custody population is presented for
+demographic characteristics, sentence length, and custody security level by
+facility type and operator. Also, the report includes data on facility
+security staff by sex and prisoner-to-security-staff ratios.
+
+9. Ovienmhada, Ufuoma, "Opportunities and Limitations of Earth Observation
+Technology for Environmental Justice Advocacy: A Case Study of Toxic
+Prisons in the U.S.." Dissertation, Massachusetts Institute of Technology,
+2024.
+Abstract: https://bjs.ojp.gov/library/publications/census-state-and-federal-adult-correctional-facilities-2019-statistical-tables
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/csfacf19st.pdf
+This report presents data collected from state, federal, and private adult
+correctional facilities on the characteristics of facilities by type,
+operator, size, physical security level, capacity, court orders, and
+programs. Data on the prison custody population is presented for
+demographic characteristics, sentence length, and custody security level by
+facility type and operator. Also, the report includes data on facility
+security staff by sex and prisoner-to-security-staff ratios.
+
+10. Ovienmhada, Ufuoma; Hines-Shanks, Mia; Krisch, Michael; Diongue, Ahmed
+T.; Minchew, Brent; Wood, Danielle R., "Spatiotemporal facility-level
+patterns of summer heat exposure, vulnerability, and risk in United States
+prison landscapes." GeoHealth. Sep 2024, 8, (9),. DOI: 10.1029/2024GH001108
+Abstract: https://bjs.ojp.gov/library/publications/census-state-and-federal-adult-correctional-facilities-2019-statistical-tables
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/csfacf19st.pdf
+This report presents data collected from state, federal, and private adult
+correctional facilities on the characteristics of facilities by type,
+operator, size, physical security level, capacity, court orders, and
+programs. Data on the prison custody population is presented for
+demographic characteristics, sentence length, and custody security level by
+facility type and operator. Also, the report includes data on facility
+security staff by sex and prisoner-to-security-staff ratios.
+
+11. Riley, Sarah; Kang-Brown, Jacob; Zhang, Jessica; Parsons, Jim;
+Williams, Sarah, "Locked Out of the Labor Market: A New State-Level Measure
+of Incarceration and Inequality." Brooklyn, NY: Vera Institute of Justice,
+Mar 2025.
+Abstract: https://bjs.ojp.gov/library/publications/census-state-and-federal-adult-correctional-facilities-2019-statistical-tables
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/csfacf19st.pdf
+This report presents data collected from state, federal, and private adult
+correctional facilities on the characteristics of facilities by type,
+operator, size, physical security level, capacity, court orders, and
+programs. Data on the prison custody population is presented for
+demographic characteristics, sentence length, and custody security level by
+facility type and operator. Also, the report includes data on facility
+security staff by sex and prisoner-to-security-staff ratios.
+
+12. Rude, Amanda T., "Locked in Toxicity: Uncovering the Relationship
+Between Lead Exposure and Violence Behind Bars." Dissertation, Sam Houston
+State University, 2024.
+Full text PDF: https://shsu-ir.tdl.org/server/api/core/bitstreams/d453b51b-611c-4aa0-b486-1dbd0ae2c24c/content
+
+13. Schuster, Steven; Denney, Andrew S.; Stickle, Ben, "Measuring prison
+education across states: Development of a national scoring system."
+Corrections. in press 2025,. DOI: 10.1080/23774657.2025.2533129
+Full text PDF: https://shsu-ir.tdl.org/server/api/core/bitstreams/d453b51b-611c-4aa0-b486-1dbd0ae2c24c/content
