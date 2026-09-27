@@ -13,6 +13,7 @@ run 1-read-agency-roster-lear.R
 run 1-read-agency-roster-cde.R
 run 1-read-agency-roster-hifld.R
 run 1-read-facility-list-jails-prisons.R
+run 1-read-facility-list-censuses.R
 run 1-read-manual-inputs.R
 run 1-read-facility-list-ice-detention.R
 run 1-read-reference-university-campuses.R

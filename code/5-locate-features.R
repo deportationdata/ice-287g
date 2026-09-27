@@ -78,7 +78,7 @@ stopifnot(
 
 # ---- the census counties and place around each feature ----
 counties_ref <- counties_reference(YEAR) |>
-  transmute(county_fips = geoid, county, geometry)
+  transmute(county_fips = geoid, county = county_name, geometry)
 # a census place, else the county subdivision around it; New England towns outrank same-named places
 places_ref <- bind_rows(
   places(cb = TRUE, year = YEAR, class = "sf") |>

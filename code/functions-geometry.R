@@ -22,7 +22,10 @@ counties_reference <- function(year = 2024, ct_year = 2021) {
     legacy_ct |> mutate(geometry_vintage = as.integer(ct_year))
   ) |>
     transmute(
+      # the matchers key on a title-cased name; what is published is the Census's own (DeKalb, McDonald),
+      # title-casing only an independent city's lowercase "city" (Manassas City)
       county = str_to_title(NAMELSAD),
+      county_name = str_replace(NAMELSAD, " city$", " City"),
       state_name = STATE_NAME,
       state_key = norm_state(STATE_NAME),
       county_key = norm_county(county),

@@ -19,11 +19,31 @@ repositories, built with the same approach.
   every era it dealt with ICE (`agency_id`, e.g.
   `NC-alamance-county-sheriff-office`, derived from its canonical name so a
   spelling change never forks it).
-- An **agreement** is one signed instrument under an agency: a support
-  model signed on a date (`agreement_id`, e.g.
-  `NC-alamance-county-sheriff-office#JEM#2007-01-10`). An agency can hold
-  several — a re-signing supersedes its predecessor, and a sheriff may run jail,
-  task-force and warrant-service agreements at once. `status` is `Active`
+- An **agreement** is one signed MOA: a new row whenever an agency and ICE
+  sign a new agreement (`agreement_id`, e.g.
+  `NC-alamance-county-sheriff-office#JEM#2007-01-10`, its support model and
+  signing date). An agency can hold several — a re-signing supersedes its
+  predecessor, and a sheriff may run jail, task-force and warrant-service
+  agreements at once, each its own MOA. `signed` is the date ICE records:
+  the date its sheet printed (`signed_source` `ICE sheet`), else, for a
+  signing ICE never listed, the date its MOA archive index gives, else ICE's
+  signature on the MOA (`MOA signature`). Two cases make the sheet's rows
+  differ from signings. ICE relabelled one listing over the years (`TASK
+  FORCE`, then `JAIL & TASK FORCE`, then `JAIL ENFORCEMENT` once the task
+  force model ended in 2012) but never printed two models for one agency
+  and date at once, so every model ICE printed for a signing is one
+  agreement, `Jail & Task Force` when its own listings carried that label.
+  And in October 2009 every agency re-signed ICE's new standard
+  MOA while the sheets kept printing the original date: each such renewal we
+  hold is its own agreement, and a listing published after it was signed
+  belongs to it (a listing belongs to the latest signing in force when it was
+  published). An **addendum** changes an agreement without replacing it and
+  is never its own row: `addendum` lists every addendum of the agreement
+  (the sheet's ADDENDUM link, or `#page=` in the MOA's own PDF where ICE
+  bound the addendum into it) and `addendum_signed` the date each took
+  effect, both joined with "; " in date order. ICE sometimes listed an
+  addendum as if it were the agreement ("… (Addendum)", dated the addendum);
+  those listings belong to the agreement the addendum amends. `status` is `Active`
   (on the current sheet), `Superseded` (a later agreement of the same
   agency and model took over, first listed in the next publication or within
   60 days) or `Removed`. ICE's lists never say which, so timing decides:
@@ -31,7 +51,9 @@ repositories, built with the same approach.
     listed is an **addition**, and nothing is superseded;
   - a same-model agreement first listed after the old one's last listing is a
     **renewal**, and the old one is `Superseded`, as is ICE's 2011–13 relabel
-    of one MOA under a new model (same signing date);
+    of one MOA under a new model (same signing date); a `Jail & Task Force`
+    MOA renews as either part, and a signing ICE never listed supersedes the
+    agreement whose listings it took;
   - a different-model agreement signed on another day and first listed after
     the old one's last listing is a **switch**: the old one is `Removed` with
     `removal_flag` `Model switch`;
@@ -54,7 +76,7 @@ a pull request shows what moved.
 | file | contents |
 |---|---|
 | **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's TYPE as printed is `ice_type`), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9` (a multi-county prosecutor's office lists one ORI per county of its district, in county order), its jurisdiction in census terms (`place`, `county` and `state` with their census codes, each filled only when that unit holds the jurisdiction: a municipality or campus has its place and county (a municipal department's jail or warrant-service agreement carries the department's own municipality, not the jail's town; a Connecticut town carries its legacy county, not the planning region its 2024 census code names, and a town that is also a city, like Danbury, is carried as the town, so its `place_type` reads Town), a port authority its county alone (its airports lie mostly outside any census place), a county agency its county alone (not its jail's town), a state agency its state alone (not the counties its offices or prisons sit in), a district or regional body the counties it spans, several separated by "; "; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit the jurisdiction is when it is one (`geoid`, `geoid_type`: the state, the county or the municipality; blank for a campus, airport, district or regional body), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` is that file's name (its snapshot folder under `sheets/` is part of `latest_sheet_url`, which serves it from GitHub). The file the slicer consumes. |
-| **`data/agencies.parquet`** | One row per agency across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to, MOA archive status and which sources attest it. |
+| **`data/agencies.parquet`** | One row per agency across every era (2002 → today): its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates with the source of each, models, the window the evidence speaks to and which sources attest it. MOAs are agreement-level: see `moa` in the agreements file. |
 | `data/agreements.{parquet,xlsx,dta,sav}`, `data/agencies.{xlsx,dta,sav}`, `data/agreements-shp.zip` | The two published files in other formats, written by `8-write-formats.R`: the agreements without geometry, and a shapefile zip with a point layer (facility agreements) and a polygon layer (jurisdiction agreements). Shapefile field names stop at 10 characters, so the zip's `fields.csv` maps each back to its full name. |
 | `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window; `county` is the corrected county the matchers use and `raw_county` the COUNTY cell as printed. |
 | `data/intermediate/identity-agreements.parquet`, `data/intermediate/sheet-publications.parquet`, `data/intermediate/sheet-publication-files.parquet`, `data/intermediate/sheet-row-agreements.parquet`, `data/intermediate/identity-agency-spellings.parquet` | The identity layer: every distinct sheet ever published, every row of every sheet resolved to an agreement, and every spelling ICE printed for each agency. |
@@ -65,6 +87,7 @@ a pull request shows what moved.
 | `data/qa/` | Committed QA: `qa-summary.csv` (every invariant and count, `pass`/`fail`/`info`), `qa-match-types.csv`, `qa-review-reasons.csv`, `qa-acquisition.csv`, `identity-candidates.csv` (spellings the rules would not merge), `identity-relabels.csv` and `signing-date-corrections.csv` (listings the rules did merge), `historical-summary.md` (per-source counts of agencies attested, listed, dated and unresolved). A `fail` row fails CI. |
 | `data/intermediate/agency-roster-leaic-2012.parquet`, `data/intermediate/agency-roster-lear-2016.parquet`, `data/intermediate/agency-roster-cde-2025.parquet`, `data/intermediate/agency-roster-hifld.parquet` | The four agency rosters, normalized to a shared matching schema (LEAIC 2012, LEAR 2016, FBI Crime Data Explorer 2025, HIFLD police stations). |
 | `data/intermediate/facility-list-ice-detention.parquet`, `data/intermediate/facility-list-jails-prisons.parquet` | Detention-facility candidate tables (ICE facilities from ice-detention-facilities; HIFLD prisons + Census of Jails). |
+| `data/intermediate/facility-list-censuses.parquet` | Every facility the BJS Census of Jails (1999, 2006, 2013, 2019) and Census of State and Federal Adult Correctional Facilities (2000, 2005, 2012) lists, one row per facility per round, with its street-level geocode: a facility a round lists was open that year. |
 | `data/intermediate/match-*.parquet` (state, county, municipal, pa-constable, university, facility, non-facility) | Per-layer match results, EPSG:4326. `match-municipal-names.parquet` is the municipality of each municipal department whose agreement is a jail point, matched by name for its place and county, with no geometry. |
 | `data/intermediate/match-all-features.parquet` | One row per agreement × matched feature (a DOC agreement spans its state's prisons; a regional department its member municipalities). Match provenance (`match_layer`, `match_name`, `match_type`, `match_quality`), FIPS codes, ORI, per-roster annotations, every review flag and the composed `review_reason`, geometry. The layer behind `agreement-level-sf`; the PR diff workflow compares it against `main`. |
 | `data/intermediate/cache-cde-api.parquet` | Committed raw cache of the CDE API download. Delete it to refresh from the API (needs `CDE_API_KEY`). |
@@ -172,7 +195,16 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   from FGDL's 2016 Florida aviation facility boundaries; an authority with no
   airport list keeps a point at its airport), and a constable district stays
   unplaced: no statewide layer of justice precincts or justice court districts
-  exists.
+  exists. Only an active agreement is matched to jails and prisons, and only to
+  ones open now; a jail-model agreement that is not active keeps its row with
+  an empty point (`match_type` `not_active`). A facility is closed when HIFLD
+  marks it Closed (its own record, or HIFLD's point at the same site) or a
+  census round leaves it out while listing the jurisdiction that ran it
+  elsewhere (more than 1 km away, or, when it is the jurisdiction's one jail
+  that round, nearer under another house number); a later HIFLD "Open" does
+  not outweigh that round. A closed facility leaves the
+  agreement even when it was its only match, and when two sources name the same
+  facility, the best-ranked one that is still open places it.
 - **`4-match-non-facility.R`** stacks the non-facility layers and asserts
   every placed census-unit feature carries a geoid.
 - **`5-match-agency-identifiers.R`** matches each agreement against the four rosters
@@ -223,6 +255,29 @@ QA diff.
   spelling that is the `same` agency as another, or two near-identical names
   that are `distinct`. Rows only add merges or silence a candidate; the
   pipeline never waits on them.
+- `inputs/unlisted-signings.csv` — the signings ICE never listed: 60 MOAs we
+  hold with no signing date on any ICE sheet, nearly all the October 2009
+  re-signings of ICE's standard MOA. `signed` is ICE's archive-index date
+  where it has one, else ICE's signature on the MOA (`signed_source`). A
+  listing published after such a signing belongs to it. What each held MOA
+  says on its signature page is recorded in
+  `inputs/other_sources/moa-signatures.csv`, a review record the pipeline does
+  not read.
+- `inputs/moa-addenda.csv` — every addendum we hold, keyed to the agreement
+  it amends (`state`, `agency`, `support_type`, `signed` as published). An
+  addendum is effective when both parties have signed, so `addendum_signed`
+  is the later of the two signature dates (`addendum_signed_source`
+  `Signatures`), or the date ICE printed when it listed the addendum as an
+  agreement (`ICE sheet`). The build stops if an addendum is dated before
+  its agreement or on or after the next signing of the same agency and
+  model. `moa_page` marks an addendum ICE both linked and bound into the
+  MOA's PDF, so the page is not counted twice. An addendum not in this file
+  is still published, as `Undated`: one the sheet links, or a page of a
+  held MOA PDF whose text reads "Addendum to Modify/Extend" and names the
+  agency; scanned pages are read with tesseract, in memory only (the held
+  PDFs are never altered). Each is listed in
+  `data/qa/undated-addenda.csv`, and the update PR gets a comment asking
+  for its dates.
 - `inputs/manual-agency-ori.csv` — ORIs for agencies the rosters miss. A row
   without a county applies to every agreement of that agency statewide.
 - `inputs/manual-facility-points.csv` / `inputs/manual-facility-review.csv` /
@@ -230,6 +285,18 @@ QA diff.
   corrections (include/exclude), and layer overrides for agreements the
   automated matchers get wrong. Each row carries a `reason`/`note` recording
   the evidence.
+- `inputs/manual-doc-facilities.csv` — a state department of corrections' own
+  list of the facilities it runs, read from its website on `listed_on`, with the
+  address and source of each; contract facilities such as halfway houses are left
+  out. It decides the facilities of every agreement the department has running on
+  that day. Each is placed on HIFLD's prison grounds: the record its `hifld_id`
+  pins when HIFLD names it differently, else HIFLD's prison of the same name
+  within 10 km, else the nearest within 1.5 km of its address when HIFLD gives
+  the same house number (a neighbouring facility at its own address keeps it);
+  failing all three, at its address or at the published `latitude`/`longitude`
+  the row gives. A department with no list has its active agreement matched to
+  HIFLD's state prisons, leaving out youth-agency facilities. Twenty-one
+  departments have lists.
 - `inputs/manual-regional-jail-counties.csv` — the member counties a regional
   jail authority serves, one per row with its source. The agreement's county
   columns list them; its geometry stays the jails.
@@ -285,8 +352,9 @@ QA diff.
   printed. `inputs/renewal-date-fixes.csv` re-dates an agreement ICE
   renewed without changing its signing date, from the first list that links the
   new MOA, so the old agreement ends where the renewal begins.
-  `inputs/moa-link-fixes.csv` supplies an agency's own MOA where the sheet links
-  another agency's (`moa_linked`), used only while it links that file; an MOA
+  `inputs/moa-link-fixes.csv` supplies an agreement's own MOA where the sheet links
+  another agreement's (`moa_linked`) or none (blank `moa_linked`, for an older
+  signing whose MOA ICE never linked), used only while it links that; an MOA
   ICE has posted but not linked needs no row, since the build finds it among the
   held PDFs by name.
   An agency-name fix is an error ICE printed on specific agreements (a county's
@@ -312,7 +380,8 @@ regenerable.
   and `needs_review` is simply whether it is set. A pending MOA link or an
   addendum is reported (`moa_pending`, `has_addendum`) but is not a reason for
   review. `match_quality` summarizes the same evidence as
-  exact / exact_flagged / fuzzy / weak / manual / unmatched.
+  exact / exact_flagged / fuzzy / weak / manual / unmatched, or not_active for
+  a jail-model agreement left unplaced because it is not active.
 - Some agreements have no geometry yet. Constable districts (Texas justice
   precincts, Mississippi justice court districts) are drawn by each county with
   no published statewide layer, so those agreements stay unmatched rather than

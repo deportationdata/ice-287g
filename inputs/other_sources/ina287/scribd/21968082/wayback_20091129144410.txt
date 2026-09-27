@@ -1,0 +1,458 @@
+
+
+ICE Law Enforcement Service Center (LESC) Training Manual
+
+ICE Law Enforcement Service Center (LESC) Training Manual
+J Cox
+For more information (and other ICE training materials), please see: www.scribd.com/doc/22789007
+11
+57
+10/31/2009
+
+Government Docs
+
+http://s7.scribdassets.com/images/filetypes/pdf_16x16.gif?1259029991
+
+-->
+
+Log In or Sign Up
+
+Log In
+
+If you already have an account, log in.
+
+Username or Email
+
+Password
+
+Trouble logging in?
+
+Other Login Options
+
+Login with Facebook Connect!
+
+Log In with OpenID
+
+Log In with OpenID
+
+Sign up for a Free Account
+
+It's quick and easy.
+
+Why Sign up?
+
+Publish documents quickly and easily
+
+Share your documents with others
+
+Manage and update your documents
+
+Email Address (Required)
+
+Create Username
+
+Create Password (Required)
+
+We respect your privacy and won’t send any unnecessary emails. Read our privacy policy .
+
+Login Successful
+
+Now bringing you back...
+
+Signup Successful
+
+Now bringing you back...
+
+« Back to Login
+
+Reset your password
+
+Please enter your email address below to reset your password. We will send you an email with instructions on how to continue.
+
+Email address:
+
+You need to provide a login for this account as well.
+
+Login:
+
+Sign up for a Free Account
+
+It's quick and easy.
+
+Why Sign up?
+
+Publish documents quickly and easily
+
+Share your documents with others
+
+Manage and update your documents
+
+Email Address (Required)
+
+Create Username
+
+Create Password (Required)
+
+Other Login Options
+
+Login with Facebook Connect!
+
+We respect your privacy and won’t send any unnecessary emails. Read our privacy policy .
+
+Home
+
+Explore
+
+Community
+
+Help
+
+Sign Up
+
+Log In
+
+by J Cox
+
+Related Documents
+
+Research Proposal
+
+636 reads
+
+Gene Therapy
+
+148 reads
+
+Gene Expression Data Analysis
+
+17 reads
+
+Significance Analysis of Micro Arrays Applied to the Ionizing Radiation Response
+
+49 reads
+
+MAPPFinder using GO and GenMAPP to study gene expression
+
+311 reads
+
+Analysis and visualization of large-scale gene expression microarray compendia
+
+49 reads
+
+Biology 4-18 SecAss 12-5
+
+148 reads
+
+Design and Analysis of DNA Micro Array Investigations
+
+79 reads
+
+Microarray Bioinformatics -Sketel
+
+299 reads
+
+Biology 3-8 SecAss 11-5
+
+121 reads
+
+An Evaluation Framework for Statistical Tests on Micro Array Data
+
+12 reads
+
+Statistical Tests for Differential Expression in cDNA Micro Array Experiments
+
+93 reads
+
+What Your Genes Reveal About You
+
+0 reads
+
+What Your Genes Reveal About You
+
+102 reads
+
+The Transcriptional Innate Immune Response to Flg22.
+
+179 reads
+
+FatiGO+ a Functional Profiling Tool for Genomic Data
+
+65 reads
+
+Developmental Genetics of Drosophila
+
+1083 reads
+
+Wit_Statistics for Micro Arrays
+
+131 reads
+
+A Systems Biology Approach for Pathway Level Analysis
+
+12 reads
+
+Related Documents
+
+Stats
+
+Reads
+
+Value
+
+This
+Doc
+
+Scribd
+Average
+
+Pages:
+
+11
+
+43
+
+Words:
+
+1663
+
+13640
+
+Characters:
+
+11634
+
+81678
+
+Lines:
+
+208
+
+623
+
+Letters per word:
+
+7.0
+
+5.99
+
+Words per line:
+
+8.0
+
+21.89
+
+Words per page:
+
+151.18
+
+317.21
+
+Add to your reading list
+
+Flag this document
+
+Flag This Document
+
+Please select the reason(s) for reporting this document
+
+Spam or junk
+
+Porn adult content
+
+Hateful or offensive
+
+Cancel
+
+If you are the copyright owner of this document and want to report it, please follow these directions to submit a copyright infringement notice.
+
+Document Information
+
+57 Reads | 0 Comments
+
+Description
+
+For more information (and other ICE training materials), please see: www.scribd.com/doc/22789007
+
+11 Pages
+
+Date Added
+
+10/31/2009
+
+Category
+
+Government Docs
+
+Tags
+
+ice , immigration , FOIA , dhs , immigration and customs enforcement , department of homeland security , 287g , 287(g) , immigration enforcement
+
+Groups
+
+Copyright
+
+Public Domain
+
+More info »
+
+Login or Signup to Scribble a Comment
+
+or use
+
+Facebook Connect
+
+﻿u.s. Immigration and Customs
+"
+Enforcement
+Law Enforcement Support Center Training Manual
+{) r- U~ ? ~ I \ -e + ; c r» ~. O"Z. - 1; 72. ,,-o-z.~
+So~ Od~ S e; e, '" '.,,,) C' h..;..~ f
+INTRODUCTION - ~ ~ ••.•• ~~ 2·· .
+THE LA W ENFORCEMENT SUPPORT CENTER :: .. : · 1
+TECHNICAL OPERA. 710NS BRANCH .............................................................••.•.•.... ~ •• , • .;. 3
+INVESTIGAtIVE SERJlICES BRANCH ::.: 4
+IMMIGRATION ALIEN QUERY (lAQJ _ 4
+FORMAT FOR LESC INQUlRlES 4
+REQUIRED FIELD SPECIFICATIONS FOR THE IAQ 5
+FOLLOWED BY ANY OF THE FOLLOWING OPTIONAL FlELDS: _ 6
+LESe MESSAGE ACKNOWLEDGEMENT : 7
+lMMIGRAnON AllEN RESPONSE (IAR) _ 8
+LESC SEARCH PROTOCOL ~ 8
+CENTRAL INDEX SYSTEM (CIS) _ 8
+COMPUTER LINKED APPLICATION INFORMATION MANAGEMENT SYSTEM (CLAIMS) ....... 9
+DEPqRT ABLE ALIEN CONTROL SYSTEM (DACS) 9
+STUDENT AND SCHOOLS SYSTEM, (STSC) and STUDENT AND EXCHANGE VISITOR
+INFORMATION SYSTEM (SEf/IS) 9
+RE;.DESIGNED NATURALIZATION APPLICA TION CASEWORK SYSTEM (RNA CS) 9
+.~~~'h
+l,lEFUGEE. ASYLUM, AND PAROLE SYSTEM (RAPS) 10
+.,
+/1
+" TREASURY ENFORCEMENTCOMMUNICA TIONS SYSTEM (TECS) _ 10
+OPERATION PREDATOR : 10
+INTRODUCTION
+The Law Enforcement Support Center (LESC or Center) was developed in response to a Congressional anti-crime initiative to respond to inquiries from federal, state, and local criminal justice agencies concerning aliens under investigation or arrest for commission of an "aggravated felony" or other criminal offenses. The Congressional mandate was originally specified in the Anti-Drug Abuse Act of 1988 and has been reiterated and modified in subsequent pieces of legislation. The Immigration and Netionallty Act was
+amended as follows: .
+"(A) The Attorney General shall devise and implement a system -
+(i) To make available, daily (on a 24 hour basis), to give federal, state and local authorities the investigative resources of the Service to determine whether individuals arrested by such authorities for aggravated felonies are etiens; and
+(ii) To designate and train officers and employees of the Service within each district to serve as a liaison to federal, state and local law enforcement and correctional agencies and courts with respect to the arrest, conviction, and release of any alien charged with an aggravated felony. "1
+On March 1,2003, the Immigration and Naturalization Service was restructured into the Bureaus of Immigration and Customs Enforcement (ICE), Customs and Border Protection (CSP). and Citizenship and Immigration Services (CIS) within the Department of Homeland Security (DHS). The LESC is an ICE Headquarters Investigations component.
+Special Agents from ICE respond to a variety of criminal and administrative enforcement matters within the interior of the United States. The U.S. Border Patrol, now one of the uniformed enforcement branches of U.S. Customs and Border Protection (CBP), enforces the immigration laws along the borders of the United States.
+)\THE LAW ENFORCEMENT SUPPORT CENTER
+, The LESC, located in Williston, Vermont, serves as a national enforcement operations center responding to inquiries from federal, state, and local criminal justice agencies concerning aliens under investigation or arrested for commission of an "aggravated felony" or other criminal offense. The Center operates 24 hours a day. seven days a week assisting law enforcement agencies with information gathered from each
+1 Aggravated felonies are defined as crimes involving murder, rape, child pornography, narcotics trafficking, firearms trafficking, certain felonies such as theft and burglary and other qualified misdemeanors.
+Revision 04/05
+database containing immigration .inforrnatlon, th'e National, Crime Information 'Center'-' (NCIC) and the Interstate Identification Index (III). Direct access to' the LESe is available through the National Law Enforcement Telecommunication System' (NLETS) message key "IAQ".
+Due to the sensitive nature of the information to be provided by the LESC, only agencies authorized to request criminal record information over NLETS will be authorized to access the LESC.
+TECHNICAL OPERATIONS BRANCH
+The LESe serves as the central point of contact for federal, state and local criminal justice agencies querying the identity and immigration status of aliens. To perform this function, the LESC:
+• Receives queries via NLETS from Law Enforcement Agencies (LEAs) relating to foreign nationals who have committed or are under investigation for criminal offenses
+• Searches immigration indices to locate corresponding records relating to the subject in the LEA's inquiry
+• Responds via NLETS to the LEAs, providing information from immigration indices, or advising that no matching records were found
+• Notifies appropriate ICE field offices that LEAs have arrested a suspected foreign national
+• Maintains a database of all LEA inquiries and the LESC responses
+In addition to providing real time assistance to law enforcement aqencies that are investigating, or have arrested, foreign nationals involved in criminal activity, the LESC also performs the following investigative functions:
+• National Crime Information Center (NCIC) - The LESC administers and
+controls ICE participation in this nati.onwide law enforcement consortium and criminal database.
+• Special Response Unit- The LESC is the central point of contact for the Federal Bureau of Investigation National Instant Criminal Bqckground Check System (NICS) program. Every foreign-born firearm applicant is screened by the Center for immigration status before being authorized to purchase or possess a weapon. The SRU also handles queries and field responses relating to national security employment issues (i.e. employment involving the handling of Bio-Foxlns). Criminal foreign nationals discovered through
+Revision 04/05
+these checks receive additional screening by LESC Special Agents and are·
+transmitted to ICE field offices as investigative leads. .
+INVESTIGATIVE SERVICES BRANCH
+The LESC Investigative Services Branch (ISB) has been designed to provide the same type of timely and accurate immigration data to internal ICE investigations and field operations. The ISB is divided into special units dedicated to specific enforcement missions:
+• Special Case Unit - The LESC provides support to a host of on going multiagency investigative initiatives. Working in concert with ICE field units, task forces and other local, state and federal investigators the Center gathers, identifies, analyzes and responds to thousands of off-line query requests.
+• Communications Center - The Comm Center serves ICE Special Agents and Deportation Officers nationwide with after-hours telephonic enforcement support via our digitally recorded duty lines confirmed by Personal Identification Numbers.
+IMMIGRATION ALIEN QUERY (lAQ) . FORMAT FOR LESC INQUIRIES
+All electronic Immigration Alien Queries (IAQ) sent via NLETS must contain the required fields in order to process the inquiry. Any optional information supplied in the request will increase the probability of finding a positive record and enable a more informative response to be returned. Response times will vary depending upon the ~eturn of individual state criminal histories and the complexity of the query.
+Revision 04/05
+REQLlIRED FIELD SPECIFICA"rIONS FOR THE I~q
+Revision 04105
+Revision 04/05
+Revision 04105
+In addition to the criminal history searches, additional databases of information can also be queried. A brief description of each may be found below:
+CENTRAL INDEX SYSTEM (CIS)
+The Central Index contains data on lawful permanent residents, naturalized citizens, '\iviolators of immigration laws, aliens with Employment Authorization Document (EAO) ;.\ information, and others of which the former INS has opened files or in whom there is a ;' special interest.
+CIS provides several major capabilities, including searching the alien database using multiple criteria and displaying summary level data on the alien. The major search keys are Alien Registration Number (A-Number), name and date of birth.
+Revision 04/05
+COMPUTER LINKED APPLICATION INFORMATION MANAGEMENT SYSTEM (CLAIMS)
+CLAIMS is an application processing system which provides information concerning the receipt, adjudication, and notification processes for applicants and petitioners of immigration benefits, such as Permanent Residency, Employment' Authorization Documents, etc. The current CLAIMS implementation combines several systems that support these processing requirements.
+DEPORTABLE ALIEN CONTROL SYSTEM (DACS)
+DACS provides information on the status and disposition of deportation cases. The DACS system captures deportable alien data, tracks aliens who are arrested, detained or formally removed from the country, and produces deportation forms and reports.
+STUDENT AND SCHOOLS SYSTEM (STSC) and STl,JDENT AND EXCHANGE VISITOR INFORMATION SYSTEM (SEVIS)
+STSC is the original system used to identify, locate, and determine the status or benefits eligibility of nonimmigrant students and their dependents.
+ssvrs, a new Internet based computer system, enables schools and program sponsors to transmit electronic information and event notifications to DHS and the Department of State throughout a foreign student's or exchange visitor's stay in the United States.
+RE·DESIGNED NATORALIZATION APP.LICATLON CASEWORK SYSTEM (RNACS)
+,~NACS is a casework management system that tracks the naturalization process of .altens seeking United States Citizenship. The data is captured from forms and 'appucattonssubmltted by aliens. The data includes general biographical background 'information, addresses, processing dates, interview.dates and the disposition or current
+status of the application for U.S. Citizenship.
+Revision 04/05
+REFUGEE, ASYLUM, AND PAROLE SYSTEM (RAPS)
+RAPS is a comprehensive case management system that tracks the R~fugee, Asylum, and Parole processes of aliens in the United States. The information contained in RAPS is obtained from forms, applications, and interviews with the alien.··' The case status is tracked throughout the cycle, showing the status of the alien at time of entry, and the completion of the process. The data includes general biographical background information, addresses, processing dates, interview dates, and infonnation regarding
+the outcome of hearings. '
+TREASURY ENFORCEMENT COMMUNICATIONS SYSTEM (TEeS)
+This system contains the Interagency Border Inspection System (IBIS) which is used to query applicants for admission to the United States. IBIS also contains information collected from a wide variety of federal law.enforcement agencies such as the former INS National Automated Immigration lookout System (NAllS) and the Department of State lookout records.
+The standard search protocol may be modified to suit a particular investigative project. The Special Case Unit also has several commercial databases available to further expand the investigative packet of subject information.
+OPERATION PREDATOR
+The lESC is a crltlcal-link in Operation Predator, the ICE investigative program aimed at arrestinq and prosecuting child sex predators, including those who can be deported from the country. Effective prosecution requires coordination between local and federal t~w enforcement that the lESC facilitates. The DHS nation-wide toll free telephone . . humber (1-866-DHS-2ICE) for the public to report information about child sex offenders and others who put children at risk is answered at the LESC.
+10
+Revision 04f05
+
+Close This
+
+Scribd
+
+About
+
+Press
+
+Scribd Store
+
+Jobs
+
+Contact
+
+Blog
+
+Legal
+
+Terms - General
+
+Terms - API
+
+Terms - Privacy
+
+Copyright
+
+Help & Tools
+
+Getting started
+
+Community Guidelines
+
+Support
+
+FAQ
+
+iPaper
+
+Desktop uploader
+
+Partners
+
+Partners / Publishers
+
+Branded Reader
+
+Developers / API
+
+Follow Us
+
+On Twitter
+
+On Facebook
+
+Scribd Newsletter
+
+Enter your email address:
+
+or
+

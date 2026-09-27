@@ -10,7 +10,6 @@ Arkansas,Pulaski County,Arkansas Division of Law Enforcement Standards and Train
 Arkansas,,Arkansas National Guard,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
 Arkansas,Columbia County,Taylor Police Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
 Colorado,,Colorado Department of Public Safety,COCSP0000,leaic/lear/crime:COLORADO STATE PATROL,"The MOA's parties are the Department of Public Safety, Colorado State Patrol (r_287gcoloradodeptofpublicsafety101509.pdf; the earlier file is coloradodepartmentofpublicsafetycoloradostatepatrol.pdf), so the State Patrol's statewide ORI (audit 2026-09-14)"
-California,San Bernardino County,San Bernardino County Sheriff's Office Addendum,CA0360000,leaic:SAN BERNARDINO COUNTY SHERIFF'S OFFICE,"ICE's agency cell carries the word Addendum, which names the document, not the agency (audit 2026-09-13)"
 Commonwealth of the Northern Mariana Islands,,CNMI Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
 Commonwealth of the Northern Mariana Islands,,CNMI Department of Public Safety,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
 Florida,,Boca Raton Police Services Department,FL0500200,leaic:BOCA RATON POLICE DEPARTMENT,"same agency, styled Police Services Department"
@@ -64,7 +63,6 @@ Louisiana,,Louisiana Department of Public Safety & Corrections,,none,no ORI foun
 Louisiana,,Louisiana Department of Wildlife & Fisheries,LA0170800,leaic:LOUSIANA WILDLIFE AND FISHERIES DEPT - ENFORCEMENT,"enforcement division, Baton Rouge"
 Louisiana,,Louisiana Military Department,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
 Louisiana,Allen Parish,Ward 5 Marshal's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
-Maryland,Frederick County,Frederick County Sheriff's Office (Addendum),MD0110000,leaic:FREDERICK COUNTY SHERIFF'S OFFICE,"ICE's agency cell carries (Addendum), which names the document, not the agency (audit 2026-09-13)"
 Massachusetts,,Massachusetts Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
 Mississippi,,Mississippi Attorney General's Office,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
 Mississippi,Hinds County,Mississippi Department of Corrections,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
@@ -76,7 +74,6 @@ Missouri,Franklin County,Oak Grove Village Police Department,MO0361000,leaic:OAK
 Missouri,St. Louis County,North County Police Cooperative,,none,"LEAR carries North County Police Cooperative, St. Louis County, MO0957700, and the pipeline matches it; this row predates the LEAR roster and decides nothing (audit 2026-09-13)"
 Montana,,Montana Department of Justice,MTMHP0000,leaic/lear/crime:MONTANA HIGHWAY PATROL,"The MOA is filed as MontanaDOJ_DHP_TFM_MOA_02.20.2025.pdf, DHP being the department's Division of Highway Patrol, so the Highway Patrol's ORI rather than the Division of Criminal Investigation's MT0251100; the PDF is a scan with no readable text (reviewed 2026-09-13)"
 Nebraska,Lincoln County,Nebraska Department of Correctional Services,,none,no ORI found in LEAIC (ICPSR 35158) or FBI crime data; reviewed 2026-07-10
-New Jersey,Monmouth County,Monmouth County Sheriff's Office (Addendum),NJ0130000,leaic:MONMOUTH COUNTY SHERIFF'S OFFICE,"ICE's agency cell carries (Addendum), which names the document, not the agency (audit 2026-09-13)"
 New York,Nassau County,Nassau County Sheriff's Office,NY0299000,leaic:NASSAU CO SHERIFF'S DEPARTMENT MINEOLA,sheriff's HQ row; the plain-name LEAIC row carries no ORI. Inactive: LEAR matches this agency on the exact tier with the same ORI (audit 2026-09-13)
 Oklahoma,Kay County,Office of The District Attorney - Eighth District,OK036015A; OK052015A,"osbi-da:DA Office, Newkirk; DA Office, Perry","OSBI ORI List - District Attorney (oklahoma.gov/content/dam/ok/en/osbi/documents/afis-docs/OSBI_ORI_List_-_District_Attorney.pdf) files a DA ORI per county; one ORI per county of the district in county order (Kay, Noble; the office sits in Newkirk, Kay); added 2026-09-26"
 Oklahoma,,Oklahoma Bureau of Investigation,OKOBI0000,crime:State Bureau of Investigation,"CDE's agency-level row for the Oklahoma State Bureau of Investigation; LEAIC's OK0BI0100-0300 are numbered sub-ORIs (audit 2026-09-14)"
@@ -213,3 +210,4 @@ Virginia,,Prince William-Manassas Regional Adult Detention Center,,none,"county 
 Virginia,,Prince William-Manassas Regional Jail,,none,"county and regional jails are not on the UCR rosters (LEAIC, LEAR, CDE); NCIC gives them corrections-type ORIs (...5C) that no public list carries; reviewed 2026-09-26"
 Virginia,,Virginia DOC Law Enforcement Services,,none,"not on the UCR rosters (LEAIC, LEAR, CDE) and no state ORI list found; reviewed 2026-09-26"
 Virginia,,Virginia Department of Corrections,,none,"not on the UCR rosters (LEAIC, LEAR, CDE) and the NCIC ORI file is not public; reviewed 2026-09-26"
+Minnesota,,MN Department of Public Safety,MNDPS0000,leaic:MINNESOTA DEPARTMENT OF PUBLIC SAFETY ST PAUL,"the 2008-09 sheets' abbreviation, whose later agreements carry MNDPS0000; LEAIC also names the State Patrol series ORI MNMHP9000 ""MN DEPARTMENT OF PUBLIC SAFETY"", which is not the whole department (reviewed 2026-09-27)"

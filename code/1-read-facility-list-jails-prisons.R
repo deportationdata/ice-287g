@@ -31,6 +31,10 @@ stopifnot(
       "state",
       "zip",
       "type",
+      "status",
+      "source_date",
+      "validated_date",
+      "date",
       "latitude",
       "longitude"
     ) %in%
@@ -137,6 +141,9 @@ jails_prisons_tbl <- bind_rows(
       facility_zip = zip,
       county_fips = NA_character_,
       type,
+      # HIFLD's status as of the day it last checked the record: Open, Closed or not available
+      facility_status = str_to_sentence(na_if(status, "NOT AVAILABLE")),
+      facility_status_date = coalesce(validated_date, source_date, as.Date(date)),
       latitude,
       longitude,
       facility_key = norm_key(facility_name)
@@ -202,6 +209,8 @@ jails_prisons_tbl <- jails_prisons_tbl |>
     county_fips,
     type,
     facility_operator_name,
+    facility_status,
+    facility_status_date,
     latitude,
     longitude,
     state_key,

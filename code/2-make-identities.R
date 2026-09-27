@@ -286,6 +286,58 @@ obs_ids <- obs_ids |>
          component = coalesce(to_component, component)) |>
   select(-to_signed, -to_component)
 
+# --- one agreement per signed MOA ---------------------------------------------------------
+# a signing is dated by ICE: the date its sheet printed, else its archive index, else its signature on the MOA
+obs_ids <- obs_ids |> mutate(agency_id = paste0(coalesce(state_abbr, "XX"), "-", slug(chosen_agency)))
+
+# signings ICE never listed (the October 2009 re-signings of the standard MOA and a few others), read off the MOAs we
+# hold; inputs/other_sources/moa-signatures.csv records every MOA read
+unlisted <- read_csv("inputs/unlisted-signings.csv", col_types = "ccDcc") |>
+  left_join(xwalk |> select(state = state_full, state_abbr), by = "state") |>
+  transmute(agency_id = agency_id_of(state, agency, state_abbr, aliases), unlisted_signed = signed,
+            unlisted_source = signed_source)
+stopifnot("every signing in inputs/unlisted-signings.csv names an agency ICE listed" =
+            all(unlisted$agency_id %in% obs_ids$agency_id))
+
+# a listing belongs to the latest signing in force when it was published: one ICE printed or a later one it never listed
+pub_on <- pubs |> select(pub_seq, published_on)
+renewed <- obs_ids |>
+  inner_join(pub_on, by = "pub_seq") |>
+  inner_join(unlisted, by = "agency_id", relationship = "many-to-many") |>
+  filter(unlisted_signed > signed, unlisted_signed <= published_on) |>
+  slice_max(unlisted_signed, n = 1, by = c(publication_id, sheet_row), with_ties = FALSE) |>
+  select(publication_id, sheet_row, unlisted_signed, unlisted_source)
+# the signing a renewal took listings from, and every ICE-printed signing left with none
+printed_signings <- obs_ids |>
+  arrange(pub_seq, sheet_row) |>
+  summarise(state = first(state), state_abbr = first(state_abbr), chosen_agency = first(chosen_agency),
+            raw_state_last = last(raw_state), raw_agency_last = last(raw_agency), raw_support_last = last(raw_support),
+            raw_type_last = last(raw_type), raw_county_last = last(raw_county), raw_moa_last = last(raw_moa),
+            support_key = if_else(any(support_key == "JAIL & TASK FORCE"), "JAIL & TASK FORCE", first(support_key)),
+            component = min(component), .by = c(state_key, agency_id, signed))
+obs_ids <- obs_ids |>
+  left_join(renewed, by = c("publication_id", "sheet_row")) |>
+  mutate(renewed_from = if_else(is.na(unlisted_signed), NA_Date_, signed),
+         signed = coalesce(unlisted_signed, signed),
+         signed_source = coalesce(unlisted_source, "ICE sheet"))
+# one signing, one MOA: ICE relabelled a listing over the years (TASK FORCE, then JAIL & TASK FORCE, then JAIL
+# ENFORCEMENT once the task force model ended in 2012) but never printed two models for one agency and date at once.
+# A signing is JAIL & TASK FORCE when its own listings printed that label, or a renewal took listings of several models
+obs_ids <- obs_ids |>
+  mutate(one_moa = any(support_key == "JAIL & TASK FORCE") | (any(!is.na(renewed_from)) & n_distinct(support_key) > 1),
+         jtf_fold = one_moa & n_distinct(support_key) > 1,
+         support_key = if_else(one_moa, "JAIL & TASK FORCE", support_key),
+         component = min(component), .by = c(agency_id, signed))
+jtf_days <- obs_ids |> filter(jtf_fold) |> distinct(agency_id, signed)
+obs_ids <- obs_ids |> select(-one_moa, -jtf_fold)
+renewals <- obs_ids |>
+  filter(!is.na(renewed_from)) |>
+  distinct(agency_id, from_signed = renewed_from, to_signed = signed, to_support = support_key)
+superseded_unlisted <- printed_signings |>
+  anti_join(obs_ids |> distinct(agency_id, signed), by = c("agency_id", "signed"))
+message(sprintf("signings: %d signings ICE printed under several models folded to one JAIL & TASK FORCE MOA; %d signings ICE never listed, %d listings moved to them; %d printed signings left with no listing",
+                nrow(jtf_days), nrow(unlisted), nrow(renewed), nrow(superseded_unlisted)))
+
 identities <- obs_ids |>
   arrange(pub_seq, sheet_row) |>
   group_by(state_key, support_key, signed, component) |>
@@ -295,7 +347,9 @@ identities <- obs_ids |>
     # before canonical_agency is overwritten: a folded date correction adds a variant, not a spelling
     n_spellings = n_distinct(canonical_agency),
     canonical_agency = first(chosen_agency),
+    signed_source = first(signed_source),
     identity_resolution = case_when(
+      any(signed_source != "ICE sheet") ~ "unlisted_signing",
       any(aliased) ~ "alias",
       any(variant_id %in% merged_t3b) ~ "rename",
       any(variant_id %in% merged_t3c) ~ "relabel",
@@ -327,14 +381,34 @@ identities <- obs_ids |>
   # the first publication without it; none while the current sheet lists it
   left_join(pub_dates |> transmute(last_seq = pub_seq - 1L, removed_by = published_on,
                                    removed_by_source = published_on_source), by = "last_seq")
+# an ICE-printed signing whose every listing went to a later signing ICE never listed
+identities <- bind_rows(
+  identities,
+  superseded_unlisted |>
+    transmute(state_key, support_key, signed, component, state, state_abbr, n_spellings = 1L,
+              canonical_agency = chosen_agency, signed_source = "ICE sheet", identity_resolution = "exact", n_pub = 0L,
+              raw_state_last, raw_agency_last, raw_support_last, raw_type_last, raw_county_last, raw_moa_last,
+              agency_id, agreement_id = paste0(agency_id, "#", support_abbr(support_key), "#", signed))
+)
 
-# lineage: same model or same-date relabel, next list or within 60 days, no same-model straddler
+# lineage: a signing ICE never listed succeeds the signings whose listings it took
+renewal_edges <- renewals |>
+  inner_join(identities |> select(agency_id, from_signed = signed, agreement_id),
+             by = c("agency_id", "from_signed"), relationship = "many-to-many") |>
+  transmute(agreement_id, succeeded_by = paste0(agency_id, "#", support_abbr(to_support), "#", to_signed)) |>
+  filter(agreement_id != succeeded_by) |>
+  slice_min(succeeded_by, n = 1, by = agreement_id, with_ties = FALSE)
+# otherwise same model (a JAIL & TASK FORCE MOA continues as either part) or same-date relabel, next list or
+# within 60 days, no same-model straddler
 windows <- identities |>
+  filter(n_pub > 0) |>
   select(agency_id, agreement_id, support_key, signed, first_seq, last_seq, n_pub, first_appeared, last_appeared)
 edges <- windows |>
   filter(last_seq < current_seq) |>
   inner_join(windows, by = "agency_id", suffix = c("", "_s"), relationship = "many-to-many") |>
-  filter(agreement_id != agreement_id_s, support_key_s == support_key | signed_s == signed,
+  filter(agreement_id != agreement_id_s,
+         support_key_s == support_key | signed_s == signed |
+           (support_key == "JAIL & TASK FORCE" & support_key_s %in% c("JAIL ENFORCEMENT MODEL", "TASK FORCE MODEL")),
          first_seq_s > last_seq,
          first_seq_s == last_seq + 1L | as.numeric(first_appeared_s - last_appeared) <= 60) |>
   left_join(windows |> select(agency_id, x_support = support_key, x_id = agreement_id, x_first = first_seq, x_last = last_seq),
@@ -346,10 +420,11 @@ edges <- windows |>
   slice_min(order_by = tibble(first_seq_s, support_key_s != support_key, signed_s), n = 1, by = agreement_id, with_ties = FALSE) |>
   slice_max(last_seq, n = 1, by = agreement_id_s, with_ties = FALSE) |>
   select(agreement_id, succeeded_by = agreement_id_s)
+edges <- bind_rows(renewal_edges, edges) |> distinct(agreement_id, .keep_all = TRUE)
 
 identities <- identities |>
   left_join(edges, by = "agreement_id") |>
-  mutate(status = case_when(last_seq == current_seq ~ "Active",
+  mutate(status = case_when(coalesce(last_seq == current_seq, FALSE) ~ "Active",
                             !is.na(succeeded_by) ~ "Superseded",
                             TRUE ~ "Removed"))
 
@@ -394,18 +469,18 @@ identities <- identities |>
     TRUE ~ NA_character_
   )) |>
   select(agreement_id, agency_id, agreement_lineage_id, state, state_abbr, state_key,
-         canonical_agency, support_key, signed, status, succeeded_by,
+         canonical_agency, support_key, signed, signed_source, status, succeeded_by,
          first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source,
          removal_flag, first_seq, last_seq, n_pub,
          latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows, identity_resolution, n_spellings,
          starts_with("raw_"))
 
 agencies <- identities |>
-  arrange(last_seq) |>
+  arrange(coalesce(last_seq, 0L)) |>
   group_by(agency_id, state, state_abbr, state_key, canonical_agency) |>
   summarise(display_agency = last(raw_agency_last),
             n_agreements = n(), n_active = sum(status == "Active"),
-            first_seen = min(first_appeared), last_seen = max(last_appeared),
+            first_seen = min(first_appeared, na.rm = TRUE), last_seen = max(last_appeared, na.rm = TRUE),
             ice_first_signed = min(signed), .groups = "drop") |>
   mutate(is_current = n_active > 0)
 
@@ -433,6 +508,8 @@ stopifnot(
     !any(identities$status == "Active" & !is.na(identities$succeeded_by)),
   "a superseded identity must name a successor" =
     all(is.na(identities$succeeded_by) == (identities$status != "Superseded")),
+  "every signing ICE never listed takes the listings published while it was in force" =
+    nrow(anti_join(unlisted, identities, by = c("agency_id", "unlisted_signed" = "signed"))) == 0,
   "identity resolution must never merge across state, model or signing date" =
     nrow(distinct(identities, agreement_id, state_key, support_key, signed)) == nrow(identities)
 )
