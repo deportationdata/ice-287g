@@ -68,7 +68,14 @@ manual_doc_exclusions <- manual_facility_review |>
 
 # only active agreements are matched, so a facility HIFLD marks Closed is never a candidate; it stays a location
 # reference for placing a DOC's listed facilities and for dating the site around it
-facility_sources_exact <- bind_rows(facilities, jails_prisons |> filter(coalesce(facility_status, "") != "Closed"))
+facility_sources_exact <- bind_rows(facilities, jails_prisons |> filter(coalesce(facility_status, "") != "Closed")) |>
+  # a Georgia county prison ("Hall County Correctional Institution", "Harris County Prison") holds state inmates for the
+  # county government, not the sheriff: the jails census names someone other than the sheriff as the operator of every one
+  filter(!(
+    facility_state %in% "Georgia" &
+      str_detect(facility_name, regex("\\bcounty (correctional institut(e|ion)|prison)\\b", ignore_case = TRUE)) &
+      !str_detect(facility_name, regex("jail|sheriff", ignore_case = TRUE))
+  ))
 # every pick ends in the same tiebreak, so no result depends on row order
 tiebreak <- c("facility_name", "latitude", "longitude")
 
@@ -526,13 +533,15 @@ doc_list_snaps <- bind_rows(
   nearest_snaps |> anti_join(bind_rows(pinned_snaps, name_snaps), by = c("state_key", "facility_name"))
 )
 
+hifld_closed_ids <- jails_prisons$source_id[jails_prisons$source == "hifld_prisons" & jails_prisons$facility_status %in% "Closed"]
 doc_list_matches <- doc_list_matches |>
   left_join(doc_list_snaps, by = c("state_key", "facility_name")) |>
   mutate(
     latitude = coalesce(snap_latitude, latitude),
     longitude = coalesce(snap_longitude, longitude),
-    # the list is the source; the HIFLD record it sits on, when there is one, is the id
-    source_id = coalesce(snap_id, source_url)
+    # the list is the source; the HIFLD record it sits on is the id, unless HIFLD marks that record Closed: a closed
+    # record only places the site (McRae Women's Facility sits in a closed federal prison's building)
+    source_id = if_else(snap_id %in% hifld_closed_ids, source_url, coalesce(snap_id, source_url))
   ) |>
   select(-snap_id, -snap_latitude, -snap_longitude, -source_url, -hifld_id)
 
@@ -587,7 +596,9 @@ manual_matches <- bind_rows(
     longitude,
     facility_key = norm_key(facility_name),
     match_type = "manual",
-    match_score = 1
+    match_score = 1,
+    manual_reason = reason,
+    manual_note = note
   )
 
 # no per-facility dedup here: every source row with the confirmed facility key survives
@@ -838,12 +849,22 @@ facility_all_matches <- facility_all_matches |>
   mutate(facility_census_years = census_years) |>
   select(-site, -census_years, -listed_last, -closed_by, -open_from)
 
-# of the open candidates for one facility name, the best-ranked source places it
+# copies of one jail are grouped by hand in inputs/manual-facility-duplicates.csv, with the copy that places it marked keep
+facility_duplicates <- read_csv(
+  "inputs/manual-facility-duplicates.csv",
+  col_types = cols(.default = col_character(), keep = col_logical())
+) |>
+  transmute(jail, source, source_id, facility_name, keep = coalesce(keep, FALSE))
+
+# of the open candidates for one facility name, the copy marked keep places it, else the best-ranked source
 facility_all_matches <- bind_rows(
   facility_all_matches |> filter(!coalesce(source_choice_pending, FALSE)),
   facility_all_matches |>
     filter(coalesce(source_choice_pending, FALSE)) |>
-    slice_best(source_rank, desc(match_score), by = c("agreement_id", "facility_key"), tiebreak = tiebreak)
+    left_join(facility_duplicates |> filter(keep) |> distinct(source, source_id, facility_name, marked_keep = keep),
+              by = c("source", "source_id", "facility_name")) |>
+    slice_best(desc(coalesce(marked_keep, FALSE)), source_rank, desc(match_score), by = c("agreement_id", "facility_key"), tiebreak = tiebreak) |>
+    select(-marked_keep)
 ) |>
   select(-source_choice_pending)
 
@@ -872,6 +893,15 @@ facility_all_matches <- facility_all_matches |>
     merge_pool[repeats, ] |> select(agreement_id, source, source_id, facility_name, latitude, longitude),
     by = c("agreement_id", "source", "source_id", "facility_name", "latitude", "longitude")
   )
+
+# copies of one jail the merge leaves apart (house numbers differ, points over 150 m apart, or one source lists it
+# twice): an agreement keeps the copy marked keep, else its best-ranked copy of that jail
+duplicate_copies <- facility_all_matches |>
+  inner_join(facility_duplicates, by = c("source", "source_id", "facility_name")) |>
+  arrange(desc(keep), source_rank, across(all_of(tiebreak))) |>
+  filter(row_number() > 1, .by = c(agreement_id, jail))
+facility_all_matches <- facility_all_matches |>
+  anti_join(duplicate_copies, by = c("agreement_id", "source", "source_id", "facility_name", "latitude", "longitude"))
 
 # facility point layer
 
@@ -938,8 +968,8 @@ facility_sf <- facility_sf |>
     geometry_unmatched = st_is_empty(geometry) & match_type != "not_active",
     fuzzy_match = coalesce(fuzzy_match, FALSE),
     weak_match = coalesce(weak_match, FALSE),
-    # HIFLD tags some records "(OLD)" without marking them Closed, and several are the county's current jail
-    # (Franklin KS, Osage KS); a point kept here passed the open check, so the tag would only mislead
+    # HIFLD tags some records "(OLD)" without marking them Closed, and some are the county's current jail (Franklin
+    # KS); where the tag is right (Osage KS), inputs/manual-facility-review.csv removes the record, so it would only mislead
     facility_name = str_squish(str_remove(facility_name, regex("\\(old\\)\\s*$", ignore_case = TRUE)))
   ) |>
   select(
@@ -964,6 +994,8 @@ facility_sf <- facility_sf |>
     fuzzy_match,
     weak_match,
     facility_census_years,
+    manual_reason,
+    manual_note,
     geometry
   )
 

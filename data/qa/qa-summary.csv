@@ -50,11 +50,11 @@ agency disagreements by kind,state,1,NA,info
 active agreements == newest sheet rows,all,2589,2589,pass
 duplicate identity rows in agreements,all,0,0,pass
 distinct states in agreements,all,47,NA,info
-feature rows,all,3777,NA,info
+feature rows,all,3747,NA,info
 agreement-level rows == agreements rows,all,3049,3049,pass
 agreements with no feature row,all,0,0,pass
 feature rows by layer,county,716,NA,info
-feature rows by layer,facility,1740,NA,info
+feature rows by layer,facility,1710,NA,info
 feature rows by layer,municipal,1168,NA,info
 feature rows by layer,port,5,NA,info
 feature rows by layer,precinct,50,NA,info
@@ -65,15 +65,15 @@ empty-geometry features by layer,municipal,2,NA,info
 empty-geometry features by layer,precinct,50,NA,info
 empty-geometry features by layer,university,1,NA,info
 active features flagged needs_review,all,117,NA,info
-active features by match quality,exact,2552,NA,info
+active features by match quality,exact,2503,NA,info
 active features by match quality,exact_flagged,33,NA,info
 active features by match quality,fuzzy,5,NA,info
-active features by match quality,manual,665,NA,info
+active features by match quality,manual,684,NA,info
 active features by match quality,unmatched,52,NA,info
 active features by match quality,weak,9,NA,info
 active agreements flagged needs_review,all,101,NA,info
 active features with a pending MOA,all,574,NA,info
-active features with an addendum,all,207,NA,info
+active features with an addendum,all,195,NA,info
 county geoids outside the census county list,all,0,NA,info
 DOC agreements fanned out to state prisons,all,0,NA,info
 agreement-identifiers rows == agreements rows,all,3049,3049,pass
@@ -97,7 +97,7 @@ Connecticut features carrying a planning-region fips,all,0,0,pass
 placed features by geometry vintage,2016,5,NA,info
 placed features by geometry vintage,2021,3,NA,info
 placed features by geometry vintage,2024,1976,NA,info
-placed features by geometry vintage,NA,1401,NA,info
+placed features by geometry vintage,NA,1371,NA,info
 missing identifiers by type,missing_both,3,NA,info
 missing identifiers by type,missing_fips,49,NA,info
 missing identifiers by type,missing_ori,92,NA,info

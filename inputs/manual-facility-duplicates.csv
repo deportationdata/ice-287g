@@ -1,0 +1,75 @@
+state,jail,facility_name,source,source_id,keep,note
+Arizona,"Pinal County Adult Detention Center, Florence",Pinal County Jail,facilities,PINALAZ,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Arizona,"Pinal County Adult Detention Center, Florence",PINAL COUNTY ADULT DETENTION CENTER,hifld_prisons,10000620,,"same jail as the kept copy, 263 m away: same address, 971 Jason Lopez Circle (reviewed 2026-09-27)"
+Arkansas,"Cross County Jail, Wynne",CROSS COUNTY JAIL,hifld_prisons,10006421,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Arkansas,"Cross County Jail, Wynne",Cross County Jail and Detention Center,jails_prisons,041019019,,"same jail as the kept copy, 7 m away: 704 E Canal St and 705 E Union Ave are two frontages of one building (reviewed 2026-09-27)"
+Arkansas,"Pope County Detention Center, Russellville",POPE COUNTY JAIL,hifld_prisons,10006410,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Arkansas,"Pope County Detention Center, Russellville",Pope County Detention Center,jails_prisons,041058058,,"same jail as the kept copy, 27 m away: 3 Emergency Lane and 10 County Complex are one site; the census gave the first address in 2006 (reviewed 2026-09-27)"
+Florida,"Falkenburg Road Jail, Tampa","HILLSBOROUGH COUNTY JAIL, FALKENBURG ROAD",hifld_prisons,10000483,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"Falkenburg Road Jail, Tampa",Falkenberg Road Jail,jails_prisons,101029029,,"same jail as the kept copy, 165 m away: same address, 520 N Falkenburg Road (reviewed 2026-09-27)"
+Florida,"Indian River County Jail, Vero Beach",INDIAN RIVER COUNTY JAIL,hifld_prisons,10000490,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"Indian River County Jail, Vero Beach",Indian River CountyJail,jails_prisons,101031031,,"same jail as the kept copy, 272 m away: same address, 4055 41st Avenue (reviewed 2026-09-27)"
+Florida,"John E. Polk Correctional Facility, Sanford",Seminole County Jail,facilities,SMNOLFL,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"John E. Polk Correctional Facility, Sanford",John E. Polk Correctional Facility,jails_prisons,101059059,,"same jail as the kept copy, 212 m away: 211 N Bush Blvd was renamed Eslinger Way (reviewed 2026-09-27)"
+Florida,"Liberty County Jail, Bristol",LIBERTY COUNTY JAIL,hifld_prisons,10001441,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"Liberty County Jail, Bristol",Liberty County Sheriff’s Office,facilities,LBRTYFL,,"same jail as the kept copy, 1088 m away: ICE's address is the sheriff's office on Revell Road; HIFLD and the census put the jail on Pogo Street (reviewed 2026-09-27)"
+Florida,"Martin County Jail, Stuart",Martin County Jail,facilities,MARTIFL,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"Martin County Jail, Stuart",Martin County Jail - Juvenile,facilities,MCJJVFL,,"same jail as the kept copy, 0 m away: ICE lists the juvenile unit under its own code at the same address; the census lists one jail (reviewed 2026-09-27)"
+Florida,"Nassau County Jail, Yulee",NASSAU COUNTY JAIL AND DETENTION CENTER,hifld_prisons,10004563,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"Nassau County Jail, Yulee",Nassau County Jail,facilities,NASSAFL,,"same jail as the kept copy, 1333 m away: same address, 76212 Nicholas Cutinha Road; ICE's point sits 1.3 km from HIFLD's and the census's, which agree (reviewed 2026-09-27)"
+Florida,"St. Johns County Jail, St. Augustine",St. John’s County Jail,facilities,STJONFL,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"St. Johns County Jail, St. Augustine",ST. JOHNS COUNTY DETENTION CENTER,hifld_prisons,10002158,,"same jail as the kept copy, 29 m away: 3955 and 4015 Lewis Speedway are one site (reviewed 2026-09-27)"
+Florida,"Suwannee County Jail, Live Oak",Suwannee County Jail,facilities,SUWANFL,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"Suwannee County Jail, Live Oak",Suwanee CountyJail,jails_prisons,101061061,,"same jail as the kept copy, 119 m away: 200 Ohio Ave S and 305 Pine Ave SW are one site (reviewed 2026-09-27)"
+Florida,"Taylor County Jail, Perry",Taylor County Jail,facilities,TAYLOFL,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Florida,"Taylor County Jail, Perry",Taylor CountyJail,jails_prisons,101062062,,"same jail as the kept copy, 166 m away: same address, 589 US Highway 27 East (reviewed 2026-09-27)"
+Georgia,"Bibb County Law Enforcement Center, Macon",BIBB COUNTY JAIL,hifld_prisons,10002133,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Georgia,"Bibb County Law Enforcement Center, Macon",BIBB COUNTY DETENTION CENTER,hifld_prisons,10006722,,"same jail as the kept copy, 124 m away: two HIFLD records, 668 Oglethorpe St and 645 Hazel St, for the one jail the census lists at 668 Oglethorpe (reviewed 2026-09-27)"
+Georgia,"Oconee County Jail, Watkinsville",OCONEE COUNTY JAIL / SHERIFF,hifld_prisons,10003917,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Georgia,"Oconee County Jail, Watkinsville",Oconee County Jail,jails_prisons,111108108,,"same jail as the kept copy, 24 m away: 1110 and 1140 Experiment Station Road are one site (reviewed 2026-09-27)"
+Louisiana,"Grant Parish Detention Center, Colfax",GRANT PARISH DETENTION CENTER,hifld_prisons,10005916,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Louisiana,"Grant Parish Detention Center, Colfax",Grant Parish Jail,jails_prisons,191022021,,"same jail as the kept copy, 289 m away: same address, 485 Richardson Drive (reviewed 2026-09-27)"
+Michigan,"Calhoun County Jail, Battle Creek",Calhoun County Correctional Center,facilities,CALHOMI,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Michigan,"Calhoun County Jail, Battle Creek",CALHOUN COUNTY JAIL,hifld_prisons,10002091,,"same jail as the kept copy, 30 m away: 185 and 161 E Michigan Ave are one site (reviewed 2026-09-27)"
+Michigan,"Jackson County Jail, Chanter Road",JACKSON COUNTY JAIL-CHANTER ROAD,hifld_prisons,10000276,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Michigan,"Jackson County Jail, Chanter Road",Chanter Rd. Correctional Facility,jails_prisons,231038038,,"same jail as the kept copy, 478 m away: same address, 1995 Chanter Road (reviewed 2026-09-27)"
+Missouri,"Pulaski County Jail, Waynesville",PULASKI COUNTY SHERIFF'S DEPARTMENT,hifld_prisons,20000843,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Missouri,"Pulaski County Jail, Waynesville",PULASKI COUNTY SHERIFF'S DEPARTMENT (OLD),hifld_prisons,10005400,,"same jail as the kept copy, 242 m away: two HIFLD records for one jail; the jail gives its address as 403 School St, and HIFLD marks the 301 Historic 66 E record, the address the 2019 census gave, as old (reviewed 2026-09-27)"
+Nebraska,"Dakota County Jail, Dakota City",Dakota County Sheriff Office,facilities,DAKOTNE,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Nebraska,"Dakota County Jail, Dakota City",DAKOTA COUNTY JAIL,hifld_prisons,10006070,,"same jail as the kept copy, 19 m away: 1601 and 1602 Broadway are one site (reviewed 2026-09-27)"
+North Carolina,"Catawba County Detention Facility, Newton",CATAWBA COUNTY DETENTION FACILITY / JUSTICE CENTER,hifld_prisons,10004187,TRUE,the copy that places this jail (reviewed 2026-09-27)
+North Carolina,"Catawba County Detention Facility, Newton",Catawba County Detention Facility,jails_prisons,341018018,,"same jail as the kept copy, 175 m away: same address, 100 Government Drive (reviewed 2026-09-27)"
+North Carolina,"Rockingham County Detention Center, Wentworth",ROCKINGHAM COUNTY DETENTION CENTER,hifld_prisons,10004149,TRUE,the copy that places this jail (reviewed 2026-09-27)
+North Carolina,"Rockingham County Detention Center, Wentworth",Rockingham County Jail,jails_prisons,341079079,,"same jail as the kept copy, 46 m away: 130 Justice Center Drive and 170 Highway 65 are one site (reviewed 2026-09-27)"
+South Carolina,"Union County Detention Center, Union",UNION COUNTY DETENTION CENTER,hifld_prisons,10005005,TRUE,the copy that places this jail (reviewed 2026-09-27)
+South Carolina,"Union County Detention Center, Union",UNION COUNTY JAIL,hifld_prisons,10002677,,"same jail as the kept copy, 65 m away: two HIFLD records, 1657 and 1663 Jonesville Hwy, for the one jail the census lists (reviewed 2026-09-27)"
+Tennessee,"Marion County Jail, Jasper",MARION COUNTY JAIL / SHERIFF,hifld_prisons,10004793,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Tennessee,"Marion County Jail, Jasper",Marion County Jail,jails_prisons,431058058,,"same jail as the kept copy, 41 m away: 103 Oak Ave and 5 N Oak St are one site (reviewed 2026-09-27)"
+Texas,"Bee County Jail, Beeville",BEE COUNTY JAIL,hifld_prisons,10001292,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Bee County Jail, Beeville",Bee County Sheriff,facilities,BEECOTX,,"same jail as the kept copy, 275 m away: same address, 1511 E Toledo St; ICE's point sits 274 m from HIFLD's and the census's, which agree (reviewed 2026-09-27)"
+Texas,"Burnet County Jail, Burnet",Burnet County Jail,facilities,BURNETX,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Burnet County Jail, Burnet",BURNET COUNTY JAIL / SHERIFF,hifld_prisons,10001985,,"same jail as the kept copy, 4 m away: 900 County Lane and 1601 E Polk St are one site (reviewed 2026-09-27)"
+Texas,"Calhoun County Adult Detention Center, Port Lavaca",CALHOUN COUNTY JAIL / SHERIFF,hifld_prisons,10002915,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Calhoun County Adult Detention Center, Port Lavaca",Calhoun County Adult Detention Center,jails_prisons,441029029,,"same jail as the kept copy, 40 m away: 211 S Ann St and 302 W Live Oak St are one site (reviewed 2026-09-27)"
+Texas,"Denton County Jail, Denton","DENTON COUNTY JAIL, PRE-TRIAL FACILITY",hifld_prisons,10001257,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Denton County Jail, Denton",Denton County Jail,jails_prisons,441061061,,"same jail as the kept copy, 199 m away: HIFLD's pre-trial facility and the census's jail at 127 N Woodrow Lane are one site (reviewed 2026-09-27)"
+Texas,"Gaines County Jail, Seminole",GAINES COUNTY JAIL,hifld_prisons,10004388,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Gaines County Jail, Seminole",Gaines County Law Enforcement Center,jails_prisons,441083083,,"same jail as the kept copy, 57 m away: 305 and 301 E Avenue A are one site (reviewed 2026-09-27)"
+Texas,"Galveston County Jail, Galveston",Galveston County Sheriff,facilities,GALVETX,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Galveston County Jail, Galveston",GALVESTON COUNTY JAIL,hifld_prisons,10002898,,"same jail as the kept copy, 55 m away: 5700 Avenue H and 601 54th St are two frontages of one building (reviewed 2026-09-27)"
+Texas,"Guadalupe County Adult Detention Center, Seguin",GUADALUPE COUNTY ADULT DETENTION CENTER,hifld_prisons,10002881,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Guadalupe County Adult Detention Center, Seguin",Guadalupe County Detention Center,jails_prisons,441094094,,"same jail as the kept copy, 53 m away: 2615 and 2617 N Guadalupe St are one site (reviewed 2026-09-27)"
+Texas,"Hidalgo County Adult Detention Center, Edinburg",Hidalgo County Sheriff’s Jail,facilities,HIDALTX,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Hidalgo County Adult Detention Center, Edinburg",HIDALGO COUNTY DETENTION CENTER,hifld_prisons,10002939,,"same jail as the kept copy, 30 m away: 701 and 711 E El Cibolo Road are one site (reviewed 2026-09-27)"
+Texas,"Jefferson County Correctional Facility, Beaumont",JEFFERSON COUNTY CORRECTIONAL FACILITY,hifld_prisons,10002855,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Jefferson County Correctional Facility, Beaumont",Jefferson County Detention Center,jails_prisons,441123123,,"same jail as the kept copy, 203 m away: same address, 5030 Highway 69 South (reviewed 2026-09-27)"
+Texas,"Limestone County Jail, Groesbeck",Limestone County Jail,jails_prisons,441147147,TRUE,"the copy that places this jail: ArcGIS matches 912 N Tyus Street to its address point (reviewed 2026-09-27)"
+Texas,"Limestone County Jail, Groesbeck",LIMESTONE COUNTY JAIL,hifld_prisons,10006869,,"same jail as the kept copy, 255 m away: same address, 912 N Tyus St (reviewed 2026-09-27)"
+Texas,"Limestone County Jail, Groesbeck",Limestone County Jail,facilities,LIMCJTX,,"same jail as the kept copy, 770 m away: ICE gives the jail the detention center's address, 910 Tyus St, and its point lies off both buildings; the jail is at 912 N Tyus St (reviewed 2026-09-27)"
+Texas,"Rains County Jail, Emory",RAINS COUNTY JAIL,hifld_prisons,10004386,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Rains County Jail, Emory",Rains County Law Enforcement Center,jails_prisons,441190190,,"same jail as the kept copy, 434 m away: same address, 313 North Street (reviewed 2026-09-27)"
+Texas,"Smith County Central Jail, Tyler",Smith County Jail,facilities,SMITHTX,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Texas,"Smith County Central Jail, Tyler",SMITH COUNTY JAIL - CENTRAL DIVISION,hifld_prisons,10002767,,"same jail as the kept copy, 47 m away: 206 E Elm St, 227 N Spring St and 104 S Spring St are one downtown jail; the Low Risk facility on Public Road stays (reviewed 2026-09-27)"
+Texas,"Smith County Central Jail, Tyler",Smith County Central Jail,jails_prisons,441212212,,"same jail as the kept copy, 85 m away: 206 E Elm St, 227 N Spring St and 104 S Spring St are one downtown jail; the Low Risk facility on Public Road stays (reviewed 2026-09-27)"
+Utah,"Sanpete County Jail, Manti",SANPETE COUNTY JAIL,hifld_prisons,10001702,TRUE,the copy that places this jail (reviewed 2026-09-27)
+Utah,"Sanpete County Jail, Manti",Sanpete County Sheriffs Complex,jails_prisons,451020020,,"same jail as the kept copy, 271 m away: same address, 1500 S Highway 89 (reviewed 2026-09-27)"

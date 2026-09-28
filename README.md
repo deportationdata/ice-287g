@@ -204,7 +204,11 @@ dependency tiers. `bash code/run_all.sh 3-match-state.R` starts partway.
   that round, nearer under another house number); a later HIFLD "Open" does
   not outweigh that round. A closed facility leaves the
   agreement even when it was its only match, and when two sources name the same
-  facility, the best-ranked one that is still open places it.
+  facility, the best-ranked one that is still open places it. A Georgia county
+  prison ("… County Correctional Institution", "… County Prison") is never a
+  candidate: it holds state inmates for the county government, not the
+  sheriff, and the jails census names someone other than the sheriff as the
+  operator of every one.
 - **`4-match-non-facility.R`** stacks the non-facility layers and asserts
   every placed census-unit feature carries a geoid.
 - **`5-match-agency-identifiers.R`** matches each agreement against the four rosters
@@ -285,6 +289,13 @@ QA diff.
   corrections (include/exclude), and layer overrides for agreements the
   automated matchers get wrong. Each row carries a `reason`/`note` recording
   the evidence.
+- `inputs/manual-facility-duplicates.csv` — jails that two sources, or one
+  source twice, place more than once, where the automatic merge (same house
+  number within 150 m) leaves the copies apart. Each row is one source record
+  (`source`, `source_id`, `facility_name`), grouped by `jail`. An agreement
+  matched to two or more copies keeps the one marked `keep`, or its
+  best-ranked copy when that one is not among its matches. The `note` gives
+  the evidence, usually that the 2019 Census of Jails lists one jail there.
 - `inputs/manual-doc-facilities.csv` — a state department of corrections' own
   list of the facilities it runs, read from its website on `listed_on`, with the
   address and source of each; contract facilities such as halfway houses are left
