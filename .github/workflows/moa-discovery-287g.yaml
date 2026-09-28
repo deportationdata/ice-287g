@@ -39,7 +39,7 @@ jobs:
         run: |
           Rscript --vanilla -e '
             pkgs <- c("arrow", "digest", "dplyr", "fs", "httr", "jsonlite", "pdftools",
-                      "purrr", "readr", "stringi", "stringr", "tidyr", "xml2")
+                      "purrr", "readr", "stringi", "stringr", "tidyr", "tidyverse", "xml2")
             missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
             if (length(missing) > 0) {
               install.packages(missing, repos = "https://cloud.r-project.org")
@@ -51,10 +51,13 @@ jobs:
           MOA_REPORT: ${{ runner.temp }}/moa-discovery.md
         run: Rscript --vanilla code/0-acquire-archive-index.R
 
+      # the probe reads the published agreements and the state crosswalk, which is not committed
       - name: Probe ice.gov for MOAs the sheet still shows pending
         env:
           MOA_REPORT: ${{ runner.temp }}/moa-discovery.md
-        run: Rscript --vanilla code/0-acquire-moa-probe.R
+        run: |
+          Rscript --vanilla code/1-read-reference-state-codes.R
+          Rscript --vanilla code/0-acquire-moa-probe.R
 
       - name: Open a pull request with anything found
         env:

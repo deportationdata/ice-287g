@@ -54,5 +54,6 @@ rsconnect/
 .DS_Store
 **/.DS_Store
 
-# rebuilt from sheets/ by 1-read-sheets.R; the ids table beside it is committed
-data/intermediate/sheet-rows.parquet
+# rebuilt by code/run_all.sh on every run; only the caches of what the APIs and MOA pdfs returned are committed
+data/intermediate/*
+!data/intermediate/cache-*

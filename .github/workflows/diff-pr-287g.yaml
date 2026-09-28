@@ -6,7 +6,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'data/intermediate/match-all-features.parquet'
+      - 'data/agreements-sf.parquet'
   workflow_dispatch:
     inputs:
       pr_number:
@@ -48,7 +48,7 @@ jobs:
           lfs: false
           sparse-checkout: |
             code/diff-agreements-pr.R
-            data/intermediate/match-all-features.parquet
+            data/agreements-sf.parquet
             data/qa/qa-summary.csv
             renv.lock
             renv/activate.R
@@ -62,11 +62,8 @@ jobs:
           ref: main
           path: _main
           lfs: false
-          # every path the feature layer is committed under on main
           sparse-checkout: |
-            data/intermediate/match-all-features.parquet
-            data/intermediate/all_agreements_sf.parquet
-            data/all_agreements_sf.parquet
+            data/agreements-sf.parquet
             data/qa/qa-summary.csv
           sparse-checkout-cone-mode: false
 
@@ -98,12 +95,9 @@ jobs:
 
       - name: Run diff script
         run: |
-          main_sf=_main/data/intermediate/match-all-features.parquet
-          [ -f "$main_sf" ] || main_sf=_main/data/intermediate/all_agreements_sf.parquet
-          [ -f "$main_sf" ] || main_sf=_main/data/all_agreements_sf.parquet
           Rscript code/diff-agreements-pr.R \
-            "$main_sf" \
-            data/intermediate/match-all-features.parquet \
+            _main/data/agreements-sf.parquet \
+            data/agreements-sf.parquet \
             > /tmp/pr-diff-comment.md
           # the QA invariants ship as a CSV so their diff reads inline
           if [ -f _main/data/qa/qa-summary.csv ] && [ -f data/qa/qa-summary.csv ]; then

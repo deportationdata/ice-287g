@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Diff two match-all-features.parquet files (main vs PR) into a markdown comment
+# Diff two agreements-sf.parquet files (main vs PR) into a markdown comment
 
 suppressMessages({
   library(arrow)
@@ -15,14 +15,14 @@ MARKER <- "<!-- pr-diff-bot -->"
 MAX_ROWS <- 100
 
 cat(MARKER, "\n", sep = "")
-cat("## `match-all-features.parquet` diff vs `main`\n\n")
+cat("## `agreements-sf.parquet` diff vs `main`\n\n")
 
 if (!file.exists(main_path) || file.size(main_path) == 0) {
-  cat("_No `match-all-features.parquet` on `main` - skipping diff._\n")
+  cat("_No `agreements-sf.parquet` on `main` - skipping diff._\n")
   quit(status = 0)
 }
 if (!file.exists(pr_path) || file.size(pr_path) == 0) {
-  cat("_No `match-all-features.parquet` on this branch - nothing to diff._\n")
+  cat("_No `agreements-sf.parquet` on this branch - nothing to diff._\n")
   quit(status = 0)
 }
 

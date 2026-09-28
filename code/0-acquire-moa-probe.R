@@ -24,7 +24,7 @@ base_url <- "https://www.ice.gov/doclib/287gMOA/"
 xwalk <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
 ids <- Sys.getenv("MOA_PROBE_IDS", "")
 dry_run <- nzchar(Sys.getenv("MOA_PROBE_DRY_RUN", ""))
-agreements <- arrow::read_parquet("data/intermediate/agreements.parquet") |>
+agreements <- arrow::read_parquet("data/agreements.parquet") |>
   left_join(xwalk |> select(state = state_full, state_abbr), by = "state")
 pending <- if (nzchar(ids)) {
   agreements |> filter(agreement_id %in% str_split(ids, ",")[[1]])

@@ -70,8 +70,10 @@ deserves a manual check.
 `data/` holds only the published products: the agreement-level geometry file, the
 agency history and the committed QA reports in `data/qa/`. Everything the
 pipeline builds on the way — rosters, per-layer and per-feature matches, the identity layer,
-source claims and the two API caches — is in `data/intermediate/`, committed so
-a pull request shows what moved.
+source claims — is written to `data/intermediate/`, which git ignores: `code/run_all.sh`
+rebuilds it on every run. Only the three caches there are committed (`cache-*`), because
+they record what the CDE and ArcGIS APIs and the MOA pdfs returned, which the pipeline
+cannot rebuild from `inputs/`.
 
 | file | contents |
 |---|---|
@@ -89,9 +91,10 @@ a pull request shows what moved.
 | `data/intermediate/facility-list-ice-detention.parquet`, `data/intermediate/facility-list-jails-prisons.parquet` | Detention-facility candidate tables (ICE facilities from ice-detention-facilities; HIFLD prisons + Census of Jails). |
 | `data/intermediate/facility-list-censuses.parquet` | Every facility the BJS Census of Jails (1999, 2006, 2013, 2019) and Census of State and Federal Adult Correctional Facilities (2000, 2005, 2012) lists, one row per facility per round, with its street-level geocode: a facility a round lists was open that year. |
 | `data/intermediate/match-*.parquet` (state, county, municipal, pa-constable, university, facility, non-facility) | Per-layer match results, EPSG:4326. `match-municipal-names.parquet` is the municipality of each municipal department whose agreement is a jail point, matched by name for its place and county, with no geometry. |
-| `data/intermediate/match-all-features.parquet` | One row per agreement × matched feature (a DOC agreement spans its state's prisons; a regional department its member municipalities). Match provenance (`match_layer`, `match_name`, `match_type`, `match_quality`), FIPS codes, ORI, per-roster annotations, every review flag and the composed `review_reason`, geometry. The layer behind `agreement-level-sf`; the PR diff workflow compares it against `main`. |
+| `data/intermediate/match-all-features.parquet` | One row per agreement × matched feature (a DOC agreement spans its state's prisons; a regional department its member municipalities). Match provenance (`match_layer`, `match_name`, `match_type`, `match_quality`), FIPS codes, ORI, per-roster annotations, every review flag and the composed `review_reason`, geometry. The layer behind `agreements-sf`. |
 | `data/intermediate/cache-cde-api.parquet` | Committed raw cache of the CDE API download. Delete it to refresh from the API (needs `CDE_API_KEY`). |
 | `data/intermediate/cache-arcgis-geocodes.rds` | Committed append-only ArcGIS geocode cache keyed by address. Do not regenerate from scratch — only new addresses hit the API. |
+| `data/intermediate/cache-moa-addendum-pages.parquet` | Committed page text of every MOA pdf the addendum check has read, keyed by file hash, so a build reads only pdfs it has not seen. |
 
 Geometry files are Parquet with the native GEOMETRY type, written by GDAL through
 `sf::st_write(driver = "Parquet", layer_options = "USE_PARQUET_GEO_TYPES=ONLY")`; the

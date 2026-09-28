@@ -1,5 +1,5 @@
 # DHS OIG-10-63 Appendix E, Table 3: 287(g) jurisdictions as of 28 Oct 2009 with model, signing date and status
-# -> data/historical-oig-2009.csv
+# -> data/intermediate/historical-oig-2009.csv
 suppressPackageStartupMessages({
   library(dplyr)
   library(stringr)
@@ -9,10 +9,7 @@ suppressPackageStartupMessages({
 
 pdf <- "inputs/historical/reports/DHS-OIG-10-63_Mar2010.pdf"
 if (!nzchar(Sys.which("pdftotext"))) {
-  message(
-    "pdftotext not available; keeping committed data/historical-oig-2009.csv"
-  )
-  quit(save = "no", status = 0)
+  stop("pdftotext (poppler) is needed to read the OIG appendix")
 }
 tf <- tempfile(fileext = ".txt")
 system2(
