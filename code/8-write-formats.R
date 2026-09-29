@@ -10,7 +10,7 @@ agreements <- agreements_sf |> st_drop_geometry() |> as_tibble()
 agencies <- arrow::read_parquet("data/agencies.parquet")
 
 writexl::write_xlsx(agreements, "data/agreements.xlsx")
-# Stata strings have no missing value, and haven fails on NA in a long (strL) string such as facilities
+# Stata strings have no missing value, and haven fails on NA in a long (strL) string such as jurisdiction_facilities
 haven::write_dta(
   agreements |> mutate(across(where(is.character), \(x) coalesce(x, ""))),
   "data/agreements.dta"
@@ -31,6 +31,8 @@ shp_names <- c(
   sheet_row = "latest_sheet_row",
   sheet = "latest_sheet",
   sheet_url = "latest_sheet_url",
+  juris = "jurisdiction",
+  juris_fclt = "jurisdiction_facilities",
   juris_lvl = "jurisdiction_level",
   juris_src = "jurisdiction_level_source",
   support = "support_type",

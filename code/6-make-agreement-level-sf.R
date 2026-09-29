@@ -382,18 +382,42 @@ stopifnot(
 regional_jail_counties <- regional_jail_counties |>
   summarize(member_county_fips = paste(county_fips, collapse = "; "), .by = c(agency, state))
 
+# HIFLD, the campus and airport layers and Pennsylvania's wards print names in capitals
+recase_capitals <- \(x) if_else(
+  !is.na(x) & x == toupper(x),
+  x |>
+    str_to_title() |>
+    str_replace_all("(?<=[^A-Za-z]|^)(Ii|Iii|Iv|Vi|Vii)(?=$|[^A-Za-z])", toupper) |>
+    str_replace_all("(?<=.)\\b(And|Of|The|For|At|In|On)\\b", tolower) |>
+    str_replace_all("\\bMc([a-z])", \(m) paste0("Mc", toupper(str_sub(m, 3)))) |>
+    str_replace_all(c("\\bDekalb\\b" = "DeKalb", "\\bDesoto\\b" = "DeSoto", "\\bDewitt\\b" = "DeWitt")),
+  x
+)
+# a municipality as it styles itself: City of Tampa, Town of Danbury, Union Township, McAdoo Borough
+municipality_name <- \(place, type) case_when(
+  type %in% c("City", "Town", "Village", "Municipality") ~ paste(type, "of", place),
+  type %in% c("Township", "Borough") ~ paste(place, type),
+  TRUE ~ place
+)
+# a constable's precinct, ward or district, from the office's name: Precinct 3, Bexar County
+constable_district_name <- \(agency, county) {
+  m <- str_match(agency, regex("\\b(?:Precinct|Pct\\.?)\\s*([0-9]+(?:-[0-9]+)?)|\\b(Ward\\s+[0-9]+)|\\b((?:Northern|Southern|Eastern|Western|Central)\\s+District)",
+                               ignore_case = TRUE))
+  district <- coalesce(if_else(is.na(m[, 2]), NA_character_, paste("Precinct", m[, 2])), m[, 3], m[, 4])
+  if_else(is.na(district) | is.na(county), NA_character_, paste0(district, ", ", county))
+}
+
 agreement_level_sf <- all_agreements_sf |>
-  # HIFLD prints facility names in capitals; recase those for the facilities list only
-  mutate(facility_name = if_else(
-    match_layer == "facility" & match_name == toupper(match_name),
-    match_name |>
-      str_to_title() |>
-      str_replace_all("(?<=[^A-Za-z]|^)(Ii|Iii|Iv|Vi|Vii)(?=$|[^A-Za-z])", toupper) |>
-      str_replace_all("(?<=.)\\b(And|Of|The|For|At|In|On)\\b", tolower) |>
-      str_replace_all("\\bMc([a-z])", \(m) paste0("Mc", toupper(str_sub(m, 3)))) |>
-      str_replace_all(c("\\bDekalb\\b" = "DeKalb", "\\bDesoto\\b" = "DeSoto", "\\bDewitt\\b" = "DeWitt")),
-    match_name
-  )) |>
+  mutate(
+    facility_name = if_else(match_layer == "facility", recase_capitals(match_name), match_name),
+    # the name of the unit a non-facility feature is: a municipality, a Pennsylvania ward, a campus, an airport
+    unit_name = case_when(
+      match_layer == "municipal" & str_detect(coalesce(match_name, ""), "\\b(WARD|PRECINCT)\\b") ~ recase_capitals(match_name),
+      match_layer == "municipal" ~ coalesce(municipality_name(place, place_type), match_name),
+      match_layer %in% c("university", "port") ~ recase_capitals(match_name),
+      TRUE ~ NA_character_
+    )
+  ) |>
   group_by(
     agreement_id,
     agency_id,
@@ -426,8 +450,9 @@ agreement_level_sf <- all_agreements_sf |>
   summarize(
     match_layer = paste(sort(unique(match_layer)), collapse = "+"),
     # the names of an agreement's matched facilities, "; "-separated, NA when none
-    facilities = facility_name[match_layer == "facility" & !is.na(facility_name)] |>
+    jurisdiction_facilities = facility_name[match_layer == "facility" & !is.na(facility_name)] |>
       unique() |> sort() |> paste(collapse = "; ") |> na_if(""),
+    unit_names = unit_name[!is.na(unit_name)] |> unique() |> paste(collapse = "; ") |> na_if(""),
     county_fips = union_codes(county_fips),
     place_geoid = single_or_na(place_geoid),
     place = single_or_na(place),
@@ -482,6 +507,22 @@ agreement_level_sf <- agreement_level_sf |>
     )
   ) |>
   select(-ice_county_fips, -member_county_fips) |>
+  # the unit the agreement covers, by name; a jail or warrant-service agreement covers the detention facilities in it
+  mutate(
+    jurisdiction = case_when(
+      jurisdiction_level %in% "Constable District" ~ constable_district_name(agency, county),
+      jurisdiction_level %in% "State" ~ state,
+      jurisdiction_level %in% c("Municipal", "Campus", "Port") ~ coalesce(unit_names, municipality_name(place, place_type)),
+      jurisdiction_level %in% "Regional" ~ coalesce(unit_names, county),
+      TRUE ~ county
+    ),
+    jurisdiction = if_else(
+      support_type %in% c("Jail Enforcement Model", "Warrant Service Officer") & !is.na(jurisdiction),
+      paste0("Detention facilities in ", if_else(str_detect(jurisdiction, "^(City|Town|Village|Municipality) of "), "the ", ""), jurisdiction),
+      jurisdiction
+    )
+  ) |>
+  select(-unit_names) |>
   # an agreement with no shape has no geometry type or vintage
   mutate(
     geometry_type = if_else(st_is_empty(geometry), NA_character_, geometry_type),
@@ -495,6 +536,8 @@ agreement_level_sf <- agreement_level_sf |>
     ORI9,
     agreement_id,
     support_type,
+    jurisdiction,
+    jurisdiction_facilities,
     status,
     signed,
     signed_source,
@@ -528,7 +571,6 @@ agreement_level_sf <- agreement_level_sf |>
     match_quality,
     review_reason,
     needs_review,
-    facilities,
     geometry_type,
     geometry_vintage,
     geometry
