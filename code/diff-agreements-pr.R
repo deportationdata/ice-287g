@@ -60,7 +60,7 @@ make_key <- function(df) {
     ),
     names(df)
   )
-  # ids neither pair rows (a new id would read as add+remove) nor diff as cells (one change would hit every row)
+  # ids stay out of the sort, so rows sharing a key are numbered by their data
   sort_cols <- setdiff(names(df), c("geometry", id_cols))
 
   df |>
@@ -72,8 +72,36 @@ make_key <- function(df) {
     select(-.base_key, -.dup_id)
 }
 
-main_df <- make_key(main_df)
-pr_df <- make_key(pr_df)
+# rows pair in three passes, each over the rows the one before left unpaired:
+# 1. the same agreement_id, which is built from state, agency, model and signing date
+# 2. make_key's descriptive key, so a corrected signing date pairs and counts as churn
+# 3. state, ICE's county, model and signing date where exactly one unpaired row on each side
+#    has them, so a renamed agency, whose name and id change together, pairs and counts as churn
+shared_ids <- intersect(main_df$agreement_id, pr_df$agreement_id)
+shared_ids <- shared_ids[!shared_ids %in% c(main_df$agreement_id[duplicated(main_df$agreement_id)],
+                                            pr_df$agreement_id[duplicated(pr_df$agreement_id)])]
+main_df <- bind_rows(
+  main_df |> filter(agreement_id %in% shared_ids) |> mutate(.key = paste("id", agreement_id, sep = " | ")),
+  main_df |> filter(!agreement_id %in% shared_ids) |> make_key()
+)
+pr_df <- bind_rows(
+  pr_df |> filter(agreement_id %in% shared_ids) |> mutate(.key = paste("id", agreement_id, sep = " | ")),
+  pr_df |> filter(!agreement_id %in% shared_ids) |> make_key()
+)
+
+rename_cols <- intersect(c("state", "ice_county", "support_type", "signed"), intersect(names(main_df), names(pr_df)))
+main_df <- main_df |>
+  mutate(.rename = if_else(!.key %in% pr_df$.key & !is.na(signed),
+                           do.call(paste, c("renamed", across(all_of(rename_cols)), sep = " | ")), NA))
+pr_df <- pr_df |>
+  mutate(.rename = if_else(!.key %in% main_df$.key & !is.na(signed),
+                           do.call(paste, c("renamed", across(all_of(rename_cols)), sep = " | ")), NA))
+renamed <- intersect(
+  main_df |> count(.rename) |> filter(n == 1, !is.na(.rename)) |> pull(.rename),
+  pr_df |> count(.rename) |> filter(n == 1, !is.na(.rename)) |> pull(.rename)
+)
+main_df <- main_df |> mutate(.key = if_else(.rename %in% renamed, .rename, .key), .rename = NULL)
+pr_df <- pr_df |> mutate(.key = if_else(.rename %in% renamed, .rename, .key), .rename = NULL)
 
 added <- pr_df |> anti_join(main_df, by = ".key")
 removed <- main_df |> anti_join(pr_df, by = ".key")
@@ -150,7 +178,7 @@ if (nrow(roster) > 0) {
               paste(head(moves$text, 5), collapse = "; ")))
 }
 
-# ids are excluded from pairing and cells above, so an id migration reads as one line
+# rows the second and third passes paired have different ids; ids stay out of the cells, so they are counted in one line
 churn <- inner_join(main_df |> select(.key, any_of("agreement_id")),
                     pr_df |> select(.key, any_of("agreement_id")),
                     by = ".key", suffix = c("_main", "_pr"))
