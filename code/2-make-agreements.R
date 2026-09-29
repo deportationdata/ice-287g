@@ -267,7 +267,7 @@ moa_copies <- bind_rows(
     select(-name)
 ) |>
   distinct(file_hash, agreement_id, .keep_all = TRUE)
-# pages without a text layer (scans) are read by tesseract when it is installed; `ocr` records whether a file's
+# pages without a readable text layer (scans, scrambled fonts) are read by tesseract when it is installed; `ocr` records whether a file's
 # scanned pages were read, so a file cached without OCR is read again once tesseract is available
 has_ocr <- nzchar(Sys.which("tesseract"))
 page_cache <- if (file.exists(addendum_pages_cache)) arrow::read_parquet(addendum_pages_cache) else
@@ -292,8 +292,11 @@ if (nrow(unread)) {
   read_addendum_pages <- \(p) {
     # a file too damaged to read (truncated Wayback captures) has no pages and is cached as read
     text <- tryCatch(pdftools::pdf_text(p), error = \(e) character())
-    # a scan can still carry a few words of text layer, such as a digital-signature stamp
-    scanned <- which(str_count(text, "[A-Za-z]{3,}") < 40)
+    # a scan can still carry a few words of text layer, such as a digital-signature stamp; a text layer set in a
+    # font with no usable character map reads as gibberish, with almost none of English's commonest words
+    words <- str_count(text, "[A-Za-z]{3,}")
+    common <- str_count(str_to_lower(text), "\\b(the|and|of|to|or|in|for|shall|will|this)\\b")
+    scanned <- which(words < 40 | common < 0.08 * words)
     if (has_ocr) {
       for (pg in scanned) {
         png <- tempfile(fileext = ".png")

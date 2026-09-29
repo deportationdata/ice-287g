@@ -54,8 +54,13 @@ for (i in seq_len(nrow(captures))) {
     message("  skipped (no PDF body): ", cap$original)
     next
   }
-  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   bytes <- content(r, "raw")
+  # some captures hold only the start of the file (Wayback kept the first 1 MiB of several 2020 MOAs); a whole PDF ends in %%EOF
+  if (!length(grepRaw("%%EOF", tail(bytes, 2048), fixed = TRUE))) {
+    message("  skipped (capture holds a cut-off PDF): ", src)
+    next
+  }
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   name <- cap$original |> str_remove("\\?.*$") |> basename() |> URLdecode() |> sanitize_path_component(fallback = "moa.pdf")
   path <- make_unique_file_path(out_dir, name)
   writeBin(bytes, path)

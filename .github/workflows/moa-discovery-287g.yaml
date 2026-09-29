@@ -41,6 +41,8 @@ jobs:
             pkgs <- c("arrow", "digest", "dplyr", "fs", "httr", "jsonlite", "pdftools",
                       "purrr", "readr", "stringi", "stringr", "tidyr", "tidyverse", "xml2")
             missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
+            # arrow before 20 refuses the native GEOMETRY column in agreements-sf.parquet
+            if (requireNamespace("arrow", quietly = TRUE) && packageVersion("arrow") < "20") missing <- union(missing, "arrow")
             if (length(missing) > 0) {
               install.packages(missing, repos = "https://cloud.r-project.org")
             }

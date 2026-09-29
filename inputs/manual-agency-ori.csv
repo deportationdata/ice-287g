@@ -211,3 +211,5 @@ Virginia,,Prince William-Manassas Regional Jail,,none,"county and regional jails
 Virginia,,Virginia DOC Law Enforcement Services,,none,"not on the UCR rosters (LEAIC, LEAR, CDE) and no state ORI list found; reviewed 2026-09-26"
 Virginia,,Virginia Department of Corrections,,none,"not on the UCR rosters (LEAIC, LEAR, CDE) and the NCIC ORI file is not public; reviewed 2026-09-26"
 Minnesota,,MN Department of Public Safety,MNDPS0000,leaic:MINNESOTA DEPARTMENT OF PUBLIC SAFETY ST PAUL,"the 2008-09 sheets' abbreviation, whose later agreements carry MNDPS0000; LEAIC also names the State Patrol series ORI MNMHP9000 ""MN DEPARTMENT OF PUBLIC SAFETY"", which is not the whole department (reviewed 2026-09-27)"
+Kentucky,Kenton County,Kenton County Detention Center,,none,"KY0590000 is the Kenton County Sheriff's Office's; county jails are not on the UCR rosters (LEAIC, LEAR, CDE); reviewed 2026-09-28"
+Kentucky,Rockcastle County,Rockcastle County Detention Center,,none,"KY1020000 is the Rockcastle County Sheriff's Office's; county jails are not on the UCR rosters (LEAIC, LEAR, CDE); reviewed 2026-09-28"
