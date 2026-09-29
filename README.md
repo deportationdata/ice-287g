@@ -23,7 +23,7 @@ repositories, built with the same approach.
   `NC-alamance-county-sheriff-office#JEM#2007-01-10`, its support model and
   signing date). An agency can hold several — a re-signing supersedes its
   predecessor, and a sheriff may run jail, task-force and warrant-service
-  agreements at once, each its own MOA. `signed` is the date ICE records:
+  agreements at once, each its own MOA. `signed_date` is the date ICE records:
   the date its sheet printed (`signed_source` `ICE sheet`), else, for a
   signing ICE never listed, the date its MOA archive index gives, else ICE's
   signature on the MOA (`MOA signature`). Two cases make the sheet's rows
@@ -39,7 +39,7 @@ repositories, built with the same approach.
   published). An **addendum** changes an agreement without replacing it and
   is never its own row: `addendum` lists every addendum of the agreement
   (the sheet's ADDENDUM link, or `#page=` in the MOA's own PDF where ICE
-  bound the addendum into it) and `addendum_signed` the date each took
+  bound the addendum into it) and `addendum_signed_date` the date each took
   effect, both joined with "; " in date order. ICE sometimes listed an
   addendum as if it were the agreement ("… (Addendum)", dated the addendum);
   those listings belong to the agreement the addendum amends. `status` is `Active`

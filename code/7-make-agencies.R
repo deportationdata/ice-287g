@@ -45,8 +45,9 @@ agencies <- ice |>
   mutate(jurisdiction_level = coalesce(jurisdiction_level,
                                        str_to_title(na_if(agency_level_from_name(display_agency, state), "unknown")))) |>
   select(agency_id, state, state_abbr, display_agency, jurisdiction_level, county_fips, is_current,
-         n_agreements, n_active, ice_listed_from, ice_listed_from_source, ice_listed_to, removed_between_from, removed_between_to,
-         terminated, first_signed, latest_signed, models, model_history) |>
+         n_agreements, n_active, ice_listed_from_date = ice_listed_from, ice_listed_from_source, ice_listed_to_date = ice_listed_to,
+         removed_between_from_date = removed_between_from, removed_between_to_date = removed_between_to,
+         terminated, first_signed_date = first_signed, latest_signed_date = latest_signed, models, model_history) |>
   arrange(state, display_agency)
 
 stopifnot(

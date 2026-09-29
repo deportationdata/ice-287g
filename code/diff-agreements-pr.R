@@ -29,7 +29,10 @@ if (!file.exists(pr_path) || file.size(pr_path) == 0) {
 read_clean <- function(path) {
   read_parquet(path) |>
     as_tibble() |>
-    select(-any_of("geometry"))
+    select(-any_of("geometry")) |>
+    # dates were published without the _date suffix until 2026-09-29
+    rename(any_of(c(signed_date = "signed", first_appeared_date = "first_appeared", last_appeared_date = "last_appeared",
+                    removed_by_date = "removed_by", addendum_signed_date = "addendum_signed")))
 }
 
 main_df <- read_clean(main_path)
@@ -37,7 +40,7 @@ pr_df <- read_clean(pr_path)
 
 id_cols <- c("agreement_id", "agency_id", "agreement_lineage_id", "succeeded_by", "latest_sheet_row", "latest_sheet", "latest_sheet_url")
 # the roster end date moves on every active row with each new sheet, so it is reported as one line
-roster_cols <- c("last_appeared")
+roster_cols <- c("last_appeared_date")
 
 make_key <- function(df) {
   base_key_cols <- intersect(
@@ -89,12 +92,12 @@ pr_df <- bind_rows(
   pr_df |> filter(!agreement_id %in% shared_ids) |> make_key()
 )
 
-rename_cols <- intersect(c("state", "ice_county", "support_type", "signed"), intersect(names(main_df), names(pr_df)))
+rename_cols <- intersect(c("state", "ice_county", "support_type", "signed_date"), intersect(names(main_df), names(pr_df)))
 main_df <- main_df |>
-  mutate(.rename = if_else(!.key %in% pr_df$.key & !is.na(signed),
+  mutate(.rename = if_else(!.key %in% pr_df$.key & !is.na(signed_date),
                            do.call(paste, c("renamed", across(all_of(rename_cols)), sep = " | ")), NA))
 pr_df <- pr_df |>
-  mutate(.rename = if_else(!.key %in% main_df$.key & !is.na(signed),
+  mutate(.rename = if_else(!.key %in% main_df$.key & !is.na(signed_date),
                            do.call(paste, c("renamed", across(all_of(rename_cols)), sep = " | ")), NA))
 renamed <- intersect(
   main_df |> count(.rename) |> filter(n == 1, !is.na(.rename)) |> pull(.rename),

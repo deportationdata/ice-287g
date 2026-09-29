@@ -31,12 +31,12 @@ pending <- if (nzchar(ids)) {
 } else {
   # a pending agreement whose PDF is already held no longer reads as pending (2-make-agreements.R)
   agreements |>
-    filter(status == "Active", moa == "pending", first_appeared <= Sys.Date() - min_days)
+    filter(status == "Active", moa == "pending", first_appeared_date <= Sys.Date() - min_days)
 }
 pending <- pending |>
   mutate(model = support_abbr(norm_support_key(support_type))) |>
-  filter(model %in% c("JEM", "TFM", "WSO"), !is.na(state_abbr), !is.na(signed)) |>
-  arrange(first_appeared)
+  filter(model %in% c("JEM", "TFM", "WSO"), !is.na(state_abbr), !is.na(signed_date)) |>
+  arrange(first_appeared_date)
 
 pdf_text_of <- function(path) {
   if (requireNamespace("pdftools", quietly = TRUE)) {
@@ -68,7 +68,7 @@ stop_reason <- NA_character_
 found <- list()
 for (i in seq_len(nrow(pending))) {
   a <- pending[i, ]
-  for (f in moa_candidate_files(a$agency, a$state_abbr, a$model, a$signed)) {
+  for (f in moa_candidate_files(a$agency, a$state_abbr, a$model, a$signed_date)) {
     if (n_requests >= max_requests) { stop_reason <- "request cap reached"; break }
     r <- tryCatch(HEAD(paste0(base_url, f), user_agent("Mozilla/5.0"), timeout(30)), error = \(e) NULL)
     n_requests <- n_requests + 1
@@ -95,7 +95,7 @@ for (h in found) {
   bytes <- if (!is.null(r) && status_code(r) == 200) content(r, "raw") else raw()
   if (!body_has_magic(bytes, "pdf")) { unverified[[length(unverified) + 1]] <- mutate(h, reason = "the url did not return a PDF"); next }
   tmp <- tempfile(fileext = ".pdf"); writeBin(bytes, tmp)
-  reason <- verify(pdf_text_of(tmp), h$agency, h$signed)
+  reason <- verify(pdf_text_of(tmp), h$agency, h$signed_date)
   if (!is.na(reason)) { unverified[[length(unverified) + 1]] <- mutate(h, reason = reason); next }
   path <- NA_character_
   if (!dry_run) {
@@ -114,12 +114,12 @@ if (nrow(verified) && !dry_run) {
     saved_path, file_hash, url, retrieved_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
     state, agency, original_filename = file,
     note = paste0("found by probing ICE's MOA naming pattern while its sheet still said link pending (",
-                  as.integer(Sys.Date() - first_appeared), " days); the PDF text names the agency or its signing date"),
+                  as.integer(Sys.Date() - first_appeared_date), " days); the PDF text names the agency or its signing date"),
     etag, last_modified))
 }
 
 if (nzchar(report)) {
-  line <- \(d) sprintf("- %s — %s (%s signed %s, pending since %s): [%s](%s)", d$state, d$agency, d$model, d$signed, d$first_appeared, d$file, d$url)
+  line <- \(d) sprintf("- %s — %s (%s signed %s, pending since %s): [%s](%s)", d$state, d$agency, d$model, d$signed_date, d$first_appeared_date, d$file, d$url)
   cat(c(sprintf("## MOA probe, %s", Sys.Date()), "",
         sprintf("Probed %d of %d %s, with %d requests to ice.gov%s.", probed, nrow(pending),
                 if (nzchar(ids)) "requested agreements" else sprintf("agreements pending at least %d days", min_days), n_requests,
