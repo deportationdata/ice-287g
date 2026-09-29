@@ -24,11 +24,6 @@ run 1-read-sheets.R
 run 2-make-identities.R
 run 2-make-agreements.R
 
-# ICE's other records (undated lists, MOA archive index) and the OIG roster
-run 1-read-historical-ice-lists.R
-run 1-read-historical-oig-2009.R
-run 1-read-historical-ice-archive-index.R
-
 # one script per geometry class; these read only 1-read outputs, so any order
 run 3-match-state.R
 run 3-match-county.R
@@ -44,7 +39,7 @@ run 5-match-agency-identifiers.R
 run 5-locate-features.R
 run 6-make-agreement-level-sf.R
 
-# the agencies grain: every source resolved to agencies and arbitrated against ICE's own record
+# the agencies grain: one row per agency, summarised from its agreements
 run 7-make-agencies.R
 run 7-match-missing-identifiers.R
 run 7-make-qa-report.R

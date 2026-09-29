@@ -20,9 +20,13 @@ showed that none of it is load-bearing:
 
 What the sources did carry was the count machinery itself — stated totals,
 tolerances, source counts and a `confidence` grade — which went with them.
-The pipeline now records presence (is an agency on a given ICE or OIG
-list or not) and conflicts (`data/intermediate/agency-disagreements.csv`), nothing
-else. Citations for every file remain in `inputs/historical/SOURCES.csv`.
+On 29 September 2026 the remaining claims machinery went too: ICE's undated
+lists, its MOA archive index and the OIG appendix had been reduced to
+per-agency claims and arbitrated against ICE's sheets, but a check showed
+they named no agreement the sheets lack and no date ICE's sheets do not
+already carry (see `inputs/historical/README.md`). The agencies file is now a
+summary of the agreements file. Citations for every file remain in
+`inputs/historical/SOURCES.csv`.
 
 ## What is here
 
@@ -56,10 +60,11 @@ were pulled, and three claims in them are wrong:
 
 ## What is still worth having
 
-- **Massachusetts State Police**, MOA signed 13 Dec 2006 and rescinded by Gov.
-  Patrick around 12 Jan 2007 with no troopers trained, is the one agreement
-  no roster records. It enters the data through
-  `inputs/historical/press-claims.csv`, sourced to ICE's own release.
+- **Massachusetts State Police**, MOA signed 13 Dec 2006 (ICE news release)
+  and rescinded by Gov. Patrick on 11 Jan 2007 with no troopers trained, is
+  the one agreement no roster records. It is not in the data: the agreements
+  file holds only what ICE listed, and the agencies file summarises the
+  agreements. The citation is in `inputs/historical/SOURCES.csv`.
 - **Capellan & Sorg's FOIA data** (167 county applications 2005–2010 with
   accepted / denied / implemented status) is the only known source on
   applications that did not become agreements. Never deposited; contact
