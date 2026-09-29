@@ -21,14 +21,6 @@ identities <- arrow::read_parquet(
 )
 pubs <- arrow::read_parquet("data/intermediate/sheet-publications.parquet")
 agencies <- arrow::read_parquet("data/agencies.parquet")
-claims <- read_csv(
-  "data/intermediate/historical-source-claims.csv",
-  show_col_types = FALSE
-)
-disagree <- read_csv(
-  "data/intermediate/agency-disagreements.csv",
-  show_col_types = FALSE
-)
 
 features <- all_sf |>
   mutate(empty = st_is_empty(geometry)) |>
@@ -150,25 +142,14 @@ summary <- bind_rows(
       )
     }) |>
     list_rbind(),
-  check("agencies added from ICE press releases", sum(!agencies$ice_published)),
-  check("source claims", nrow(claims)),
-  claims |>
-    count(resolution, name = "n") |>
-    pmap(\(resolution, n) {
-      check("source claims by resolution", n, scope = resolution)
-    }) |>
-    list_rbind(),
   check(
-    "source claims left unresolved",
-    sum(
-      str_starts(claims$resolution, "unresolved") &
-        claims$field %in% c("listed", "signed")
-    )
+    "agencies whose agreement count differs from the agreements file",
+    agencies |>
+      inner_join(count(agreements, agency_id, name = "n_in_file"), by = "agency_id") |>
+      filter(n_agreements != n_in_file) |>
+      nrow(),
+    0
   ),
-  disagree |>
-    count(kind, name = "n") |>
-    pmap(\(kind, n) check("agency disagreements by kind", n, scope = kind)) |>
-    list_rbind(),
   check(
     "active agreements == newest sheet rows",
     sum(agreements$status == "Active"),

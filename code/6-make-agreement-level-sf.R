@@ -507,19 +507,15 @@ agreement_level_sf <- agreement_level_sf |>
     )
   ) |>
   select(-ice_county_fips, -member_county_fips) |>
-  # the unit the agreement covers, by name; a jail or warrant-service agreement covers the detention facilities in it
+  # the unit the agreement covers, by name; a jail or warrant-service agreement covers the agency's detention facilities
   mutate(
     jurisdiction = case_when(
+      support_type %in% c("Jail Enforcement Model", "Warrant Service Officer") ~ paste("Detention facilities operated by", agency),
       jurisdiction_level %in% "Constable District" ~ constable_district_name(agency, county),
       jurisdiction_level %in% "State" ~ state,
       jurisdiction_level %in% c("Municipal", "Campus", "Port") ~ coalesce(unit_names, municipality_name(place, place_type)),
       jurisdiction_level %in% "Regional" ~ coalesce(unit_names, county),
       TRUE ~ county
-    ),
-    jurisdiction = if_else(
-      support_type %in% c("Jail Enforcement Model", "Warrant Service Officer") & !is.na(jurisdiction),
-      paste0("Detention facilities in ", if_else(str_detect(jurisdiction, "^(City|Town|Village|Municipality) of "), "the ", ""), jurisdiction),
-      jurisdiction
     )
   ) |>
   select(-unit_names) |>
@@ -538,6 +534,8 @@ agreement_level_sf <- agreement_level_sf |>
     support_type,
     jurisdiction,
     jurisdiction_facilities,
+    jurisdiction_level,
+    jurisdiction_level_source,
     status,
     signed,
     signed_source,
@@ -561,8 +559,6 @@ agreement_level_sf <- agreement_level_sf |>
     state_fips,
     geoid,
     geoid_type,
-    jurisdiction_level,
-    jurisdiction_level_source,
     ice_county,
     ice_type,
     latest_sheet_row,

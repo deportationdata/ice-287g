@@ -1,42 +1,48 @@
-# Historical inputs — the program's record before the live scraper
+# Historical inputs — ICE's records of the program before the live scraper
 
-The agency history is built from ICE's own records plus one DHS OIG
-appendix. Every file here is read by `code/1-read-historical-*.R` or
-`code/7-make-agencies.R`; the secondary sources the pipeline does not read
-live in `inputs/other_sources/` (see its README).
+The pipeline reads one file here: the newest `ice_live_287gMOA_index_*.tsv`
+snapshot, which `code/0-acquire-archive-index.R` compares against ICE's live
+`/287g-archive` index to find newly posted MOAs. The rest is kept for
+reference and citation; the secondary sources live in `inputs/other_sources/`
+(see its README).
 
-## Sources the pipeline reads
+| File | What it is |
+|---|---|
+| `ice_live_287gMOA_index_<date>.tsv` | ICE's `/287g-archive` index of MOA documents with original signing dates, one snapshot per change. It also files non-287(g) documents (a Cook County forfeiture MOU, a Morristown application letter). Seven signings ICE's sheets never dated take their date from it, by hand, in `inputs/unlisted-signings.csv` (`signed_source` `ICE archive index`) |
+| `reports/DHS-OIG-10-63_Mar2010.pdf` | DHS OIG-10-63, Appendix E Table 3: all 67 jurisdictions as of 28 Oct 2009 with model, original signing date and signed/pending status, from ICE OSLC data. The only roster between the Aug 2009 and Apr 2010 captures |
+| `SOURCES.csv` | The citation and provenance record for every file here and under `inputs/other_sources/` |
 
-| Source (`source_id`) | What it is | Where |
-|---|---|---|
-| `ICE sheet` | Every archived capture of ICE's 287(g) roster, from the partners-page table of 29 Apr 2008 (signing dates back to Florida DLE, 2 Jul 2002) through the fact-sheet series to today's participating-agencies sheet | `sheets/` |
-| `ICE undated lists` | ICE's undated agency lists that preceded the table: "Signed MOAs as of 9-19-07" (28) and "Agencies with signed MOAs (updated 3-10-08)" (41) | `sheets/sheets_wayback_pre2011/` |
-| `ICE archive index` | ICE's live `/287g-archive` index of MOA documents with original signing dates, retrieved 20 Apr 2026. It also files non-287(g) documents (a Cook County forfeiture MOU, a Morristown application letter), so it may not add an agency | `ice_live_287gMOA_index_2026-04-20.tsv` |
-| `OIG 2009 report` | DHS OIG-10-63, Appendix E Table 3: all 67 jurisdictions as of 28 Oct 2009 with model, original signing date and signed/pending status, from ICE OSLC data. The only roster between the Aug 2009 and Apr 2010 captures, and the record of the Oct 2009 re-signing wave | `reports/DHS-OIG-10-63_Mar2010.pdf` |
-| `ICE press release` | Agreements ICE announced that never reached a roster, one row per claim with its evidence url. Today: Massachusetts State Police, signed 13 Dec 2006 (ICE release), rescinded 12 Jan 2007 (press) | `press-claims.csv` |
+`sheets/sheets_wayback_pre2011/` also holds ICE's undated agency lists that
+preceded its dated table: "Signed MOAs as of 9-19-07" (28) and "Agencies with
+signed MOAs (updated 3-10-08)" (41).
 
-`source-registry.csv` registers each with its as-of date and provenance file;
-only `ICE press release` may add an agency. `SOURCES.csv` is the citation
-and provenance record for every file, including those under
-`inputs/other_sources/`. `crosswalk/ice_agency_to_county.csv` is the hand-built
-jurisdiction crosswalk for agencies the modern sheet never typed.
+## Why none of this feeds the agencies file
 
-## How the record is built
+Until 29 September 2026, `7-make-agencies.R` reduced the undated lists, the
+archive index, the OIG appendix and one ICE press release to per-agency
+claims and arbitrated them against ICE's sheets, so the agencies file could
+carry an earlier signing date or a wider active window than the agreements
+file. A check of every claim against the agreements showed:
 
-- `7-make-agencies.R` first reduces each source to typed claims (`listed`,
-  `pending`, `signed`, `model`, `moa_file`, `rescinded`) and resolves each to a
-  agency by rule — the registry of ICE's spellings and the alias table,
-  then a name that begins exactly one agency, then a signing date unique
-  in the state. Every claim is written to `data/intermediate/historical-source-claims.csv`; what no
-  rule resolves is in `data/intermediate/historical-source-claims-unresolved.csv`, never dropped.
-- It then writes one row per agency: ICE's listing window
-  and removal window, the earliest signing date and its source, every signing
-  date every source gives, the window the evidence speaks to
-  (`attested_active_from/to`), MOA archive status and `source_ids`. Where a
-  source and ICE differ — a date, a model, a state, or presence on the nearest
-  ICE publication — the difference is recorded in
-  `data/intermediate/agency-disagreements.csv`. There are no stated-total checks,
-  source counts or confidence grades: an agency is on a list or it is not.
+- **No missing agreement.** Every agency on the undated lists and in the OIG
+  appendix already holds a signed agreement in the agreements file by that
+  list's date. Every dated entry in the archive index is an MOA the
+  agreements file already links, sometimes dated a few days differently
+  (Cobb, Benton, Frederick, Cabarrus, Rensselaer, Waukesha), once with month
+  and day swapped (Cape May, `2017-10-04` for `2017-04-10`), and once an
+  addendum already recorded in `inputs/moa-addenda.csv` (Monmouth,
+  2019-03-08). The OIG appendix's pending entries (Mesa, Charleston, Rhode
+  Island DOC) were not agreements on its date; the first two signed later
+  and the third never did.
+- **One agreement no ICE list records.** Massachusetts State Police signed
+  a task force MOA on 13 Dec 2006 (ICE news release) that Gov. Patrick
+  rescinded on 11 Jan 2007 with no troopers trained. It is on no ICE list and
+  is left out of both files; its citation is in `SOURCES.csv`.
+
+The agencies file is now a summary of the agreements file, so the two cannot
+disagree. A signing date the archive index or the OIG appendix gives that
+should replace ICE's sheet date goes in `inputs/signed-date-fixes.csv` once
+verified against the MOA's signature page, so both files change together.
 
 ## What the record can and cannot show
 
@@ -45,7 +51,7 @@ jurisdiction crosswalk for agencies the modern sheet never typed.
   terminated (Barnstable) — matches the 67 agencies on ICE's captures by
   May 2009 exactly. An agreement rescinded before anyone trained is evidently
   booked as a withdrawn application, which is why Massachusetts State Police
-  is outside that count and enters through `press-claims.csv`.
+  is outside that count.
 - ICE's monthly release indexes from Mar 2003 to Aug 2008 carry no 287(g)
   release before Feb 2005; Florida (2002) and Alabama (2003) have no release.
 - Alabama's 2003 agreement is dated 10 Sep 2003 by ICE's table and OIG, and
