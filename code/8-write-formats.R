@@ -55,17 +55,23 @@ shp_names <- c(
 agreements_shp <- agreements_sf |> rename(any_of(shp_names))
 
 stopifnot(
-  "a column name is too long for a shapefile; add it to shp_names" =
-    all(nchar(setdiff(names(agreements_shp), "geometry")) <= 10)
+  "a column name is too long for a shapefile; add it to shp_names" = all(
+    nchar(setdiff(names(agreements_shp), "geometry")) <= 10
+  )
 )
 
-tibble(shapefile_field = names(st_drop_geometry(agreements_shp)), field = names(agreements)) |>
+tibble(
+  shapefile_field = names(st_drop_geometry(agreements_shp)),
+  field = names(agreements)
+) |>
   write_csv(file.path(shp_dir, "fields.csv"))
 
 layers <- c(Point = "MULTIPOINT", Polygon = "MULTIPOLYGON")
 stopifnot(
-  "every agreement with a shape is in exactly one shapefile layer" =
-    sum(agreements_sf$geometry_type %in% names(layers)) == sum(!st_is_empty(agreements_sf))
+  "every agreement with a shape is in exactly one shapefile layer" = sum(
+    agreements_sf$geometry_type %in% names(layers)
+  ) ==
+    sum(!st_is_empty(agreements_sf))
 )
 for (type in names(layers)) {
   agreements_shp |>
@@ -84,5 +90,6 @@ if (file.exists("data/agreements-shp.zip")) {
 zip(
   zipfile = "data/agreements-shp.zip",
   files = list.files(shp_dir, full.names = TRUE),
-  flags = "-j -q"
+  flags = "-j -q",
+  zip = Sys.which("zip")
 )
