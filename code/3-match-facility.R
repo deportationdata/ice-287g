@@ -81,6 +81,7 @@ tiebreak <- c("facility_name", "latitude", "longitude")
 
 doc_pattern <- paste(
   "department of corrections?",
+  "department of adult correction",
   "correctional services",
   "public safety & corrections",
   "division of corrections",

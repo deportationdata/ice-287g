@@ -69,7 +69,9 @@ pairs <- variants |>
   )
 
 # T3b: a rename: the old spelling ends on one list, the new begins on the next, both link the same MOA
-# file, and the file name carries a word of one spelling
+# file, and the file name carries a word of one spelling. When the file names only the old spelling, ICE
+# mistyped the name on a row it otherwise left alone: the agreement keeps the old spelling and the pair
+# goes to the candidate report
 moa_file_key <- \(u) str_to_lower(str_remove_all(basename(coalesce(u, "")), "[^A-Za-z0-9]"))
 href <- \(x) if_else(str_detect(coalesce(x, ""), "^https?://"), x, NA_character_)
 # an MOA cell links an MOA when it is a "Link" hyperlink (optionally "| Addendum"), a url or an anchor to a real
@@ -101,6 +103,8 @@ adjacent <- pairs |>
   mutate(old_id = if_else(last_seq_a + 1L == first_seq_b, variant_id_a, variant_id_b),
          new_id = if_else(last_seq_a + 1L == first_seq_b, variant_id_b, variant_id_a))
 pairs$t3b <- FALSE
+held_variants <- integer()
+held_renames <- tibble()
 if (nrow(adjacent)) {
   last_rows <- variant_rows |> filter(variant_id %in% adjacent$old_id) |>
     slice_max(pub_seq, n = 1, by = variant_id, with_ties = FALSE) |> row_moa_links() |>
@@ -111,17 +115,23 @@ if (nrow(adjacent)) {
   generic_words <- c("county", "parish", "sheriff", "sheriffs", "office", "police", "department", "of", "the", "and",
                      "city", "town", "board", "commissioners", "state", "dept", "jail", "correction", "corrections",
                      "task", "force", "model", "law", "enforcement", "division")
+  names_file <- \(name, file_key) map2_lgl(name, file_key, \(n, f) {
+    tok <- setdiff(unique(str_split(n, " ")[[1]]), generic_words)
+    tok <- tok[nchar(tok) >= 4]
+    length(tok) > 0 && any(str_detect(f, fixed(tok)))
+  })
   renamed <- adjacent |>
     left_join(last_rows, by = "old_id") |>
     left_join(first_rows, by = "new_id") |>
     filter(!is.na(link_old), !is.na(link_new), moa_file_key(link_old) == moa_file_key(link_new)) |>
     mutate(file_key = moa_file_key(link_new),
-           names_file = map2_lgl(paste(canonical_agency_a, canonical_agency_b), file_key, \(n, f) {
-             tok <- setdiff(unique(str_split(n, " ")[[1]]), generic_words)
-             tok <- tok[nchar(tok) >= 4]
-             length(tok) > 0 && any(str_detect(f, fixed(tok)))
-           })) |>
-    filter(names_file)
+           old_agency = if_else(old_id == variant_id_a, canonical_agency_a, canonical_agency_b),
+           new_agency = if_else(old_id == variant_id_a, canonical_agency_b, canonical_agency_a),
+           names_old = names_file(old_agency, file_key),
+           names_new = names_file(new_agency, file_key)) |>
+    filter(names_old | names_new)
+  held_renames <- renamed |> filter(names_old, !names_new)
+  held_variants <- held_renames$new_id
   pairs$t3b[match(paste(renamed$variant_id_a, renamed$variant_id_b), paste(pairs$variant_id_a, pairs$variant_id_b))] <- TRUE
   pairs$merge <- pairs$merge | pairs$t3b
 }
@@ -175,9 +185,11 @@ for (k in which(pairs$merge)) {
 }
 variants$component <- vapply(variants$variant_id, find_root, integer(1))
 
-# canonical spelling: alias target, else current sheet's, else most published, earliest, alphabetical
+# canonical spelling: alias target, else current sheet's, else most published, earliest, alphabetical;
+# never a held rename's new spelling
+variants$held <- variants$variant_id %in% held_variants
 chosen <- variants |>
-  arrange(component, desc(aliased), desc(in_current), desc(n_pub), first_seq, canonical_agency) |>
+  arrange(component, desc(aliased), held, desc(in_current), desc(n_pub), first_seq, canonical_agency) |>
   distinct(component, .keep_all = TRUE) |>
   select(component, chosen_agency = canonical_agency)
 variants <- variants |> left_join(chosen, by = "component")
@@ -187,7 +199,7 @@ merged_t3b <- unique(c(pairs$variant_id_a[pairs$t3b], pairs$variant_id_b[pairs$t
 merged_t3c <- relabelled_variants
 
 obs_ids <- signed_obs |>
-  left_join(variants |> select(state_key, support_key, signed, canonical_agency, variant_id, component, chosen_agency),
+  left_join(variants |> select(state_key, support_key, signed, canonical_agency, variant_id, component, chosen_agency, held),
             by = c("state_key", "support_key", "signed", "canonical_agency"),
             relationship = "many-to-one")
 
@@ -311,7 +323,7 @@ renewed <- obs_ids |>
 printed_signings <- obs_ids |>
   arrange(pub_seq, sheet_row) |>
   summarise(state = first(state), state_abbr = first(state_abbr), chosen_agency = first(chosen_agency),
-            raw_state_last = last(raw_state), raw_agency_last = last(raw_agency), raw_support_last = last(raw_support),
+            raw_state_last = last(raw_state), raw_agency_last = last(raw_agency[!held]), raw_support_last = last(raw_support),
             raw_type_last = last(raw_type), raw_county_last = last(raw_county), raw_moa_last = last(raw_moa),
             support_key = if_else(any(support_key == "JAIL & TASK FORCE"), "JAIL & TASK FORCE", first(support_key)),
             component = min(component), .by = c(state_key, agency_id, signed))
@@ -362,7 +374,7 @@ identities <- obs_ids |>
     n_pub = n_distinct(publication_id),
     n_sheet_rows = max(table(publication_id)),
     latest_sheet_row = min(sheet_row[pub_seq == max(pub_seq)]),
-    raw_state_last = last(raw_state), raw_agency_last = last(raw_agency),
+    raw_state_last = last(raw_state), raw_agency_last = last(raw_agency[!held]),
     raw_support_last = last(raw_support), raw_type_last = last(raw_type),
     raw_county_last = last(raw_county), raw_moa_last = last(raw_moa),
     .groups = "drop"
@@ -562,7 +574,15 @@ unlinked <- gone |>
             left_n_pub = n_pub, right_n_pub = n_pub_s, suggested_relation = NA_character_)
 
 dir.create("data/qa", showWarnings = FALSE)
-candidates <- bind_rows(near, renames, unlinked) |> arrange(kind, state_key, left_agency)
+# a rename held back because the MOA file names only the old spelling
+held_candidates <- if (nrow(held_renames)) held_renames |>
+  transmute(kind = "rename_held", state_key, support_key, signed,
+            left_agency = old_agency, right_agency = new_agency,
+            distance = stringdist(old_agency, new_agency, method = "osa"),
+            pub_ratio = NA_real_, windows_overlap = FALSE,
+            left_n_pub = if_else(old_id == variant_id_a, n_pub_a, n_pub_b),
+            right_n_pub = if_else(old_id == variant_id_a, n_pub_b, n_pub_a), suggested_relation = "distinct")
+candidates <- bind_rows(near, renames, unlinked, held_candidates) |> arrange(kind, state_key, left_agency)
 write_csv(candidates, "data/qa/identity-candidates.csv")
 # every signing date folded into another, for review
 target |>
