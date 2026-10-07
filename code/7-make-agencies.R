@@ -11,23 +11,22 @@ geography <- arrow::read_parquet(
   col_select = c("agreement_id", "county_fips")
 )
 
-# --- ICE's record: listing window, models, signing dates, removal ------------
+# --- ICE's record: listing window, models, signing dates, removal; named as in the agreements file ------------
 ice_record <- identities |>
   group_by(agency_id) |>
   arrange(first_seq, .by_group = TRUE) |>
   summarise(
-    ice_listed_from = min(first_appeared), ice_listed_from_source = first_appeared_source[which.min(first_appeared)],
-    ice_listed_to = max(last_appeared),
+    first_appeared = min(first_appeared), last_appeared = max(last_appeared),
     n_agreements = n(), n_active = sum(status == "Active"),
-    removed_between_from = if (any(status == "Active")) as.Date(NA) else max(last_appeared),
-    removed_between_to = if (any(status == "Active")) as.Date(NA) else max(removed_by, na.rm = TRUE),
-    first_signed = min(signed), latest_signed = max(signed),
+    # blank while any agreement is active; the agency left ICE's list between last_appeared and removed_by
+    removed_by = if (any(status == "Active")) as.Date(NA) else max(removed_by, na.rm = TRUE),
+    first_signed = min(signed), last_signed = max(signed),
     models = paste(unique(support_abbr(support_key)), collapse = "; "),
     # in signing order; agreements ICE listed out of that order, or on the same sheet, would otherwise jumble it
     model_history = paste(sprintf("%s %s", support_abbr(support_key), signed)[order(signed, first_seq)], collapse = " -> "),
     .groups = "drop"
   ) |>
-  mutate(is_current = n_active > 0, terminated = n_active == 0)
+  mutate(has_active = n_active > 0)
 
 # --- jurisdiction and county --------------------------------------------------------
 # the agency takes its active or latest agreement's level and counties ("; "-joined, none for a state agency)
@@ -44,10 +43,10 @@ agencies <- ice |>
   left_join(level_modern, by = "agency_id") |>
   mutate(jurisdiction_level = coalesce(jurisdiction_level,
                                        str_to_title(na_if(agency_level_from_name(display_agency, state), "unknown")))) |>
-  select(agency_id, state, state_abbr, display_agency, jurisdiction_level, county_fips, is_current,
-         n_agreements, n_active, ice_listed_from_date = ice_listed_from, ice_listed_from_source, ice_listed_to_date = ice_listed_to,
-         removed_between_from_date = removed_between_from, removed_between_to_date = removed_between_to,
-         terminated, first_signed_date = first_signed, latest_signed_date = latest_signed, models, model_history) |>
+  select(agency_id, state, state_abbr, display_agency, jurisdiction_level, county_fips, has_active,
+         n_agreements, n_active, first_appeared_date = first_appeared, last_appeared_date = last_appeared,
+         removed_by_date = removed_by, first_signed_date = first_signed, last_signed_date = last_signed,
+         models, model_history) |>
   arrange(state, display_agency)
 
 stopifnot(
@@ -64,4 +63,4 @@ if (anyNA(agencies$jurisdiction_level)) {
 
 dir.create("data", showWarnings = FALSE)
 arrow::write_parquet(agencies, "data/agencies.parquet")
-message(sprintf("agencies: %d (%d current) from %d agreements", nrow(agencies), sum(agencies$is_current), nrow(agreements)))
+message(sprintf("agencies: %d (%d with an active agreement) from %d agreements", nrow(agencies), sum(agencies$has_active), nrow(agreements)))

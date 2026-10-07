@@ -409,8 +409,7 @@ regenerable.
   a date in ICE's am/mid/pm order; a list with no filename date by ice.gov's
   Last-Modified; earlier lists (archived ICE pages, which carry no date) by the
   Eastern date of their earliest archive capture.
-  `first_appeared_source`, `removed_by_source` and `ice_listed_from_source` say
-  which. Capture times only order lists that share a date and catch a filename
+  `first_appeared_source` and `removed_by_source` say which. Capture times only order lists that share a date and catch a filename
   date the file was online before (`date_flag` in
   `data/intermediate/sheet-publications.parquet`); a filename dated a year early
   (01062025 on a January 2026 list) takes the year its newest signing date needs.
