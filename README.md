@@ -37,10 +37,11 @@ repositories, built with the same approach.
   hold is its own agreement, and a listing published after it was signed
   belongs to it (a listing belongs to the latest signing in force when it was
   published). An **addendum** changes an agreement without replacing it and
-  is never its own row: `addendum` lists every addendum of the agreement
-  (the sheet's ADDENDUM link, or `#page=` in the MOA's own PDF where ICE
-  bound the addendum into it) and `addendum_signed_date` the date each took
-  effect, both joined with "; " in date order. ICE sometimes listed an
+  is never its own row: `addendum` and `addendum_second` link each addendum
+  of the agreement in date order (the sheet's ADDENDUM link, or `#page=` in
+  the MOA's own PDF where ICE bound the addendum into it) and
+  `addendum_signed_date` and `addendum_signed_date_second` give the date each
+  took effect; no agreement has more than two. ICE sometimes listed an
   addendum as if it were the agreement ("… (Addendum)", dated the addendum);
   those listings belong to the agreement the addendum amends. `status` is `Active`
   (on the current sheet), `Superseded` (a later agreement of the same
@@ -77,7 +78,7 @@ cannot rebuild from `inputs/`.
 | file | contents |
 |---|---|
 | **`data/agreements-sf.parquet`** | One row per agreement, geometries unioned: the ICE sheet's columns (`support_type` gives each model one spelling; ICE's TYPE as printed is `ice_type`), `jurisdiction`, what the agreement covers by name (a task force agreement's county, state, municipality styled as it styles itself, such as City of Tampa or Union Township, campus, airports, member municipalities or counties, or a constable's precinct, such as Precinct 3, Bexar County; a jail or warrant-service agreement reads Detention facilities operated by the agency, such as Detention facilities operated by Houston County Sheriff's Office), `jurisdiction_facilities` (the names of the jails and prisons an active agreement's points mark, "; "-separated and spelled as their source prints them; blank for agreements with no points), the agreement's `jurisdiction_level` and `jurisdiction_level_source`, `ORI9` (a multi-county prosecutor's office lists one ORI per county of its district, in county order), its jurisdiction in census terms (`place`, `county` and `state` with their census codes, each filled only when that unit holds the jurisdiction: a municipality or campus has its place and county (a municipal department's jail or warrant-service agreement carries the department's own municipality, not the jail's town; a Connecticut town carries its legacy county, not the planning region its 2024 census code names, and a town that is also a city, like Danbury, is carried as the town, so its `place_type` reads Town), a port authority its county alone (its airports lie mostly outside any census place), a county agency its county alone (not its jail's town), a state agency its state alone (not the counties its offices or prisons sit in), a district or regional body the counties it spans, several separated by "; "; `place_type` says whether the place is a city, town, township, borough, village or CDP), the census unit the jurisdiction is when it is one (`geoid`, `geoid_type`: the state, the county or the municipality; blank for a campus, airport, district or regional body), `geometry_type`, `geometry_vintage`, geometry. ICE's county as printed is `ice_county`. `latest_sheet_row` is the agreement's row on the latest sheet that lists it (the current sheet for active agreements, the last one it appeared on otherwise; the header is row 1, as in Excel); `latest_sheet` is that file's name (its snapshot folder under `sheets/` is part of `latest_sheet_url`, which serves it from GitHub). The file the slicer consumes. |
-| **`data/agencies.parquet`** | One row per agency across every era (2002 → today), summarised from its agreements: its jurisdiction level (State, County, Municipal, Regional, Campus, Port, Constable District or Judicial District), ICE's listing and removal windows, first and latest signing dates, models and model history. Every value is derived from the agreements file, so the two never disagree. MOAs are agreement-level: see `moa` in the agreements file. |
+| **`data/agencies.parquet`** | One row per agency across every era (2002 → today), summarised from its agreements, with the agreements file's column names: whether it has an active agreement, the ICE lists it first and last appeared on and the one that dropped it, first and last signing dates, models and model history, and the ORI and geography (place, county, state, GEOID) of its active agreement, or of its most recently listed one when none is active. Every value is derived from the agreements file, so the two never disagree. MOAs are agreement-level: see `moa` in the agreements file. |
 | `data/agreements.{xlsx,dta,sav}`, `data/agencies.{xlsx,dta,sav}`, `data/agreements-shp.zip` | The two published files in other formats, written by `8-write-formats.R`: the agreements without geometry, and a shapefile zip with a point layer (facility agreements) and a polygon layer (jurisdiction agreements). Shapefile field names stop at 10 characters, so the zip's `fields.csv` maps each back to its full name. |
 | `data/intermediate/agreements.parquet` | The current sheet cleaned, one row per agreement, with lineage (`agency_id`, `succeeded_by`), first/last appearance and removal window; `county` is the corrected county the matchers use and `raw_county` the COUNTY cell as printed. |
 | `data/intermediate/identity-agreements.parquet`, `data/intermediate/sheet-publications.parquet`, `data/intermediate/sheet-publication-files.parquet`, `data/intermediate/sheet-row-agreements.parquet`, `data/intermediate/identity-agency-spellings.parquet` | The identity layer: every distinct sheet ever published, every row of every sheet resolved to an agreement, and every spelling ICE printed for each agency. |
@@ -409,8 +410,7 @@ regenerable.
   a date in ICE's am/mid/pm order; a list with no filename date by ice.gov's
   Last-Modified; earlier lists (archived ICE pages, which carry no date) by the
   Eastern date of their earliest archive capture.
-  `first_appeared_source`, `removed_by_source` and `ice_listed_from_source` say
-  which. Capture times only order lists that share a date and catch a filename
+  `first_appeared_source` and `removed_by_source` say which. Capture times only order lists that share a date and catch a filename
   date the file was online before (`date_flag` in
   `data/intermediate/sheet-publications.parquet`); a filename dated a year early
   (01062025 on a January 2026 list) takes the year its newest signing date needs.
