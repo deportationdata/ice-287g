@@ -25,14 +25,6 @@ agreements absent from a publication inside their listing window,all,9,NA,info
 agreements ICE printed whose every listing went to a later signing it never listed,all,1,NA,info
 identity candidates awaiting a verdict,all,55,NA,info
 agencies across every era,all,2398,NA,info
-agencies by jurisdiction level,Campus,19,NA,info
-agencies by jurisdiction level,Constable District,51,NA,info
-agencies by jurisdiction level,County,1073,NA,info
-agencies by jurisdiction level,Judicial District,12,NA,info
-agencies by jurisdiction level,Municipal,1127,NA,info
-agencies by jurisdiction level,Port,4,NA,info
-agencies by jurisdiction level,Regional,19,NA,info
-agencies by jurisdiction level,State,93,NA,info
 agencies whose agreement count differs from the agreements file,all,0,0,pass
 active agreements == newest sheet rows,all,2631,2631,pass
 duplicate identity rows in agreements,all,0,0,pass
