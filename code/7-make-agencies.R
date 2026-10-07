@@ -39,12 +39,20 @@ level_modern <- agreements |>
   left_join(geography, by = "agreement_id") |>
   select(-agreement_id)
 
+# --- jurisdiction level -----------------------------------------------------------
+# what the agency is (State, County, Municipal, Campus, ...), set per agreement in 2-make-agreements.R from
+# the manual list, the agency's name and ICE's TYPE; the same on every agreement an agency signs
+level <- agreements |>
+  distinct(agency_id, jurisdiction_level)
+stopifnot("one jurisdiction level per agency" = !anyDuplicated(level$agency_id))
+
 # --- assemble ---------------------------------------------------------------------
 agencies <- ice |>
   select(agency_id, state, state_abbr, display_agency) |>
   left_join(ice_record, by = "agency_id") |>
+  left_join(level, by = "agency_id") |>
   left_join(level_modern, by = "agency_id") |>
-  select(agency = display_agency, agency_id, ORI9, has_active,
+  select(agency = display_agency, agency_id, ORI9, jurisdiction_level, has_active,
          n_agreements, n_active, first_appeared_date = first_appeared, last_appeared_date = last_appeared,
          last_removed_by_date = last_removed_by, first_signed_date = first_signed, last_signed_date = last_signed,
          models, model_history,
