@@ -1,5 +1,5 @@
 match_layer,match_type,needs_review,n
-county,county_name,FALSE,682
+county,county_name,FALSE,687
 county,county_name,TRUE,2
 county,judicial_district_member_county,FALSE,42
 facility,exact_county_pattern_all_facilities,FALSE,711
@@ -20,13 +20,13 @@ municipal,cousub_name,TRUE,8
 municipal,lrc_voting_district,FALSE,1
 municipal,lrc_ward,FALSE,2
 municipal,manual_override,FALSE,3
-municipal,place_name,FALSE,999
+municipal,place_name,FALSE,1012
 municipal,place_name,TRUE,24
 municipal,regional_member_municipality,FALSE,42
 municipal,regional_member_municipality,TRUE,17
 municipal,unmatched_regional_members,TRUE,2
 port,airport_boundary,FALSE,5
-precinct,no_precinct_boundary_layer,TRUE,51
+precinct,no_precinct_boundary_layer,TRUE,52
 state,state_name,FALSE,79
 state,state_name,TRUE,2
 university,manual_override,TRUE,1

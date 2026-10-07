@@ -132,16 +132,6 @@ summary <- bind_rows(
     nrow(read_csv("data/qa/identity-candidates.csv", show_col_types = FALSE))
   ),
   check("agencies across every era", nrow(agencies)),
-  agencies |>
-    count(jurisdiction_level, name = "n") |>
-    pmap(\(jurisdiction_level, n) {
-      check(
-        "agencies by jurisdiction level",
-        n,
-        scope = coalesce(jurisdiction_level, "none")
-      )
-    }) |>
-    list_rbind(),
   check(
     "agencies whose agreement count differs from the agreements file",
     agencies |>
