@@ -8,7 +8,8 @@ ice <- arrow::read_parquet("data/intermediate/identity-agencies.parquet")
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet")
 geography <- arrow::read_parquet(
   "data/agreements-sf.parquet",
-  col_select = c("agreement_id", "county_fips")
+  col_select = c("agreement_id", "ORI9", "place", "place_type", "place_geoid", "county", "county_fips",
+                 "state_fips", "geoid", "geoid_type")
 )
 
 # --- ICE's record: listing window, models, signing dates, removal; named as in the agreements file ------------
@@ -18,8 +19,8 @@ ice_record <- identities |>
   summarise(
     first_appeared = min(first_appeared), last_appeared = max(last_appeared),
     n_agreements = n(), n_active = sum(status == "Active"),
-    # blank while any agreement is active; the agency left ICE's list between last_appeared and removed_by
-    removed_by = if (any(status == "Active")) as.Date(NA) else max(removed_by, na.rm = TRUE),
+    # blank while any agreement is active; the agency left ICE's list between last_appeared and last_removed_by
+    last_removed_by = if (any(status == "Active")) as.Date(NA) else max(removed_by, na.rm = TRUE),
     first_signed = min(signed), last_signed = max(signed),
     models = paste(unique(support_abbr(support_key)), collapse = "; "),
     # in signing order; agreements ICE listed out of that order, or on the same sheet, would otherwise jumble it
@@ -28,38 +29,33 @@ ice_record <- identities |>
   ) |>
   mutate(has_active = n_active > 0)
 
-# --- jurisdiction and county --------------------------------------------------------
-# the agency takes its active or latest agreement's level and counties ("; "-joined, none for a state agency)
+# --- identifier and geography ---------------------------------------------
+# the agency takes its active or latest agreement's ORI and geography, named as in the agreements file;
+# historical agreements carry no geography, and the fields never differ between an agency's active agreements
 level_modern <- agreements |>
   arrange(desc(status == "Active"), desc(last_appeared)) |>
   distinct(agency_id, .keep_all = TRUE) |>
+  select(agency_id, agreement_id) |>
   left_join(geography, by = "agreement_id") |>
-  transmute(agency_id, jurisdiction_level, county_fips)
+  select(-agreement_id)
 
 # --- assemble ---------------------------------------------------------------------
 agencies <- ice |>
   select(agency_id, state, state_abbr, display_agency) |>
   left_join(ice_record, by = "agency_id") |>
   left_join(level_modern, by = "agency_id") |>
-  mutate(jurisdiction_level = coalesce(jurisdiction_level,
-                                       str_to_title(na_if(agency_level_from_name(display_agency, state), "unknown")))) |>
-  select(agency_id, state, state_abbr, display_agency, jurisdiction_level, county_fips, has_active,
+  select(agency = display_agency, agency_id, ORI9, has_active,
          n_agreements, n_active, first_appeared_date = first_appeared, last_appeared_date = last_appeared,
-         removed_by_date = removed_by, first_signed_date = first_signed, last_signed_date = last_signed,
-         models, model_history) |>
-  arrange(state, display_agency)
+         last_removed_by_date = last_removed_by, first_signed_date = first_signed, last_signed_date = last_signed,
+         models, model_history,
+         place, place_type, place_geoid, county, county_fips, state, state_fips, geoid, geoid_type) |>
+  arrange(state, agency)
 
 stopifnot(
   "every agency id is unique" = !anyDuplicated(agencies$agency_id),
   "every agency holds at least one agreement" = all(agencies$n_agreements >= 1L),
-  "every agreement's agency is present" = all(agreements$agency_id %in% agencies$agency_id),
-  "every jurisdiction level is one of the eight" =
-    all(is.na(agencies$jurisdiction_level) | agencies$jurisdiction_level %in% JURISDICTION_LEVELS)
+  "every agreement's agency is present" = all(agreements$agency_id %in% agencies$agency_id)
 )
-if (anyNA(agencies$jurisdiction_level)) {
-  warning(sum(is.na(agencies$jurisdiction_level)), " agency(s) have no jurisdiction level: ",
-          paste(agencies$agency_id[is.na(agencies$jurisdiction_level)], collapse = ", "))
-}
 
 dir.create("data", showWarnings = FALSE)
 arrow::write_parquet(agencies, "data/agencies.parquet")

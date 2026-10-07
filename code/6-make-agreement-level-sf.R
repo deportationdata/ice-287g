@@ -8,6 +8,8 @@ source("code/functions.R")
 features_sf <- st_read("data/intermediate/match-features.parquet", quiet = TRUE)
 
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet")
+stopifnot("no agreement has more than two addenda" = !any(str_count(coalesce(agreements$addendum, ""), ";") > 1))
+
 
 agreement_identifiers <-
   arrow::read_parquet("data/intermediate/match-agency-identifiers.parquet") |>
@@ -525,7 +527,15 @@ agreement_level_sf <- agreement_level_sf |>
     geometry_vintage = if_else(st_is_empty(geometry), NA_integer_, geometry_vintage)
   ) |>
   arrange(desc(last_appeared), latest_sheet_row, agreement_id) |>
-  mutate(latest_sheet = basename(latest_sheet)) |>
+  mutate(
+    latest_sheet = basename(latest_sheet),
+    # the intermediate joins an agreement's addendum links and dates with "; " (and prints Undated for one it
+    # cannot date); no agreement has more than two, so the published file carries each as its own column
+    addendum_second = str_match(addendum, ";\\s*([^;]+)$")[, 2],
+    addendum = str_extract(addendum, "^[^;]+"),
+    addendum_signed_date = as.Date(str_extract(addendum_signed, "^[^;]+"), format = "%Y-%m-%d"),
+    addendum_signed_date_second = as.Date(str_match(addendum_signed, ";\\s*([^;]+)$")[, 2], format = "%Y-%m-%d")
+  ) |>
   select(
     agency,
     agency_id,
@@ -548,7 +558,9 @@ agreement_level_sf <- agreement_level_sf |>
     moa,
     moa_pending,
     addendum,
-    addendum_signed_date = addendum_signed,
+    addendum_second,
+    addendum_signed_date,
+    addendum_signed_date_second,
     has_addendum,
     place,
     place_type,
