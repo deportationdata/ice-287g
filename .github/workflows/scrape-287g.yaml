@@ -1,0 +1,549 @@
+name: "Scrape 287(g) agreements"
+
+on:
+  schedule:
+    # hourly, 10:00 to 01:00 UTC: ICE can replace the sheet twice a day, always 9 am to 7 pm
+    # Eastern; minute 17 avoids the top-of-the-hour pile-up
+    - cron: '17 10-23,0-1 * * *'
+  workflow_dispatch:
+    inputs:
+      full_pass:
+        description: "revalidate every MOA url, not just this hour's shard"
+        type: boolean
+        default: false
+      rebuild:
+        description: "rebuild the open update branch's datasets even though the sheet is unchanged"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+# never cancel a run mid-scrape; a newer tick queues behind it
+concurrency:
+  group: 287g-acquire
+  cancel-in-progress: false
+
+jobs:
+  # acquisitions are committed and pushed before any pipeline code runs, so a failed build
+  # never discards one
+  acquire:
+    runs-on: [self-hosted]
+    timeout-minutes: 150
+    outputs:
+      branch: ${{ steps.update_branch.outputs.branch }}
+      changed: ${{ steps.check_changes.outputs.changed == 'true' || steps.dedupe_changes.outputs.changed == 'true' }}
+      needs_build: ${{ steps.needs_build.outputs.needs_build }}
+      # the run that commits an acquisition records the PR it created or updated;
+      # any other run looks it up by branch
+      pr_number: ${{ steps.create_pr.outputs.pr_number || steps.needs_build.outputs.pr_number }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: true
+          lfs: true
+          fetch-depth: 0
+
+      - name: Continue open update PR if one exists
+        id: update_branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # while an agreements-update PR is open, each run commits onto its branch
+          open_branch=$(gh pr list --state open --json headRefName \
+            --jq '[.[].headRefName | select(startswith("agreements-update"))][0] // empty')
+          if [ -n "$open_branch" ]; then
+            git fetch origin "$open_branch"
+            git checkout -B "$open_branch" "origin/$open_branch"
+            echo "Continuing open update branch: $open_branch"
+            echo "branch=$open_branch" >> "$GITHUB_OUTPUT"
+          else
+            branch="agreements-update-$(date +%Y-%m-%d-%H%M%S)"
+            git checkout -b "$branch"
+            echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check whether the ICE sheet changed (quick check)
+        id: sheet_check
+        run: |
+          # hash just the sheet against the archive; any failure falls through to a full scrape.
+          # ICE links it by doclib name or by file-download id, as 0-acquire-scraper.R accepts
+          ua="Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36"
+          url=$(curl -sL --retry 3 -A "$ua" "https://www.ice.gov/identify-and-arrest/287g" \
+            | grep -oiE 'href="[^"]*(participatingAgenc(y|ies)[^"]*\.xlsx|file-download/download/public/[0-9]+)[^"]*"' \
+            | head -1 | sed 's/^href="//; s/"$//' || true)
+          case "$url" in
+            //*) url="https:$url" ;;
+            /*)  url="https://www.ice.gov$url" ;;
+          esac
+          if [ -z "$url" ]; then
+            echo "Sheet link not found on page — running full scrape."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! curl -sL -f --retry 3 -A "$ua" "$url" -D "$RUNNER_TEMP/sheet-check.headers" -o "$RUNNER_TEMP/sheet-check.xlsx"; then
+            echo "Sheet check download failed — running full scrape."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          new_hash=$(sha256sum "$RUNNER_TEMP/sheet-check.xlsx" | cut -d' ' -f1)
+          echo "sheet_hash=$new_hash" >> "$GITHUB_OUTPUT"
+          # the served filename, read as 0-acquire-scraper.R reads original_filename (publications
+          # are dated by it): Content-Disposition of the final response, else the url's last part
+          served_name=$(grep -i '^content-disposition:' "$RUNNER_TEMP/sheet-check.headers" | tail -1 \
+            | sed -n 's/.*filename=//Ip' | cut -d';' -f1 | tr -d '"\r')
+          [ -n "$served_name" ] || served_name=$(basename "${url%%\?*}")
+          # a bare file-download id is no filename; the scraper records participating.xlsx then
+          case "$served_name" in *.*) ;; *) served_name="participating.xlsx" ;; esac
+          echo "Sheet served as $served_name"
+          # a failed PDF download is retried on the next tick, not the next sheet edit
+          if find agreements -name failed_downloads.txt -size +0 2>/dev/null | grep -q .; then
+            echo "Outstanding failed downloads — running full scrape."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          newest_dir=$(ls -d sheets/sheets_2* 2>/dev/null | sort | tail -1 || true)
+          today=$(date -u +%Y-%m-%d)
+          # a folder's hashes are in its manifest.csv, or in a download_path_log.csv where it has that instead
+          if [ -n "$newest_dir" ] && cat "$newest_dir"/manifest.csv "$newest_dir"/download_path_log.csv 2>/dev/null | grep -q "$new_hash"; then
+            # the same bytes under a new filename are a new publication date, snapshotted once;
+            # original_filename is column 7 of manifest.csv, and the etag's commas sit after it
+            if [ -f "$newest_dir/manifest.csv" ] && ! cut -d, -f7 "$newest_dir/manifest.csv" | grep -qxF "$served_name"; then
+              if grep -qs "^$today,$new_hash,rename" sheets/seen-log.csv; then
+                echo "Sheet unchanged but served as $served_name, already logged today — skipping."
+                echo "changed=false" >> "$GITHUB_OUTPUT"
+              else
+                echo "Sheet unchanged (sha256 $new_hash) but served under a new name, $served_name — logging and scraping."
+                echo "event=rename" >> "$GITHUB_OUTPUT"
+                echo "changed=true" >> "$GITHUB_OUTPUT"
+              fi
+            else
+              echo "Sheet unchanged (sha256 $new_hash) — skipping scrape."
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+            fi
+          elif cat sheets/sheets_2*/manifest.csv sheets/sheets_2*/download_path_log.csv 2>/dev/null | grep -q "$new_hash"; then
+            # ICE is re-serving an older sheet: log it once a day (after the clean-tree step, which
+            # would wipe it) and scrape; the sheet itself collapses as a duplicate
+            if grep -qs "^$today,$new_hash," sheets/seen-log.csv; then
+              echo "Sheet reverted to $new_hash, already logged today — skipping."
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "Sheet reverted to a previously seen hash — logging and scraping."
+              echo "event=revert" >> "$GITHUB_OUTPUT"
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "Sheet changed or no prior snapshot — running full scrape."
+            echo "event=new" >> "$GITHUB_OUTPUT"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ensure clean working tree
+        run: |
+          git lfs pull
+          git checkout -- .
+          # the runner is persistent; drop anything git doesn't track before acquiring
+          git clean -fd agreements/ sheets/
+
+      - name: Record the sheet event
+        if: steps.sheet_check.outputs.event != ''
+        run: |
+          # one row per (day, sheet hash, event); an event is new, revert (an older hash served
+          # again) or rename (the same bytes under a new filename)
+          [ -f sheets/seen-log.csv ] || echo "date,sheet_hash,event" > sheets/seen-log.csv
+          echo "$(date -u +%Y-%m-%d),${{ steps.sheet_check.outputs.sheet_hash }},${{ steps.sheet_check.outputs.event }}" >> sheets/seen-log.csv
+
+      - name: Install R packages
+        run: |
+          Rscript --vanilla -e '
+            pkgs <- c(
+              "arrow", "digest", "dplyr", "fs", "haven", "httr", "httr2", "openxlsx",
+              "readr", "readxl", "rvest", "sf", "stringi", "stringdist",
+              "stringr", "tidygeocoder", "tigris", "tidyr", "tidyverse", "xml2"
+            )
+            # the runner keeps its library, and reinstalling arrow takes ~50 min, so only missing
+            # packages install (delete one from the library to refresh it)
+            missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
+            if (length(missing) > 0) {
+              install.packages(missing, repos = "https://cloud.r-project.org")
+            }
+          '
+
+      - name: Snapshot the sheet
+        if: steps.sheet_check.outputs.changed == 'true'
+        run: Rscript --vanilla code/0-acquire-scraper.R
+
+      - name: Revalidate MOA documents
+        env:
+          # every url when the sheet changed or failures are outstanding; one shard
+          # of six otherwise (hour mod 6), so the 16 daily runs still cover every url
+          MOA_FULL: ${{ (steps.sheet_check.outputs.changed == 'true' || inputs.full_pass == true) && '1' || '' }}
+        run: |
+          export MOA_SHARD=$(( 10#$(date -u +%H) % 6 ))
+          Rscript --vanilla code/0-acquire-moa-pass.R
+
+      # downloads are committed as they came, before any pipeline code; the summary is plain
+      # shell, so nothing between download and push can fail on an R package
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git add agreements/ sheets/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          bash code/0-acquire-diff.sh > "$RUNNER_TEMP/287g-changes.txt"
+          if [ ! -s "$RUNNER_TEMP/287g-changes.txt" ]; then
+            echo "Only the pass log moved — nothing to commit."
+            git reset HEAD -- agreements/ sheets/
+            git checkout -- agreements/ sheets/
+            git clean -fd agreements/ sheets/
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            cat "$RUNNER_TEMP/287g-changes.txt"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push the acquisition
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "Update 287(g) agreement files [skip ci]"
+          git push --set-upstream origin HEAD
+
+      # byte-identical downloads (one pdf under several agencies, a re-served sheet) are
+      # deleted in a commit of their own once the acquisition is pushed
+      - name: Run deduplicator
+        run: Rscript --vanilla code/0-acquire-dedupe.R
+
+      - name: Commit and push the deduplication
+        id: dedupe_changes
+        run: |
+          git add agreements/ sheets/
+          if git diff --cached --quiet; then
+            echo "Nothing deduplicated."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          bash code/0-acquire-diff.sh > "$RUNNER_TEMP/287g-dedupe.txt"
+          if [ ! -s "$RUNNER_TEMP/287g-dedupe.txt" ]; then
+            echo "Only the pass log moved — nothing to commit."
+            git reset HEAD -- agreements/ sheets/
+            git checkout -- agreements/ sheets/
+            git clean -fd agreements/ sheets/
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cat "$RUNNER_TEMP/287g-dedupe.txt"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "Remove duplicate 287(g) downloads [skip ci]"
+          git push --set-upstream origin HEAD
+          # the PR description lists these under the files acquired
+          { [ -s "$RUNNER_TEMP/287g-changes.txt" ] && cat "$RUNNER_TEMP/287g-changes.txt"
+            echo "_After deduplication:_"; echo; cat "$RUNNER_TEMP/287g-dedupe.txt"; } > "$RUNNER_TEMP/287g-listed.txt"
+          mv "$RUNNER_TEMP/287g-listed.txt" "$RUNNER_TEMP/287g-changes.txt"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update pull request
+        if: steps.check_changes.outputs.changed == 'true' || steps.dedupe_changes.outputs.changed == 'true'
+        id: create_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # the PR description: the diff workflow writes links to its three review comments above the
+          # marker on every build; each run's acquired files are listed under it
+          {
+            echo "### Files acquired $(date +%Y-%m-%d)"
+            echo ""
+            cat "$RUNNER_TEMP/287g-changes.txt"
+          } > "$RUNNER_TEMP/pr-acquired.txt"
+          # the acquisition takes minutes, so look the PR up again now: the one that
+          # was open at the start may have been merged or closed meanwhile
+          pr_num=$(gh pr list --state open \
+            --head "${{ steps.update_branch.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$pr_num" ]; then
+            gh api "repos/${{ github.repository }}/pulls/$pr_num" --jq '.body // ""' > "$RUNNER_TEMP/pr-body-current.txt"
+            if ! grep -qF '<!-- acquired -->' "$RUNNER_TEMP/pr-body-current.txt"; then
+              # a description written before the marker existed is kept whole under it
+              { echo '<!-- acquired -->'; echo; cat "$RUNNER_TEMP/pr-body-current.txt"; } > "$RUNNER_TEMP/pr-body-marked.txt"
+              mv "$RUNNER_TEMP/pr-body-marked.txt" "$RUNNER_TEMP/pr-body-current.txt"
+            fi
+            { cat "$RUNNER_TEMP/pr-body-current.txt"; echo; echo; cat "$RUNNER_TEMP/pr-acquired.txt"; } \
+              | head -c 65000 > "$RUNNER_TEMP/pr-body.txt"
+            # REST, not `gh pr edit`: gh before 2.82.1 (Debian ships 2.46) fails asking for the
+            # retired classic-project cards
+            gh api -X PATCH "repos/${{ github.repository }}/pulls/$pr_num" \
+              -f title="287(g) update through $(date +%Y-%m-%d)" \
+              -F "body=@$RUNNER_TEMP/pr-body.txt" --jq .title
+          else
+            { echo '<!-- acquired -->'; echo; cat "$RUNNER_TEMP/pr-acquired.txt"; } > "$RUNNER_TEMP/pr-body.txt"
+            pr_url=$(gh pr create \
+              --title "287(g) update $(date +%Y-%m-%d)" \
+              --body-file "$RUNNER_TEMP/pr-body.txt" \
+              --base main)
+            pr_num="${pr_url##*/}"
+          fi
+          echo "pr_number=${pr_num}" >> "$GITHUB_OUTPUT"
+
+      # a build that failed or never ran leaves the datasets stale behind an unchanged sheet, so
+      # rebuild when acquisitions are newer than data/ or the PR carries the "run failed" label
+      - name: Check whether the update branch needs a build
+        id: needs_build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_num=$(gh pr list --state open --head "${{ steps.update_branch.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          echo "pr_number=$pr_num" >> "$GITHUB_OUTPUT"
+          if [ -z "$pr_num" ]; then
+            echo "No open update PR, so nothing to rebuild."
+            echo "needs_build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          acquired=$(git log -1 --format=%ct -- agreements/ sheets/)
+          built=$(git log -1 --format=%ct -- data/)
+          flagged=$(gh api "repos/${{ github.repository }}/issues/$pr_num/labels" \
+            --jq 'any(.[]; .name == "run failed")')
+          if [ "${acquired:-0}" -gt "${built:-0}" ]; then
+            echo "The newest acquisition ($(date -u -d "@$acquired" +%Y-%m-%dT%H:%MZ)) is newer than the datasets ($(date -u -d "@${built:-0}" +%Y-%m-%dT%H:%MZ)) — a build is needed."
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+          elif [ "$flagged" = "true" ]; then
+            echo "PR #$pr_num carries the run failed label — a build is needed."
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "The datasets on the branch are current."
+            echo "needs_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # a failed run leaves the branch's datasets stale; the PR is looked up by branch, since the
+      # step that records its number may be the one that failed
+      - name: Flag the update PR when this run fails
+        if: failure() && steps.update_branch.outputs.branch != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_num=$(gh pr list --state open --head "${{ steps.update_branch.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          if [ -z "$pr_num" ]; then
+            echo "No open update PR to flag."
+            exit 0
+          fi
+          gh api "repos/${{ github.repository }}/labels" -f name="run failed" -f color=d73a4a \
+            -f description="The latest scrape run failed; the datasets may be stale" >/dev/null 2>&1 || true
+          gh api "repos/${{ github.repository }}/issues/$pr_num/labels" -f "labels[]=run failed" --silent
+          gh pr comment "$pr_num" --body "🛑 **Do not merge: the scrape run failed while acquiring, so this branch's datasets were not rebuilt.**
+
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Whatever was downloaded before the failure is committed on this branch. The next hourly run retries the acquisition and rebuilds the datasets while this label is on the PR; a successful build removes it."
+
+      - name: Clean up temp files
+        if: always()
+        run: rm -f "$RUNNER_TEMP"/sheet-check.xlsx "$RUNNER_TEMP"/sheet-check.headers "$RUNNER_TEMP"/287g-*.txt "$RUNNER_TEMP"/pr-*.txt
+
+  # Ubuntu's GDAL has no Parquet driver, so GDAL comes from Homebrew, and R too, so that R, GDAL
+  # and every compiled package share one set of libraries
+  build:
+    needs: acquire
+    if: needs.acquire.outputs.changed == 'true' || needs.acquire.outputs.needs_build == 'true' || inputs.rebuild == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      # packages compile from CRAN source against Homebrew's libraries; Posit's
+      # Ubuntu binaries would link Ubuntu's GDAL (no Parquet driver) instead
+      RENV_CONFIG_PPM_ENABLED: "FALSE"
+      RENV_CONFIG_REPOS_OVERRIDE: "https://cloud.r-project.org"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.acquire.outputs.branch }}
+          lfs: false
+
+      # the build reads sheets, inputs and manifests; the MOA pdfs (12 GB) stay LFS pointers and
+      # the rarely changing inputs' LFS objects are cached
+      - uses: actions/cache@v4
+        with:
+          path: .git/lfs/objects
+          key: lfs-inputs-${{ hashFiles('inputs/**') }}
+          restore-keys: lfs-inputs-
+
+      - name: Pull the LFS files the build reads
+        run: |
+          git lfs install --local
+          git lfs pull --include="sheets/**,inputs/**"
+
+      - name: Install Homebrew GDAL and R
+        id: brew
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          # older runner images' Homebrew cannot parse the pinned formulae, so update brew itself
+          # first; this touches only Homebrew's own repository, not the core tap
+          brew update --quiet
+          # CRAN's arrow 25.0.1 does not load against Homebrew's libarrow 26, so formulae come from
+          # this homebrew-core commit (apache-arrow 25.0.1_9); drop the pin once renv.lock has arrow 26
+          core_pin=685ff236593368a75026fc2945dc664186cfa592
+          core=$(brew --repository homebrew/core)
+          if [ ! -d "$core/.git" ]; then
+            git init -q "$core"
+            git -C "$core" remote add origin https://github.com/Homebrew/homebrew-core
+          fi
+          git -C "$core" fetch -q --depth 1 origin "$core_pin"
+          git -C "$core" checkout -q --detach FETCH_HEAD
+          export HOMEBREW_NO_INSTALL_FROM_API=1
+          # udunits (units) and libuv (fs) are what renv.lock needs beyond GDAL and R; tesseract
+          # reads scanned MOA pages for the addendum check
+          brew install gdal r udunits libuv tesseract
+          echo "$HOMEBREW_PREFIX/bin" >> "$GITHUB_PATH"
+          # the package cache is keyed on these, so a GDAL, R or OpenSSL upgrade recompiles
+          echo "versions=$(brew list --versions r gdal apache-arrow openssl@3 | tr ' \n' '-_')" >> "$GITHUB_OUTPUT"
+          # openssl@3 is keg-only, but curl links it and pkg-config refuses libcurl (and so
+          # poppler-cpp, for pdftools) without its openssl.pc
+          ssl=$(brew --prefix openssl@3)
+          {
+            # every compile finds Homebrew's headers and libraries and their dependencies
+            # (LD_RUN_PATH), and arrow links Homebrew's libarrow, the copy GDAL uses
+            echo "PKG_CONFIG_PATH=$HOMEBREW_PREFIX/lib/pkgconfig:$ssl/lib/pkgconfig"
+            echo "LIBRARY_PATH=$HOMEBREW_PREFIX/lib:$ssl/lib"
+            echo "LD_RUN_PATH=$HOMEBREW_PREFIX/lib:$ssl/lib"
+            echo "CPATH=$HOMEBREW_PREFIX/include:$ssl/include"
+            echo "ARROW_USE_PKG_CONFIG=true"
+            echo "MAKEFLAGS=-j$(nproc)"
+          } >> "$GITHUB_ENV"
+          Rscript --vanilla -e 'cat(R.version.string, "\n"); print(Sys.which(c("gcc", "gdal-config")))'
+
+      # no binaries exist for Homebrew's R, so a cache miss compiles every package (~15 min)
+      - uses: r-lib/actions/setup-renv@v2
+        with:
+          cache-version: ${{ steps.brew.outputs.versions }}
+
+      - name: Check sf reads Parquet and arrow links Homebrew
+        run: |
+          Rscript -e '
+            stopifnot("Parquet" %in% rownames(sf::st_drivers()))
+            print(sf::sf_extSoftVersion())
+            cat("arrow", as.character(packageVersion("arrow")), "\n")
+          '
+          ldd "$(Rscript -e 'cat(system.file("libs", "arrow.so", package = "arrow"))')" | grep -i arrow
+
+      # the addendum check reads MOA pdfs through a committed page cache; only pdfs it
+      # has not seen (normally this run's downloads) are pulled from LFS
+      - name: Pull the MOA pdfs the addendum check has not read
+        run: |
+          Rscript -e '
+            suppressMessages(library(tidyverse)); source("code/functions.R")
+            cache <- "data/cache/moa-addendum-pages.parquet"
+            # a file cached before its scanned pages were read by tesseract is read again
+            seen <- if (file.exists(cache)) arrow::read_parquet(cache) |> filter(coalesce(ocr, FALSE)) |> pull(file_hash) else character()
+            snapshot_manifests("agreements") |>
+              filter(on_disk, !is.na(file_hash), str_detect(str_to_lower(path_now), "[.]pdf$"), !file_hash %in% seen) |>
+              distinct(file_hash, .keep_all = TRUE) |> pull(path_now) |> writeLines()
+          ' > "$RUNNER_TEMP/unread-pdfs.txt"
+          echo "$(wc -l < "$RUNNER_TEMP/unread-pdfs.txt") pdf(s) to read"
+          while IFS= read -r pdf; do
+            git lfs pull --include="$pdf"
+          done < "$RUNNER_TEMP/unread-pdfs.txt"
+
+      - name: Build the datasets
+        env:
+          # a tripped invariant fails this job, and only this job
+          QA_STRICT: "1"
+        run: bash code/run_ci.sh
+
+      # looked up by branch rather than taken from acquire: the acquisition takes
+      # minutes, and the PR open at its start may have been merged meanwhile
+      - name: Find the update PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_num=$(gh pr list --state open --head "${{ needs.acquire.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          echo "number=$pr_num" >> "$GITHUB_OUTPUT"
+
+      # addenda stay undated until their dates are entered in inputs/manual/moa-addenda.csv;
+      # comments only when the list changed
+      - name: Comment on addenda that need dates
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          list=review/undated-addenda.csv
+          [ "$(wc -l < "$list")" -gt 1 ] || exit 0
+          if git cat-file -e "HEAD:$list" 2>/dev/null && git diff --quiet HEAD -- "$list"; then
+            echo "Undated addenda unchanged."
+            exit 0
+          fi
+          {
+            echo "📎 **Addenda published without dates.** Each is on this branch as \`Undated\`. Read both signature dates off the page and add a row to \`inputs/manual/moa-addenda.csv\` (\`addendum_signed\` is the later date); an addendum that duplicates a recorded one gets \`moa_page\` on that row instead."
+            echo
+            echo "| agreement | addendum | found in |"
+            echo "|---|---|---|"
+            tail -n +2 "$list" | awk -F, '{print "| " $1 " | " $2 " | " $3 " |"}'
+          } > "$RUNNER_TEMP/addenda-comment.txt"
+          gh pr comment "${{ steps.pr.outputs.number }}" --body-file "$RUNNER_TEMP/addenda-comment.txt"
+
+      - name: Commit and push the datasets
+        run: |
+          git add data/ review/
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          if git diff --cached --quiet; then
+            echo "Datasets unchanged."
+          else
+            git commit -m "Update 287(g) datasets [skip ci]"
+            git push origin HEAD
+          fi
+
+      - name: Trigger diff workflow
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/dispatches" \
+            -f event_type=diff-pr \
+            -F "client_payload[pr_number]=${{ steps.pr.outputs.number }}"
+
+      - name: Flag the update PR when the build fails
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_num=$(gh pr list --state open --head "${{ needs.acquire.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          if [ -z "$pr_num" ]; then
+            echo "No open update PR to flag."
+            exit 0
+          fi
+          gh api "repos/${{ github.repository }}/labels" -f name="run failed" -f color=d73a4a \
+            -f description="The latest scrape run failed; the datasets may be stale" >/dev/null 2>&1 || true
+          gh api "repos/${{ github.repository }}/issues/$pr_num/labels" -f "labels[]=run failed" --silent
+          gh pr comment "$pr_num" --body "🛑 **Do not merge: the data build failed, so this branch's datasets are stale.**
+
+          The raw snapshot is committed on this branch at $(git rev-parse --short HEAD). Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          The next hourly run rebuilds this branch while this label is on the PR, so a failure in the pipeline code needs a fix on this branch first (merge main into it or push here); or rebuild locally with \`bash code/run_all.sh\` and push to this branch. A successful build removes the **run failed** label."
+
+      # a successful rebuild clears a flag an earlier failed run left
+      - name: Clear the failure flag after a successful build
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_num=$(gh pr list --state open --head "${{ needs.acquire.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          [ -n "$pr_num" ] || exit 0
+          flagged=$(gh api "repos/${{ github.repository }}/issues/$pr_num/labels" \
+            --jq 'any(.[]; .name == "run failed")')
+          if [ "$flagged" = "true" ]; then
+            gh api -X DELETE "repos/${{ github.repository }}/issues/$pr_num/labels/run%20failed" --silent
+            gh pr comment "$pr_num" --body "✅ **The data build succeeded, so this branch's datasets are current. The earlier failure flag is cleared.**"
+          fi

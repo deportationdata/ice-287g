@@ -1,0 +1,178 @@
+name: "Diff 287(g) agreements on PR"
+
+on:
+  repository_dispatch:
+    types: [diff-pr]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'data/agreements-sf.parquet'
+      - 'review/agreement-review.csv'
+      - 'review/qa-summary.csv'
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to diff'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    env:
+      # the runner context is not available in a job-level env; the workspace is
+      RENV_PATHS_ROOT: ${{ github.workspace }}/.renv-root
+
+    steps:
+      - name: Resolve PR ref
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          case "${{ github.event_name }}" in
+            workflow_dispatch)   num="${{ github.event.inputs.pr_number }}" ;;
+            repository_dispatch) num="${{ github.event.client_payload.pr_number }}" ;;
+            *)                   num="${{ github.event.pull_request.number }}" ;;
+          esac
+          ref=$(gh api "repos/${REPO}/pulls/${num}" --jq .head.sha)
+          echo "number=${num}" >> "$GITHUB_OUTPUT"
+          echo "ref=${ref}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.ref }}
+          lfs: false
+          sparse-checkout: |
+            code/diff-agreements-pr.R
+            data/agreements-sf.parquet
+            review/agreement-review.csv
+            review/qa-summary.csv
+            renv.lock
+            renv/activate.R
+            renv/settings.json
+            .Rprofile
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout main into _main/
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: _main
+          lfs: false
+          sparse-checkout: |
+            data/agreements-sf.parquet
+            review/agreement-review.csv
+            review/qa-summary.csv
+          sparse-checkout-cone-mode: false
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.6.0'
+          use-public-rspm: true
+
+      # only the four packages the diff needs; the rest of renv.lock wants GDAL
+      - name: Cache the renv library
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.RENV_PATHS_ROOT }}
+            renv/library
+          key: diff-renv-${{ runner.os }}-R4.6.0-${{ hashFiles('renv.lock') }}
+
+      - name: Restore the diff script's packages from renv.lock
+        env:
+          RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/latest
+        # records naming the Posit URL as their repository install from source; recorded as
+        # "CRAN" they resolve through the override above, which serves Linux binaries
+        run: |
+          sed 's#"Repository": "https://packagemanager.posit.co/cran/latest"#"Repository": "CRAN"#' \
+            renv.lock > "$RUNNER_TEMP/diff-renv.lock"
+          Rscript -e 'renv::restore(lockfile = file.path(Sys.getenv("RUNNER_TEMP"), "diff-renv.lock"), packages = c("arrow", "dplyr", "tidyr", "stringr"))'
+
+      - name: Run diff script
+        env:
+          # renv's out-of-sync notice is noise in the log
+          RENV_CONFIG_SYNCHRONIZED_CHECK: "false"
+          PR_HEAD_SHA: ${{ steps.pr.outputs.ref }}
+        run: |
+          # one file per comment: row changes, ICE's row beside the pipeline's match, topline
+          # numbers; the script allows a review file still absent on main
+          Rscript code/diff-agreements-pr.R \
+            _main/data/agreements-sf.parquet \
+            data/agreements-sf.parquet \
+            _main/review/agreement-review.csv \
+            review/agreement-review.csv \
+            _main/review/qa-summary.csv \
+            review/qa-summary.csv \
+            "$RUNNER_TEMP/pr-diff"
+          # a comment holds 65,536 characters
+          for f in "$RUNNER_TEMP"/pr-diff/*.md; do
+            if [ "$(wc -c < "$f")" -gt 60000 ]; then
+              head -c 60000 "$f" > "$f.trimmed"
+              printf "\n\n_...truncated at 60k chars._\n" >> "$f.trimmed"
+              mv "$f.trimmed" "$f"
+            fi
+          done
+
+      # each comment starts with its own marker; the first build posts it and every later
+      # build edits it in place, so the PR carries one copy of each that is always current
+      - name: Post or update the three comments
+        id: comments
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api --paginate "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]") | [.id, (.body | split("\n")[0])] | @tsv' \
+            > "$RUNNER_TEMP/bot-comments.tsv"
+          for which in rows merge stats; do
+            marker="<!-- pr-diff-${which} -->"
+            id=$(awk -F'\t' -v m="$marker" '$2 == m {print $1; exit}' "$RUNNER_TEMP/bot-comments.tsv")
+            if [ -n "$id" ]; then
+              url=$(gh api -X PATCH "repos/${REPO}/issues/comments/${id}" \
+                -F "body=@$RUNNER_TEMP/pr-diff/${which}.md" --jq .html_url)
+            else
+              url=$(gh api -X POST "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+                -F "body=@$RUNNER_TEMP/pr-diff/${which}.md" --jq .html_url)
+            fi
+            echo "${which}_url=${url}" >> "$GITHUB_OUTPUT"
+          done
+
+      # the description points at the three comments; the scrape workflow keeps the lists of
+      # files each run acquired under its marker, and those stay below the pointer
+      - name: Refresh the PR description
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REPO: ${{ github.repository }}
+          ROWS_URL: ${{ steps.comments.outputs.rows_url }}
+          MERGE_URL: ${{ steps.comments.outputs.merge_url }}
+          STATS_URL: ${{ steps.comments.outputs.stats_url }}
+        run: |
+          gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.body // ""' > /tmp/pr-body-current.md
+          if grep -qF '<!-- acquired -->' /tmp/pr-body-current.md; then
+            sed -n '/<!-- acquired -->/,$p' /tmp/pr-body-current.md > /tmp/pr-body-acquired.md
+          else
+            # a description written before the marker existed is kept whole under it
+            { echo '<!-- acquired -->'; echo; cat /tmp/pr-body-current.md; } > /tmp/pr-body-acquired.md
+          fi
+          {
+            echo '<!-- pr-diff-pointer -->'
+            echo "Three comments below are rewritten on every build of this branch:"
+            echo
+            echo "- [Row changes](${ROWS_URL}): what \`agreements-sf.parquet\` gained, lost or changed"
+            echo "- [ICE's row beside the pipeline's match](${MERGE_URL}): what ICE's sheet says and what we made of it, for every added or re-matched agreement"
+            echo "- [Topline numbers](${STATS_URL}): counts on \`main\` and on this branch, and the QA checks that moved"
+            echo
+            echo
+            cat /tmp/pr-body-acquired.md
+          } > /tmp/pr-body.md
+          gh api -X PATCH "repos/${REPO}/pulls/${PR_NUMBER}" -F "body=@/tmp/pr-body.md" --jq .number
