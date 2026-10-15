@@ -54,6 +54,5 @@ rsconnect/
 .DS_Store
 **/.DS_Store
 
-# rebuilt by code/run_all.sh on every run; only the caches of what the APIs and MOA pdfs returned are committed
-data/intermediate/*
-!data/intermediate/cache-*
+# rebuilt by code/run_all.sh on every run; the caches of what the APIs and MOA pdfs returned live in data/cache/ and are committed
+data/intermediate/
