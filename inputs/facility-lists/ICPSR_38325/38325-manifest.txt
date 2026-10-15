@@ -1,0 +1,58 @@
+File Manifest for ICPSR 38325
+
+United States. Bureau of Justice Statistics. Census of State and Federal
+Adult Correctional Facilities, 2019. ICPSR38325-v2. Ann Arbor, MI: Inter-
+university Consortium for Political and Social Research [distributor],
+2022-08-18. http://doi.org/10.3886/ICPSR38325.v2
+
+Details on the version history can be found below the file listings.
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    38325-descriptioncitation.pdf       -       -         -       2022-08-18  -
+
+    38325-related_literature.txt        -       -         -       daily       -
+
+    38325-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 Public Use Data
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    38325-0001-Codebook.pdf             -       -         -       2022-06-16  0d009196d104d7e9267ceb6f79687be8
+
+    38325-0001-Data.dta                 -       1,694     270     2022-08-18  6e0f5b935a7de067cde3db82f88cfdfb
+
+    38325-0001-Data.rda                 -       1,694     270     2022-08-18  a32666f3587f981dace9a15099e19fd2
+
+    38325-0001-Data.sav                 -       1,694     270     2022-08-18  c61245949d06ad2fff9d44eafd42bcd2
+
+    38325-0001-Data.stc                 -       1,694     270     2022-08-18  d2de0b7da83df1c9aae64e8c491162e5
+
+    38325-0001-Data.tsv                 -       1,694     270     2022-08-18  cc51a12af056d4c3b3648eca7011da65
+
+    38325-0001-Data.txt                 2693    1,694     270     2022-08-18  8f59649a7c7f1db75e4e069a846e0ebd
+
+    38325-0001-Setup.dct                -       -         -       2022-08-18  d1e474276ac1349ae88dae575c53bd6c
+
+    38325-0001-Setup.do                 -       -         -       2022-08-18  cbec2124e444d9d772f597fe71907ca8
+
+    38325-0001-Setup.sas                -       -         -       2022-08-18  7856271c89606e2693401612e8acf408
+
+    38325-0001-Setup.sps                -       -         -       2022-08-18  cbfa55cc1214d8193e379cdfc17b3dce
+
+    38325-0001-Supplemental_syntax.do   -       -         -       2022-08-18  12ba32c1bf7ea206f65d505caa69830d
+
+    38325-0001-Supplemental_syntax.sas  -       -         -       2022-08-18  872a6b813eca4628ef23f8bbac63a011
+
+
+Version History
+
+2022-08-18 Data were updated to correct a misspelled facility name in
+variable V005.

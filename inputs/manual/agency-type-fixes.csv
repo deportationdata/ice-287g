@@ -1,0 +1,13 @@
+state,agency,type,type_fixed,note
+Indiana,Shirley Police Department,County,Municipality,ICE's TYPE says County; the agency is a town police department (reviewed 2026-09-13 against ILRC's map)
+Texas,Stamford Police Department,County,Municipality,ICE's TYPE says County; the agency is a town police department (reviewed 2026-09-13 against ILRC's map)
+Wyoming,Shoshoni Police Department,County,Municipality,ICE's TYPE says County; the agency is a town police department (reviewed 2026-09-13 against ILRC's map)
+Missouri,Washington County Sheriff's Office,Municipality,County,ICE's TYPE says Municipality; the agency is a county sheriff (reviewed 2026-09-13 against ILRC's map)
+Oklahoma,Haskell County Sheriff's Office,Municipality,County,ICE's TYPE says Municipality; the agency is a county sheriff (reviewed 2026-09-13 against ILRC's map)
+Texas,Dalworthington Gardens Department of Public Safety,State Agency,Municipality,ICE's TYPE says State Agency; the agency is the City of Dalworthington Gardens' public safety department (Tarrant County) (reviewed 2026-09-13)
+Michigan,Center Line Division of Public Safety and Security,State,Municipality,ICE's TYPE says State; the agency is the City of Center Line's public safety department (Macomb County) (reviewed 2026-09-13)
+Maryland,Wicomico County Corrections Center,State,County,ICE's TYPE says State; the agency is Wicomico County's detention center (reviewed 2026-09-13)
+Louisiana,Livingston Police Department,County,Municipality,"ICE's TYPE says County; the Town of Livingston's police department (Livingston Parish; ORI LA0320200), drawn as the whole parish until fixed (reviewed 2026-09-13)"
+Texas,Yoakum Police Department,County,Municipality,"ICE's TYPE says County; the City of Yoakum's police, 900 Irvine St, Yoakum TX 77995 per its MOA, in Lavaca County (see county-name-fixes.csv) (reviewed 2026-09-13)"
+Missouri,Saint Charles County Police Department,Municipality,County,"ICE's TYPE says Municipality; the county's police department (formed 2015, ORI MO0920300), drawn as the City of St. Charles until fixed (reviewed 2026-09-13)"
+Virginia,Gordonsville Department of Public Safety,County,Municipality,"ICE's TYPE says County; the Town of Gordonsville's police, 112 S Main St, Gordonsville VA (Orange County), drawn as the county until fixed (reviewed 2026-09-13)"

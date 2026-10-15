@@ -1,0 +1,58 @@
+File Manifest for ICPSR 36128
+
+United States Department of Justice. Office of Justice Programs. Bureau of
+Justice Statistics. Census of Jails, 2013. ICPSR36128-v4. Ann Arbor, MI:
+Inter-university Consortium for Political and Social Research
+[distributor], 2018-04-25. http://doi.org/10.3886/ICPSR36128.v4
+
+Details on the version history can be found below the file listings.
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    36128-descriptioncitation.pdf       -       -         -       2018-04-25  -
+
+    36128-related_literature.txt        -       -         -       daily       -
+
+    36128-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 Census of Jails, 2013
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    36128-0001-Codebook.pdf             -       -         -       2018-04-25  7b98efea9ac20ca3301ceeea2d56f332
+
+    36128-0001-Data.dta                 -       2,931     178     2018-04-25  ae8a0805811c36bc010613f4cab8deb6
+
+    36128-0001-Data.rda                 -       2,931     178     2018-04-25  b07408f2dff784c3c6b672bc6bac596d
+
+    36128-0001-Data.sav                 -       2,931     178     2018-04-25  49f5f60fd9c4b9c65731a0f07ff55319
+
+    36128-0001-Data.stc                 -       2,931     178     2018-04-25  fffbbbc620d24c0d58c74fb0df709e45
+
+    36128-0001-Data.tsv                 -       2,931     178     2018-04-25  dda94a3452bbc45203bcf6afe3411595
+
+    36128-0001-Data.txt                 790     2,931     178     2018-04-25  92d3d8de09b1b5a54c5f1ebf390d093a
+
+    36128-0001-Setup.dct                -       -         -       2018-04-25  46002f5bd262e0f8e194f9f366dcb19a
+
+    36128-0001-Setup.do                 -       -         -       2018-04-25  00a33d47446ef8c48247864e6c05226e
+
+    36128-0001-Setup.sas                -       -         -       2018-04-25  f75283700c5ca0bbe309a4c624fbad31
+
+    36128-0001-Setup.sps                -       -         -       2018-04-25  2f0505904c9661f62308ffc76152de32
+
+    36128-0001-Supplemental_syntax.do   -       -         -       2018-04-25  8dff0bfbec6c759c04c975089cef206c
+
+    36128-0001-Supplemental_syntax.sas  -       -         -       2018-04-25  c836cd4a2b86213bbea3288016feb965
+
+
+Version History
+
+2018-04-25 The dataset and the codebook have been updated  2016-03-25 Two
+records needed to be updated.

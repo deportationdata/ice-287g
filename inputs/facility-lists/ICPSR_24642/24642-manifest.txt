@@ -1,0 +1,61 @@
+File Manifest for ICPSR 24642
+
+United States Department of Justice. Office of Justice Programs. Bureau of
+Justice Statistics. Census of State and Federal Adult Correctional
+Facilities, 2005. ICPSR24642-v3. Ann Arbor, MI: Inter-university Consortium
+for Political and Social Research [distributor], 2017-05-12.
+http://doi.org/10.3886/ICPSR24642.v3
+
+Details on the version history can be found below the file listings.
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    24642-descriptioncitation.pdf       -       -         -       2017-06-27  -
+
+    24642-related_literature.txt        -       -         -       daily       -
+
+    24642-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 Census of State and Federal Adult Correctional Facilities, 2005
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    24642-0001-Codebook.pdf             -       -         -       2017-05-12  962e1935197f5642e6befadcb08cc222
+
+    24642-0001-Data.dta                 -       1,821     366     2017-05-12  391335062117ca12ed49fdf6923c5e9c
+
+    24642-0001-Data.rda                 -       1,821     366     2017-05-12  6d192d046c3a52405085d3caa7fc9547
+
+    24642-0001-Data.sav                 -       1,821     366     2017-05-12  1085b36b7a52fc8670ae416f97f1dba3
+
+    24642-0001-Data.stc                 -       1,821     366     2017-05-12  7d91b6c617b7b377ee8af39317ff01c7
+
+    24642-0001-Data.tsv                 -       1,821     366     2017-05-12  8cb81638154123acce6b51ce15fba45d
+
+    24642-0001-Data.txt                 2733    1,821     366     2017-05-12  c5b547690e308738127ca46aa749d1f5
+
+    24642-0001-Setup.dct                -       -         -       2017-05-12  ce5c30b97e3c448fd7d447c772c472b7
+
+    24642-0001-Setup.do                 -       -         -       2017-05-12  99fe003674fef309b2528220e13b05cb
+
+    24642-0001-Setup.sas                -       -         -       2017-05-12  33de822e44b19de463d36cccf1ed2a1b
+
+    24642-0001-Setup.sps                -       -         -       2017-05-12  dc3bb0adbebfe305cfe8036b257cbbef
+
+    24642-0001-Supplemental_syntax.do   -       -         -       2017-05-12  22131176988af4f98b65828d721f6392
+
+    24642-0001-Supplemental_syntax.sas  -       -         -       2017-05-12  bdb3601011d5fefdddd15c248cbb57de
+
+
+Version History
+
+2017-05-12 Added value labels to V38 (Percentage of inmates permitted to
+leave facility). The codebook has also been updated so valid values and
+their corresponding values for V38 now appear.  2010-10-05 Un-suppress V9
+(Physical address) and V10 (Physical city).

@@ -1,0 +1,340 @@
+Bibliography
+Census of Jail Facilities, 2006
+
+This bibliography includes published and unpublished works that are related 
+to ICPSR study 26602. It includes works that are based on primary
+or secondary analysis of the data, or which describe or critique those
+data or the collection methodology. 
+
+If you publish a work or know of other works that are based on these data,
+please send the complete citation and name of the ICPSR study used to:
+icpsrbibliography@umich.edu
+
+
+1. Aldrich, John; Watts-Smith, Candis; Krishnamurthy, Arvind; Barrett,
+Marianna; Bui, Wyatt; Caouki, Kaya; Gupta, Rohan; Gust, David; Han, Annie;
+Keschner, Ben; Khurana, Satya; Mehrotra, Amiya; Narula, Mal; Nasco, Julia;
+Nayak, Alisha; Shokeir, Emma; Sun, Nellie; Tawasha, Hanna, "How criminal
+justice shapes politics and policy [poster]." Presented at the Fortin
+Foundation Bass Connections Showcase, Duke University, Durham, NC, Apr 13,
+2022.
+Full text PDF: https://bassconnections.duke.edu/sites/bassconnections.duke.edu/files/site-images/HowCriminalJusticeShapesPoliticsandPolicyRaceandNewSouthernPolitics_121610116_racesouthernposter_0.pdf
+
+2. Beck, Allen J., "Staff sexual misconduct: Implications of PREA for women
+working in corrections." Justice Research and Policy. 2015, 16, (1), 8 -
+36. DOI: 10.1177/1525107115580785
+Full text PDF: https://bassconnections.duke.edu/sites/bassconnections.duke.edu/files/site-images/HowCriminalJusticeShapesPoliticsandPolicyRaceandNewSouthernPolitics_121610116_racesouthernposter_0.pdf
+
+3. Beck, Allen J.; Harrison, Paige M., "Sexual Victimization in Local Jails
+Reported by Inmates, 2007." Bureau of Justice Statistics Special Report.
+NCJ 221946, Washington, DC: United States Department of Justice, Office of
+Justice Programs, Jun 2008.
+Abstract: https://bjs.ojp.gov/library/publications/sexual-victimization-local-jails-reported-inmates-2007
+Full text: https://bjs.ojp.gov/redirect-legacy/content/pub/ascii/svljri07.txt
+Full text PDF: https://bjs.ojp.gov/content/pub/pdf/svljri07.pdf
+Presents data from the 2007 National Inmate Survey (NIS), conducted in 282
+local jails between April and December, with a sample of 40,419 inmates.
+The report and appendix tables provide a listing of results for sampled
+local jails, as required under the Prison Rape Elimination Act of 2003
+(P.L. 108-79). Facilities are listed alphabetically by state with estimated
+prevalence rates of sexual victimization as reported by inmates during a
+personal interview and based on activity in the 6 months prior to the
+interview or since admission to the facility, if shorter. The report
+includes national-level and facility-level estimates of nonconsensual
+sexual acts, abusive sexual contacts, inmate-on-inmate and staff-on-inmate
+victimization, and level of coercion. It also includes estimates of the
+standard error for selected measures of sexual victimization and summary
+characteristics of victims and incidents. Data collected from prison
+inmates in the National Inmate Survey were reported in Sexual Victimization
+in State and Federal Prisons Reported by Inmates, 2007, released in
+December 2007.
+
+4. Bell, Karen D., "Comparing Methods for Estimation of Daytime Population
+in Downtown Indianapolis, Indiana." Thesis, Indiana University, 2011.
+Abstract: http://hdl.handle.net/1805/2638
+
+5. Clegg, John, "Slavery's Carceral Legacy." Jan 29, 2021..
+Full text PDF: https://economics.barnard.edu/sites/default/files/inline-files/Clegg_carceral_legacy_slavery.pdf
+
+6. Clegg, John, "Slavery's carceral legacy." American Journal of Sociology.
+May 2025, 130, (6), 1351 - 1393. DOI: 10.1086/733783
+Full text PDF: https://economics.barnard.edu/sites/default/files/inline-files/Clegg_carceral_legacy_slavery.pdf
+
+7. Clifford, Robert; Sullivan, Riley, "The Criminal Population in New
+England: Records, Convictions, and Barriers to Employment." Policy Report
+17-1. New England Public Policy Center, Mar 2017.
+Abstract: https://ssrn.com/abstract=3031188
+
+8. Dove, John A.; Dove, Laura R., "Institutions and incarceration: The role
+of economic freedom at the MSA level." Social Science Quarterly. Jul 2023,
+104, (4), 436 - 463. DOI: 10.1111/ssqu.13263
+Abstract: https://ssrn.com/abstract=3031188
+
+9. Downey, P. Mitchell; Roman, John K., "Cost-Benefit Analysis: A Guide for
+Drug Courts and Other Criminal Justice Programs." Research in Brief. NCJ
+246769, Washington, DC: United States Department of Justice, Office of
+Justice Programs, National Institute of Justice, Jun 2014.
+Abstract: http://www.ncjrs.gov/App/publications/abstract.aspx?ID=268859
+Full text PDF: https://ncjrs.gov/pdffiles1/nij/246769.pdf
+This report is divided into three sections. The first section, 'The Basics
+of Cost-Benefit Analysis,' describes that foundations of CBA, the
+motivation for performing a CBA, what the CBA can and cannot provide, and
+the general principles for conducting a CBA regarding its conceptual basis
+and applied framework. In the guide’s second section, 'Cost-Benefit
+Analysis in Action: NIJ's MADCE,' the CBA framework is applied using the
+National Institute of Justice's (NIJ's) Multi-site Adult Drug Court
+Evaluation (MADCE). This NIJ-sponsored evaluation focused on 23 adult drug
+courts in 8 States. The comparison group was drawn from six comparison
+groups where drug court access was limited. A total of 1,787 individuals
+participated in the evaluation, with approximately two-thirds being in the
+treatment group. The third section of the guide, “NIJ’s MADCE results,” the
+findings are presented from the MADCE, with a discussion of how the results
+provide new and useful information about how the drug courts are being
+implemented and the impact they have had on the behaviors and attitudes of
+the offenders managed by the drug court. The information provided by MADCE
+would not have been available to guide the development of the drug courts
+without a CBA. 2 tables and 10 notes
+
+10. Fridell, Lorie A.; Marier, Christopher J., "The color of confinement:
+Racial bias and jail populations across America." American Journal of
+Criminal Justice. Apr 2025, 50, (2), 307 - 332. DOI: 10.1007/s12103-024-
+09788-2
+Abstract: http://www.ncjrs.gov/App/publications/abstract.aspx?ID=268859
+Full text PDF: https://ncjrs.gov/pdffiles1/nij/246769.pdf
+This report is divided into three sections. The first section, 'The Basics
+of Cost-Benefit Analysis,' describes that foundations of CBA, the
+motivation for performing a CBA, what the CBA can and cannot provide, and
+the general principles for conducting a CBA regarding its conceptual basis
+and applied framework. In the guide’s second section, 'Cost-Benefit
+Analysis in Action: NIJ's MADCE,' the CBA framework is applied using the
+National Institute of Justice's (NIJ's) Multi-site Adult Drug Court
+Evaluation (MADCE). This NIJ-sponsored evaluation focused on 23 adult drug
+courts in 8 States. The comparison group was drawn from six comparison
+groups where drug court access was limited. A total of 1,787 individuals
+participated in the evaluation, with approximately two-thirds being in the
+treatment group. The third section of the guide, “NIJ’s MADCE results,” the
+findings are presented from the MADCE, with a discussion of how the results
+provide new and useful information about how the drug courts are being
+implemented and the impact they have had on the behaviors and attitudes of
+the offenders managed by the drug court. The information provided by MADCE
+would not have been available to guide the development of the drug courts
+without a CBA. 2 tables and 10 notes
+
+11. Henrichson, Christian; Rinaldi, Joshua; Delaney, Ruth, "The Price of
+Jails: Measuring the Taxpayer Cost of Local Incarceration." Vera Institute
+of Justice, May 2015.
+Full text PDF: https://storage.googleapis.com/vera-web-assets/downloads/Publications/the-price-of-jails-measuring-the-taxpayer-cost-of-local-incarceration/legacy_downloads/price-of-jails.pdf
+
+12. Ifft, Jennifer; Jodlowski, Margaret, "Is ICE freezing US agriculture?
+Farm-level adjustment to increased local immigration enforcement." Labour
+Economics. Oct 2022, 78,. DOI: 10.1016/j.labeco.2022.102203
+Full text PDF: https://storage.googleapis.com/vera-web-assets/downloads/Publications/the-price-of-jails-measuring-the-taxpayer-cost-of-local-incarceration/legacy_downloads/price-of-jails.pdf
+
+13. Jodlowski, Margaret C., "Three Essays on Agricultural Labor and Risk in
+the United States." Dissertation, Cornell University, 2020.
+Full text PDF: https://storage.googleapis.com/vera-web-assets/downloads/Publications/the-price-of-jails-measuring-the-taxpayer-cost-of-local-incarceration/legacy_downloads/price-of-jails.pdf
+
+14. Kajeepeta, Sandhya; Mauro, Pia M.; Keyes, Katherine M.; El-Sayed,
+Abdulrahman M.; Rutherford, Caroline G.; Prins, Seth J., "Association
+between county jail incarceration and cause-specific county mortality in
+the USA, 1987-2017: A retrospective, longitudinal study." The Lancet Public
+Health. Apr 2021, 6, (4), e240 - e248. DOI: 10.1016/S2468-2667(20)30283-8
+Full text PDF: https://storage.googleapis.com/vera-web-assets/downloads/Publications/the-price-of-jails-measuring-the-taxpayer-cost-of-local-incarceration/legacy_downloads/price-of-jails.pdf
+
+15. Kang-Brown, Jacob; Montagnet, Chase; Heiss, Jasmine, "People in Jail
+and Prison in 2020." Brooklyn, NY: Vera Institute of Justice, Jan 2021.
+Full text PDF: https://www.vera.org/downloads/publications/people-in-jail-and-prison-in-2020.pdf
+
+16. Kang-Brown, Jacob; Montagnet, Chase; Heiss, Jasmine, "People in Jail
+and Prison in Spring 2021." Brooklyn, NY: Vera Institute of Justice, 2021.
+Full text PDF: https://www.vera.org/downloads/publications/people-in-jail-and-prison-in-spring-2021.pdf
+
+17. Knapp, Courtney, "Local planning in the age of mass decarceration."
+Journal of Planning Education and Research. Jun 2020, 40, (2), 169 - 185.
+DOI: 10.1177/0739456X20911704
+Full text PDF: https://www.vera.org/downloads/publications/people-in-jail-and-prison-in-spring-2021.pdf
+
+18. Lara-Millan, Armando, "The administrative disappearing of state crisis:
+The resolution of prison realignment in Los Angeles County." American
+Journal of Sociology. Mar 2022, 127, (5), 1460 - 1506. DOI: 10.1086/719423
+Full text PDF: https://www.vera.org/downloads/publications/people-in-jail-and-prison-in-spring-2021.pdf
+
+19. Lee, Alice S.; Berendes, David M.; Seib, Katherine G.; Whitney, Ellen
+A.S.; Berkelman, Ruth L., "Receipt of A(H1N1)pdm09 vaccine by prisons and
+jails - United States, 2009-10 influenza season." Morbidity and Mortality
+Weekly Report. Jan 6, 2012, 60, (51/52), 1737 - 1740.
+Full text: https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6051a3.htm
+
+20. Lee, Alice S.; Berendes, David M.; Seib, Katherine; Whitney, Ellen
+A.S.; Chavez, R. Scott; Meyer, Patricia Lynn; Berkelman, Ruth L.; Omer,
+Saad B.; Spaulding, Anne C., "Distribution of A(H1N1)pdm09 influenza
+vaccine: Need for greater consideration of smaller jails." Journal of
+Correctional Health Care. Jul 2014, 20, (3), 228 - 239. DOI:
+10.1177/1078345814532223
+Full text: https://www.cdc.gov/mmwr/preview/mmwrhtml/mm6051a3.htm
+
+21. Liu, Patrick; Nunn, Ryan; Shambaugh, Jay, "Nine Facts About Monetary
+Sanctions in the Criminal Justice System." Economic Facts. The Hamilton
+Project, Mar 2019.
+Full text: http://www.hamiltonproject.org/papers/nine_facts_about_monetary_sanctions_in_the_criminal_justice_system
+Full text PDF: http://www.hamiltonproject.org/assets/files/BailFacts_20190314.pdf
+
+22. Lynch, James P., "Corrections in the United States: Trends in
+Correctional Populations, Common Perceptions of Incarceration, and the Role
+of Corrections in Society." Washington, DC: Bureau of Justice Statistics,
+May 4, 2012..
+Full text PDF: https://bjs.gov/content/pub/pdf/cus2012.pdf
+
+23. Maruschak, Laura M.; Sabol, William J.; Potter, R.H.; Reid, Laurie C.;
+Cramer, Emily W., "Pandemic influenza and jail facilities and populations."
+American Journal of Public Health. Oct 2009, 99, (S2), S339 - S344. DOI:
+10.2105/AJPH.2009.175174
+Full text PDF: https://bjs.gov/content/pub/pdf/cus2012.pdf
+
+24. Minton, Todd D.; Ginder, Scott; Brumbaugh, Susan M.; Smiley-McDonald,
+Hope; Rohlof, Harley, "Census of Jails: Population Changes, 1999-2013."
+Bulletin. NCJ 248627, Washington, DC: U.S. Department of Justice, Office of
+Justice Programs, Bureau of Justice Statistics, Dec 2015.
+Abstract: http://www.bjs.gov/index.cfm?ty=pbdetail&iid=5480&utm_source=juststats-120815&utm_medium=email&utm_content=CJPC9913%20Head&utm_campaign=juststats&ed2f26df2d9c416fbddddd2330a778c6=cbbiganehg-cngonblg
+Full text: http://www.bjs.gov/content/pub/ascii/cjpc9913.txt
+Full text PDF: http://www.bjs.gov/content/pub/pdf/cjpc9913.pdf
+Presents state-level estimates of the number of inmates confined in local
+jails at year end 2013, by sex, race, and Hispanic origin. This report
+provides information on changes in the incarceration rate, average daily
+population, admissions, expected length of stay, rated capacity, percent of
+capacity occupied, and inmate-to-correctional officer ratios. It also
+includes statistics, by jurisdiction size, on the number of inmates
+confined to jail and persons admitted to jail during 2013. It features a
+special section on the 12 facilities that functioned as jails for the
+Federal Bureau of Prisons.
+
+25. Money, Emma E.L., "Examining County-Level Implicit Stereotypes and
+Prejudice as Predictors of Racial and Gender Disparities in Incarceration
+Across the United States." Dissertation, Portland State University, 2025.
+Abstract: http://www.bjs.gov/index.cfm?ty=pbdetail&iid=5480&utm_source=juststats-120815&utm_medium=email&utm_content=CJPC9913%20Head&utm_campaign=juststats&ed2f26df2d9c416fbddddd2330a778c6=cbbiganehg-cngonblg
+Full text: http://www.bjs.gov/content/pub/ascii/cjpc9913.txt
+Full text PDF: http://www.bjs.gov/content/pub/pdf/cjpc9913.pdf
+Presents state-level estimates of the number of inmates confined in local
+jails at year end 2013, by sex, race, and Hispanic origin. This report
+provides information on changes in the incarceration rate, average daily
+population, admissions, expected length of stay, rated capacity, percent of
+capacity occupied, and inmate-to-correctional officer ratios. It also
+includes statistics, by jurisdiction size, on the number of inmates
+confined to jail and persons admitted to jail during 2013. It features a
+special section on the 12 facilities that functioned as jails for the
+Federal Bureau of Prisons.
+
+26. O'Brien, Timothy L., "Arresting confidence: Mass incarceration and
+Black-White differences in perceptions of legal authorities." Social
+Science Quarterly. Sep 2020, 101, (5), 1905 - 1919. DOI: 10.1111/ssqu.12842
+Abstract: http://www.bjs.gov/index.cfm?ty=pbdetail&iid=5480&utm_source=juststats-120815&utm_medium=email&utm_content=CJPC9913%20Head&utm_campaign=juststats&ed2f26df2d9c416fbddddd2330a778c6=cbbiganehg-cngonblg
+Full text: http://www.bjs.gov/content/pub/ascii/cjpc9913.txt
+Full text PDF: http://www.bjs.gov/content/pub/pdf/cjpc9913.pdf
+Presents state-level estimates of the number of inmates confined in local
+jails at year end 2013, by sex, race, and Hispanic origin. This report
+provides information on changes in the incarceration rate, average daily
+population, admissions, expected length of stay, rated capacity, percent of
+capacity occupied, and inmate-to-correctional officer ratios. It also
+includes statistics, by jurisdiction size, on the number of inmates
+confined to jail and persons admitted to jail during 2013. It features a
+special section on the 12 facilities that functioned as jails for the
+Federal Bureau of Prisons.
+
+27. Pew Charitable Trusts, "Comprehensive Policies Can Improve Probation
+and Parole." Fact Sheet. Philadelphia, PA: Pew Charitable Trusts, Apr 2020.
+Full text PDF: https://www.livingfacts.org/-/media/assets/2020/04/pspp_comprehensive_policies_can_improve_probation_and_parole.pdf
+
+28. Ruddell, Rick; Leyton-Brown, Ken, "All in the family: The role of the
+sheriff's wife in 20th-century mom and pop jails." Women and Criminal
+Justice. 2013, 23, (4), 267 - 285. DOI: 10.1080/08974454.2012.733328
+Full text PDF: https://www.livingfacts.org/-/media/assets/2020/04/pspp_comprehensive_policies_can_improve_probation_and_parole.pdf
+
+29. Sarfraz, Azza; Chatzipanagiotou, Odysseas P.; Angez, Meher; Agarwal,
+Ishika; Mevawalla, Areesh; Rashid, Zayed; Pawlik, Timothy M., "Association
+of jail incarceration with lung, liver, and colorectal cancer mortality
+across US counties." JCO Oncology Practice. in press 2026,. DOI:
+10.1200/OP-25-00651
+Full text PDF: https://www.livingfacts.org/-/media/assets/2020/04/pspp_comprehensive_policies_can_improve_probation_and_parole.pdf
+
+30. Saunders, Jessica; Kotzias, Virginia; Ramchand, Rajeev, "Contemporary
+police stress: The impact of the evolving socio-political context."
+Criminology, Criminal Justice, Law and Society. 2019, 20, (1), 35 - 52.
+Full text PDF: https://ccjls.scholasticahq.com/article/7739-contemporary-police-stress-the-impact-of-the-evolving-socio-political-context
+
+31. Schlanger, Margo, "How Prisoners' Rights Lawyers Are Preserving the
+Role of the Courts." Public Law and Legal Theory Research Paper Series
+Paper No. 428. Aug 11, 2014. DOI: 10.2139/ssrn.2478884
+Abstract: https://ssrn.com/abstract=2478884
+
+32. Schlanger, Margo, "Prison and Jail Civil Rights/Conditions Cases:
+Longitudinal Statistics, 1970-2021." University of Michigan Law and
+Economics Working Papers. Working paper. University of Michigan Law,.
+Abstract: https://ssrn.com/abstract=2478884
+
+33. Schlanger, Margo, "Prisoners' rights lawyers' strategies for preserving
+the role of the courts." University of Miami Law Review. 2015, 69, 519 -
+558.
+Abstract: https://lawreview.law.miami.edu/prisoners-rights-lawyers-strategies-preserving-role-courts/
+Full text PDF: https://lawreview.law.miami.edu/wp-content/uploads/2015/04/Schlanger.pdf
+
+34. Schlanger, Margo, "Trends in prisoner litigation, as the PLRA enters
+adulthood." UC Irvine Law Review. 2015, 5, (1), 153 - 179.
+Abstract: https://scholarship.law.uci.edu/ucilr/vol5/iss1/6/
+
+35. Scott, Jacqueline; Petrossian, Gohar; Mellow, Jeff; Peterson, Bryce,
+"Understanding risky facilities: An analysis of factors associated with
+jail escapes in eight states." Security Journal. Oct 2018, 31, (4), 805 -
+820. DOI: 10.1057/s41284-018-0132-7
+Abstract: https://scholarship.law.uci.edu/ucilr/vol5/iss1/6/
+
+36. Stephan, James; Walsh, Georgette, "Census of Jail Facilities, 2006."
+NCJ 230188, Washington, DC: United States Department of Justice, Bureau of
+Justice Statistics, Dec 2011.
+Full text: http://www.bjs.gov/content/pub/ascii/cjf06.txt
+Full text PDF: http://www.bjs.gov/content/pub/pdf/cjf06.pdf
+Presents findings from the ninth in a series of complete enumerations of
+local jails since 1970. The data include changes in the number of
+jurisdictions and facilities, functions, confined inmates, and inmate-to-
+staff ratios. Findings are presented on the number of jurisdictions by
+size, incarceration rates, judicial sanctions, jail staff, and the number
+operated publically or under contract to county or city governments.
+
+37. Stober, Emmanuel, "The race warfare and the United States justice
+system." Journal of Humanities and Social Sciences Studies. 2020, 2, (6), 1
+- 14. DOI: 10.32996/jhsss.2020.2.6.1
+Full text: http://www.bjs.gov/content/pub/ascii/cjf06.txt
+Full text PDF: http://www.bjs.gov/content/pub/pdf/cjf06.pdf
+Presents findings from the ninth in a series of complete enumerations of
+local jails since 1970. The data include changes in the number of
+jurisdictions and facilities, functions, confined inmates, and inmate-to-
+staff ratios. Findings are presented on the number of jurisdictions by
+size, incarceration rates, judicial sanctions, jail staff, and the number
+operated publically or under contract to county or city governments.
+
+38. Vaughn, Paige E.; Williams, Joshua H., "Social control and neglect at a
+crossroads: Unpacking the interactive effects of residential segregation
+and violence on pretrial detention." Punishment and Society. in press
+2026,. DOI: 10.1177/14624745261433556
+Full text: http://www.bjs.gov/content/pub/ascii/cjf06.txt
+Full text PDF: http://www.bjs.gov/content/pub/pdf/cjf06.pdf
+Presents findings from the ninth in a series of complete enumerations of
+local jails since 1970. The data include changes in the number of
+jurisdictions and facilities, functions, confined inmates, and inmate-to-
+staff ratios. Findings are presented on the number of jurisdictions by
+size, incarceration rates, judicial sanctions, jail staff, and the number
+operated publically or under contract to county or city governments.
+
+39. Williams, Morgan C., Jr., "Gun Violence in Black and White: Evidence
+from Policy Reform in Missouri." Apr 17, 2018..
+Full text PDF: http://www.morganwilliamsjr.com/wp-content/uploads/2015/06/WilliamsJr_Morgan_WP_April_2018.pdf
+
+40. Yun, Minjae, "Three Essays in Law and Economics: Consequences and
+Formation of Legal Rules in Other Markets." Claremont Graduate University,
+2022.
+Full text PDF: http://www.morganwilliamsjr.com/wp-content/uploads/2015/06/WilliamsJr_Morgan_WP_April_2018.pdf
+
+41. Zimring, Franklin E., "Crime, law enforcement, and sentencing in an era
+of prison expansion." In The Insidious Momentum of American Mass
+Incarceration. 22 - 43, Oxford, England: Oxford University Press,2020. DOI:
+10.1093/oso/9780197513170.003.0002
+Full text PDF: http://www.morganwilliamsjr.com/wp-content/uploads/2015/06/WilliamsJr_Morgan_WP_April_2018.pdf

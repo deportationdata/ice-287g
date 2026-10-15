@@ -1,0 +1,40 @@
+Bibliography
+Census of State and Federal Adult Correctional Facilities, 2012
+
+This bibliography includes published and unpublished works that are related 
+to ICPSR study 37294. It includes works that are based on primary
+or secondary analysis of the data, or which describe or critique those
+data or the collection methodology. 
+
+If you publish a work or know of other works that are based on these data,
+please send the complete citation and name of the ICPSR study used to:
+icpsrbibliography@umich.edu
+
+
+1. Chirakijja, Janjala, "The economic effects of prison closures on local
+communities." Economics Letters. Jul 2023, 228,. DOI:
+10.1016/j.econlet.2023.111155
+
+2. Emblom-Hooe, Allyson, "The Effect of Correctional and Rehabilitation
+Facilities on Property Values." Job market paper. Dec 8, 2024..
+Full text PDF: https://abemblom.github.io/AllysonEmblomHooe.github.io/assets/files/JMP_AEH.pdf
+
+3. O'Brien, Timothy L., "Arresting confidence: Mass incarceration and
+Black-White differences in perceptions of legal authorities." Social
+Science Quarterly. Sep 2020, 101, (5), 1905 - 1919. DOI: 10.1111/ssqu.12842
+Full text PDF: https://abemblom.github.io/AllysonEmblomHooe.github.io/assets/files/JMP_AEH.pdf
+
+4. Schnepel, Kevin T., "COVID-19 in U.S. State and Federal Prisons."
+Washington, DC: Council on Criminal Justice, Sep 2020.
+Full text PDF: https://www.courthousenews.com/wp-content/uploads/2020/12/ccj-covid.pdf
+
+5. Skarha, Julianne; Spangler, Keith; Dosa, David; Rich, Josiah D.; Savitz,
+David A.; Zanobetti, Antonella, "Cold-related mortality in US state and
+private prisons: A case-crossover analysis." Epidemiology. Mar 2025, 36,
+(2), 207 - 215. DOI: 10.1097/EDE.0000000000001824
+Full text PDF: https://www.courthousenews.com/wp-content/uploads/2020/12/ccj-covid.pdf
+
+6. Stober, Emmanuel, "The race warfare and the United States justice
+system." Journal of Humanities and Social Sciences Studies. 2020, 2, (6), 1
+- 14. DOI: 10.32996/jhsss.2020.2.6.1
+Full text PDF: https://www.courthousenews.com/wp-content/uploads/2020/12/ccj-covid.pdf
