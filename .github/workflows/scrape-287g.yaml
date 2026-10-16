@@ -371,18 +371,16 @@ jobs:
           ref: ${{ needs.acquire.outputs.branch }}
           lfs: false
 
-      # the build reads sheets, inputs and manifests; the MOA pdfs (12 GB) stay LFS pointers and
-      # the rarely changing inputs' LFS objects are cached
       - uses: actions/cache@v4
         with:
           path: .git/lfs/objects
-          key: lfs-inputs-${{ hashFiles('inputs/**') }}
+          key: lfs-inputs-${{ hashFiles('inputs/**', 'data/cache/**') }}
           restore-keys: lfs-inputs-
 
       - name: Pull the LFS files the build reads
         run: |
           git lfs install --local
-          git lfs pull --include="sheets/**,inputs/**"
+          git lfs pull --include="sheets/**,inputs/**,data/cache/**"
 
       - name: Install Homebrew GDAL and R
         id: brew
