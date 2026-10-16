@@ -59,6 +59,12 @@ jobs:
             .Rprofile
           sparse-checkout-cone-mode: false
 
+      # agreements-sf.parquet is in LFS, so both checkouts hold a pointer until it is pulled
+      - name: Pull the LFS parquet on the PR head
+        run: |
+          git lfs install --local
+          git lfs pull --include="data/agreements-sf.parquet"
+
       - name: Checkout main into _main/
         uses: actions/checkout@v4
         with:
@@ -70,6 +76,11 @@ jobs:
             review/agreement-review.csv
             review/qa-summary.csv
           sparse-checkout-cone-mode: false
+
+      - name: Pull the LFS parquet on main
+        run: |
+          git -C _main lfs install --local
+          git -C _main lfs pull --include="data/agreements-sf.parquet"
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
