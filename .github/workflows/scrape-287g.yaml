@@ -361,6 +361,9 @@ jobs:
       # Ubuntu binaries would link Ubuntu's GDAL (no Parquet driver) instead
       RENV_CONFIG_PPM_ENABLED: "FALSE"
       RENV_CONFIG_REPOS_OVERRIDE: "https://cloud.r-project.org"
+      # renv prints "The project is out-of-sync" on stdout at every R start when the library
+      # drifts from the lockfile; steps below capture Rscript's stdout, so the check stays off
+      RENV_CONFIG_SYNCHRONIZED_CHECK: "FALSE"
 
     steps:
       - uses: actions/checkout@v4
