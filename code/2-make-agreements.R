@@ -5,9 +5,7 @@ library(tidyverse)
 source("code/functions.R")
 
 state_xwalk <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
-# a fix with an agency applies to it alone; a blank fix removes the county, a blank county fills one
-county_name_fixes <- read_csv("inputs/manual/county-name-fixes.csv", col_types = "ccccc", na = character()) |>
-  transmute(state, agency = na_if(agency, ""), county = na_if(county, ""), county_fixed)
+county_name_fixes <- read_county_name_fixes()
 # keyed on the erroneous TYPE, so a fix does nothing once ICE corrects it
 agency_type_fixes <- read_csv("inputs/manual/agency-type-fixes.csv", col_types = "ccccc") |>
   transmute(state, agency, type_clean = str_to_lower(type), type_fixed = str_to_lower(type_fixed))
@@ -22,29 +20,13 @@ held_moas <- moa_manifest |>
   filter(on_disk, str_detect(coalesce(url, ""), "^https://www\\.ice\\.gov/doclib/287gMOA/")) |>
   distinct(url) |>
   mutate(file = basename(str_remove(url, "[?#].*$")))
-# levels are keyed to agency_id so an alias spelling reaches the same row
+# levels are keyed on the agency; the county picks one where two share a spelling
 counties_ref <- arrow::read_parquet("data/intermediate/reference-counties.parquet")
-aliases <- read_agency_aliases(state_xwalk)
 level_manual <- read_csv("inputs/manual/manual-jurisdiction-levels.csv", col_types = cols(.default = "c")) |>
-  left_join(state_xwalk |> select(state = state_full, state_abbr), by = "state") |>
-  transmute(agency_id = agency_id_of(state, agency, state_abbr, aliases), manual_level = jurisdiction_level) |>
+  transmute(agency_id = manual_agency_id(state, agency, county), manual_level = jurisdiction_level) |>
   distinct(agency_id, .keep_all = TRUE)
 stopifnot("every level in inputs/manual/manual-jurisdiction-levels.csv is one of the eight" =
             all(level_manual$manual_level %in% jurisdiction_levels))
-
-# longest run of up to three words before County/Parish that is a real county of the state
-county_from_agency_name <- function(agency, state, counties_ref) {
-  ref <- counties_ref |> distinct(state_key, county_key, county)
-  out <- rep(NA_character_, length(agency))
-  for (k in 3:1) {
-    words <- str_match(str_squish(agency), paste0("\\b((?:[A-Za-z.'-]+\\s+){", k - 1, "}[A-Za-z.'-]+)\\s+(County|Parish)\\b"))[, 2]
-    hit <- tibble(state_key = norm_state(state), county_key = norm_county(words)) |>
-      left_join(ref, by = c("state_key", "county_key")) |>
-      pull(county)
-    out <- coalesce(out, hit)
-  }
-  out
-}
 
 identities <- arrow::read_parquet("data/intermediate/identity-agreements.parquet")
 publications <- arrow::read_parquet("data/intermediate/sheet-publications.parquet")
@@ -103,10 +85,8 @@ agreements <- bind_rows(active, gone) |>
     agreement_id, status, state,
     # published as ice_county
     raw_county,
-    # missing counties arrive as #N/A-style text, not blanks
-    county = str_to_title(str_squish(raw_county)),
-    county = if_else(str_to_lower(county) %in% c("#na", "#n/a", "na", "n/a"), NA_character_, county),
     agency = str_squish(raw_agency),
+    county = sheet_county(raw_county, state, agency, county_name_fixes),
     signed,
     # sentinel string, not NA: needs_review keys off this exact value
     moa = case_when(
@@ -120,11 +100,6 @@ agreements <- bind_rows(active, gone) |>
     type_clean = str_to_lower(str_squish(raw_type)),
     support_clean = str_to_lower(norm_support_key(raw_support))
   ) |>
-  # keys on cleaned values, so it must follow the title-casing pass above
-  left_join(county_name_fixes |> filter(!is.na(agency)), by = c("state", "agency", "county")) |>
-  left_join(county_name_fixes |> filter(is.na(agency)) |> select(-agency), by = c("state", "county"), suffix = c("", "_any")) |>
-  mutate(county = na_if(coalesce(county_fixed, county_fixed_any, county), "")) |>
-  select(-county_fixed, -county_fixed_any) |>
   left_join(agency_type_fixes, by = c("state", "agency", "type_clean")) |>
   mutate(type_clean = coalesce(type_fixed, type_clean)) |>
   select(-type_fixed)
@@ -206,8 +181,9 @@ agreements <- agreements |>
       !is.na(jurisdiction_level) ~ "Name, no ICE type",
       TRUE ~ NA_character_
     ),
-    # jail models are a point at the jail; a task force is the body's territory
+    # jail models are a point at the jail; a task force or a judicial district is the body's territory
     geometry_type = case_when(
+      jurisdiction_level == "Judicial District" ~ "Polygon",
       support_clean %in% c("jail enforcement model", "warrant service officer", "jail & task force") ~ "Point",
       support_clean == "task force model" & !is.na(jurisdiction_level) ~ "Polygon",
       TRUE ~ NA_character_

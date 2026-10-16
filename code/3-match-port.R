@@ -10,8 +10,11 @@ source("code/functions.R")
 vintage <- 2024
 
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet")
-manual_ports <- arrow::read_parquet("data/intermediate/manual-port-airports.parquet")
-manual_points <- arrow::read_parquet("data/intermediate/manual-facility-points.parquet")
+# both lists are keyed on the agency
+manual_ports <- arrow::read_parquet("data/intermediate/manual-port-airports.parquet") |>
+  mutate(agency_id = manual_agency_id(state, agency))
+manual_points <- arrow::read_parquet("data/intermediate/manual-facility-points.parquet") |>
+  mutate(agency_id = manual_agency_id(state, agency, county))
 airport_boundaries <- st_read("data/intermediate/reference-airport-boundaries.parquet", quiet = TRUE)
 
 ports <- agreements |> filter(geometry_type == "Polygon", jurisdiction_level == "Port")
@@ -47,7 +50,7 @@ stopifnot(
 )
 
 port_sf <- ports |>
-  inner_join(members, by = c("agency", "state")) |>
+  inner_join(members |> select(-agency, -state), by = "agency_id") |>
   st_as_sf() |>
   transmute(
     agreement_id,
@@ -66,12 +69,12 @@ port_sf <- ports |>
 
 # an authority with no airport list keeps its airport's reference point
 fallback <- ports |>
-  anti_join(manual_ports, by = c("agency", "state")) |>
+  anti_join(manual_ports, by = "agency_id") |>
   left_join(
     manual_points |>
       filter(is.na(county) | county == "") |>
-      select(agency, state, match_name = facility_name, latitude, longitude, manual_reason = reason, manual_note = note),
-    by = c("agency", "state")
+      select(agency_id, match_name = facility_name, latitude, longitude, manual_reason = reason, manual_note = note),
+    by = "agency_id"
   )
 fallback_points <- fallback |>
   filter(!is.na(latitude), !is.na(longitude)) |>

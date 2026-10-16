@@ -36,10 +36,8 @@ university_name_overrides <-
   )
 
 university_overrides <- manual_polygons |>
-  select(
-    agency,
-    state,
-    county,
+  transmute(
+    agency_id = manual_agency_id(state, agency, county),
     manual_match_layer = match_layer,
     manual_university_match = match_name,
     manual_reason = reason,
@@ -47,7 +45,7 @@ university_overrides <- manual_polygons |>
   )
 
 university_sf <- agreements |>
-  left_join(university_overrides, by = c("agency", "state", "county")) |>
+  left_join(university_overrides, by = "agency_id") |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "university" |

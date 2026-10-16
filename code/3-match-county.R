@@ -10,7 +10,9 @@ source("code/functions.R")
 
 agreements <- arrow::read_parquet("data/intermediate/agreements.parquet")
 manual_polygons <- arrow::read_parquet("data/intermediate/manual-non-facility-polygons.parquet")
-manual_judicial <- arrow::read_parquet("data/intermediate/manual-judicial-district-counties.parquet")
+# keyed on the agency
+manual_judicial <- arrow::read_parquet("data/intermediate/manual-judicial-district-counties.parquet") |>
+  mutate(agency_id = manual_agency_id(state, agency))
 
 vintage <- 2024
 
@@ -19,10 +21,8 @@ counties_sf <- counties_reference(vintage) |>
   select(county, state_key, county_key, statefp, countyfp, geometry_vintage, geometry)
 
 county_overrides <- manual_polygons |>
-  select(
-    agency,
-    state,
-    county,
+  transmute(
+    agency_id = manual_agency_id(state, agency, county),
     manual_match_layer = match_layer,
     manual_county_match = match_name,
     manual_reason = reason,
@@ -30,7 +30,7 @@ county_overrides <- manual_polygons |>
   )
 
 county_agreements_sf <- agreements |>
-  left_join(county_overrides, by = c("agency", "state", "county")) |>
+  left_join(county_overrides, by = "agency_id") |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "county" |
@@ -108,8 +108,8 @@ stopifnot(
 )
 judicial_agreements <- agreements |> filter(geometry_type == "Polygon", jurisdiction_level == "Judicial District")
 judicial_sf <- judicial_agreements |>
-  inner_join(judicial_members |> select(agency, state, match_name, statefp, countyfp, geometry_vintage, source, geometry),
-             by = c("agency", "state"), relationship = "many-to-many") |>
+  inner_join(judicial_members |> select(agency_id, match_name, statefp, countyfp, geometry_vintage, source, geometry),
+             by = "agency_id", relationship = "many-to-many") |>
   transmute(
     agreement_id,
     match_name,
@@ -126,7 +126,7 @@ judicial_sf <- judicial_agreements |>
   st_as_sf()
 # a district with no county list rides along unplaced, saying why
 judicial_unmatched <- judicial_agreements |>
-  anti_join(manual_judicial, by = c("agency", "state")) |>
+  anti_join(manual_judicial, by = "agency_id") |>
   transmute(
     agreement_id,
     match_name = NA_character_,

@@ -1,5 +1,6 @@
 # Resolve every sheet observation to an agreement identity and an agency; leftovers go to a candidate report
-# -> data/intermediate/identity-{agreements,agencies,agency-spellings}.parquet, sheet-row-agreements.parquet, identity-*.csv
+# -> data/intermediate/identity-{agreements,agencies,agency-spellings}.parquet, sheet-row-agreements.parquet, identity-*.csv,
+#    review/identity-candidates.csv
 library(tidyverse)
 library(stringdist)
 
@@ -288,15 +289,46 @@ obs_ids <- obs_ids |>
          component = coalesce(to_component, component)) |>
   select(-to_signed, -to_component)
 
+# T5: a list that prints one spelling under two counties lists two agencies (Ward 5 Marshal's Office, Allen and
+# Calcasieu Parish), so each slug carries its county: ICE's cell with the name fixes, overridden by a county the
+# agency names; a row without one takes its signing's county from another list
+county_name_fixes <- read_county_name_fixes()
+counties_ref <- arrow::read_parquet("data/intermediate/reference-counties.parquet")
+obs_ids <- obs_ids |>
+  mutate(county = coalesce(county_from_agency_name(raw_agency, state, counties_ref),
+                           sheet_county(raw_county, state, raw_agency, county_name_fixes)))
+twins <- obs_ids |>
+  filter(!is.na(county)) |>
+  distinct(state_key, chosen_agency, publication_id, county) |>
+  count(state_key, chosen_agency, publication_id) |>
+  filter(n > 1) |>
+  distinct(state_key, chosen_agency)
+obs_ids <- obs_ids |>
+  semi_join(twins, by = c("state_key", "chosen_agency")) |>
+  mutate(agency_county = first(na.omit(county)), .by = c(state_key, support_key, signed, component)) |>
+  select(publication_id, sheet_row, agency_county) |>
+  right_join(obs_ids, by = c("publication_id", "sheet_row")) |>
+  select(-county)
+message(sprintf("identities: %d spellings listed under two counties on one list carry the county in their agency id",
+                nrow(twins)))
+
 # a signing is dated by ICE: the date its sheet printed, else its archive index, else its signature on the MOA
-obs_ids <- obs_ids |> mutate(agency_id = paste0(coalesce(state_abbr, "XX"), "-", slug(chosen_agency)))
+agency_id_with_county <- \(state_abbr, agency, agency_county)
+  paste0(coalesce(state_abbr, "XX"), "-", slug(agency), if_else(is.na(agency_county), "", paste0("-", slug(agency_county))))
+obs_ids <- obs_ids |> mutate(agency_id = agency_id_with_county(state_abbr, chosen_agency, agency_county))
 
 # signings ICE never listed (the October 2009 re-signings of the standard MOA and a few others), read off the MOAs we
 # hold; inputs/manual/moa-signatures.csv records every MOA read
-unlisted <- read_csv("inputs/manual/unlisted-signings.csv", col_types = "ccDcc") |>
+qualified_ids <- obs_ids |>
+  filter(!is.na(agency_county)) |>
+  distinct(id = paste0(coalesce(state_abbr, "XX"), "-", slug(chosen_agency))) |>
+  pull(id)
+unlisted <- read_csv("inputs/manual/unlisted-signings.csv", col_types = cols(.default = "c", signed = "D"))
+if (!"county" %in% names(unlisted)) unlisted$county <- NA_character_
+unlisted <- unlisted |>
   left_join(xwalk |> select(state = state_full, state_abbr), by = "state") |>
-  transmute(agency_id = agency_id_of(state, agency, state_abbr, aliases), unlisted_signed = signed,
-            unlisted_source = signed_source)
+  transmute(agency_id = agency_id_of(state, agency, state_abbr, aliases, na_if(county, ""), qualified_ids),
+            unlisted_signed = signed, unlisted_source = signed_source)
 stopifnot("every signing in inputs/manual/unlisted-signings.csv names an agency ICE listed" =
             all(unlisted$agency_id %in% obs_ids$agency_id))
 
@@ -314,6 +346,7 @@ printed_signings <- obs_ids |>
   summarise(state = first(state), state_abbr = first(state_abbr), chosen_agency = first(chosen_agency),
             raw_state_last = last(raw_state), raw_agency_last = last(raw_agency[!held]), raw_support_last = last(raw_support),
             raw_type_last = last(raw_type), raw_county_last = last(raw_county), raw_moa_last = last(raw_moa),
+            agency_county = first(agency_county),
             support_key = if_else(any(support_key == "JAIL & TASK FORCE"), "JAIL & TASK FORCE", first(support_key)),
             component = min(component), .by = c(state_key, agency_id, signed))
 obs_ids <- obs_ids |>
@@ -365,10 +398,11 @@ identities <- obs_ids |>
     raw_state_last = last(raw_state), raw_agency_last = last(raw_agency[!held]),
     raw_support_last = last(raw_support), raw_type_last = last(raw_type),
     raw_county_last = last(raw_county), raw_moa_last = last(raw_moa),
+    agency_county = first(agency_county),
     .groups = "drop"
   ) |>
   mutate(
-    agency_id = paste0(coalesce(state_abbr, "XX"), "-", slug(canonical_agency)),
+    agency_id = agency_id_with_county(state_abbr, canonical_agency, agency_county),
     agreement_id = paste0(agency_id, "#", support_abbr(support_key), "#", signed)
   ) |>
   left_join(pub_dates |> select(first_seq = pub_seq, first_appeared = published_on,
@@ -388,7 +422,7 @@ identities <- bind_rows(
     transmute(state_key, support_key, signed, component, state, state_abbr, n_spellings = 1L,
               canonical_agency = chosen_agency, signed_source = "ICE sheet", identity_resolution = "exact", n_pub = 0L,
               raw_state_last, raw_agency_last, raw_support_last, raw_type_last, raw_county_last, raw_moa_last,
-              agency_id, agreement_id = paste0(agency_id, "#", support_abbr(support_key), "#", signed))
+              agency_county, agency_id, agreement_id = paste0(agency_id, "#", support_abbr(support_key), "#", signed))
 )
 
 # lineage: a signing ICE never listed succeeds the signings whose listings it took
@@ -469,7 +503,7 @@ identities <- identities |>
     TRUE ~ NA_character_
   )) |>
   select(agreement_id, agency_id, agreement_lineage_id, state, state_abbr, state_key,
-         canonical_agency, support_key, signed, signed_source, status, succeeded_by,
+         canonical_agency, agency_county, support_key, signed, signed_source, status, succeeded_by,
          first_appeared, first_appeared_source, last_appeared, removed_by, removed_by_source,
          removal_flag, first_seq, last_seq, n_pub,
          latest_sheet_row, latest_sheet, latest_sheet_url, n_sheet_rows, identity_resolution, n_spellings,
@@ -477,7 +511,7 @@ identities <- identities |>
 
 agencies <- identities |>
   arrange(coalesce(last_seq, 0L)) |>
-  group_by(agency_id, state, state_abbr, state_key, canonical_agency) |>
+  group_by(agency_id, state, state_abbr, state_key, canonical_agency, agency_county) |>
   summarise(display_agency = last(raw_agency_last),
             n_agreements = n(), n_active = sum(status == "Active"),
             first_seen = min(first_appeared, na.rm = TRUE), last_seen = max(last_appeared, na.rm = TRUE),
@@ -491,9 +525,10 @@ observation_ids <- obs_ids |>
 
 # every spelling ICE ever printed, mapped to the agency it resolved to
 spellings <- obs_ids |>
-  distinct(state_key, state_abbr, observed_agency, raw_agency, chosen_agency) |>
-  mutate(agency_id = paste0(coalesce(state_abbr, "XX"), "-", slug(chosen_agency)),
-         n_agencies = n_distinct(agency_id), .by = c(state_key, observed_agency)) |>
+  select(publication_id, sheet_row, state_key, state_abbr, observed_agency, raw_agency) |>
+  inner_join(observation_ids |> select(publication_id, sheet_row, agency_id), by = c("publication_id", "sheet_row")) |>
+  distinct(state_key, state_abbr, observed_agency, raw_agency, agency_id) |>
+  mutate(n_agencies = n_distinct(agency_id), .by = c(state_key, observed_agency)) |>
   select(state_key, state_abbr, observed_agency, raw_agency, agency_id, n_agencies) |>
   arrange(state_key, observed_agency, raw_agency)
 
@@ -511,7 +546,10 @@ stopifnot(
   "every signing ICE never listed takes the listings published while it was in force" =
     nrow(anti_join(unlisted, identities, by = c("agency_id", "unlisted_signed" = "signed"))) == 0,
   "identity resolution must never merge across state, model or signing date" =
-    nrow(distinct(identities, agreement_id, state_key, support_key, signed)) == nrow(identities)
+    nrow(distinct(identities, agreement_id, state_key, support_key, signed)) == nrow(identities),
+  "a spelling listed under two counties on one list must split into two agencies" =
+    nrow(twins) == 0 || all((identities |> semi_join(twins, by = c("state_key", "canonical_agency" = "chosen_agency")) |>
+                               summarise(n = n_distinct(agency_id), .by = c(state_key, canonical_agency)))$n > 1)
 )
 
 # candidates: propose, never block
@@ -570,7 +608,7 @@ held_candidates <- if (nrow(held_renames)) held_renames |>
             left_n_pub = if_else(old_id == variant_id_a, n_pub_a, n_pub_b),
             right_n_pub = if_else(old_id == variant_id_a, n_pub_b, n_pub_a), suggested_relation = "distinct")
 candidates <- bind_rows(near, renames, unlinked, held_candidates) |> arrange(kind, state_key, left_agency)
-write_csv(candidates, "data/intermediate/identity-candidates.csv")
+write_csv(candidates, "review/identity-candidates.csv")
 # every signing date folded into another, for review
 target |>
   transmute(state_key, support_key, agency = chosen_agency, signed_printed = signed, signed = to_signed, rule) |>

@@ -211,12 +211,16 @@ roster_key_unique_tbl <- bind_rows(
   group_by(state_key, agency_key) |>
   summarize(roster_key_unique = max(n) <= 1, .groups = "drop")
 
+# keyed on the agency; a county-specific row wins
 manual_agency_ori <- read_csv(
   "inputs/manual/manual-agency-ori.csv",
   col_types = cols(.default = "c")
 ) |>
   filter(!is.na(ORI9), ORI9 != "") |>
-  distinct(state, county, agency, .keep_all = TRUE)
+  distinct(state, county, agency, .keep_all = TRUE) |>
+  mutate(agency_id = manual_agency_id(state, agency, county)) |>
+  arrange(is.na(county) | county == "") |>
+  distinct(agency_id, .keep_all = TRUE)
 
 agreement_identifiers <- arrow::read_parquet("data/intermediate/agreements.parquet") |>
   select(agreement_id, agency_id, state, county, agency, jurisdiction_level) |>
@@ -276,22 +280,9 @@ agreement_identifiers <- arrow::read_parquet("data/intermediate/agreements.parqu
     )
   ) |>
   select(-crime_rank, -lear_rank, -leaic_rank, -best_rank) |>
-  # a county-less manual row applies statewide; the county-specific row wins
-  left_join(
-    manual_agency_ori |>
-      filter(!is.na(county), county != "") |>
-      select(state, county, agency, manual_ori_specific = ORI9),
-    by = c("state", "county", "agency")
-  ) |>
-  left_join(
-    manual_agency_ori |>
-      filter(is.na(county) | county == "") |>
-      select(state, agency, manual_ori_general = ORI9),
-    by = c("state", "agency")
-  ) |>
+  left_join(manual_agency_ori |> select(agency_id, manual_ori = ORI9), by = "agency_id") |>
   # a manual ORI overrides the rosters; an agreeing roster keeps the credit
   mutate(
-    manual_ori = coalesce(manual_ori_specific, manual_ori_general),
     ori_source = if_else(
       !is.na(manual_ori) & coalesce(ORI9 != manual_ori, TRUE),
       "manual",
