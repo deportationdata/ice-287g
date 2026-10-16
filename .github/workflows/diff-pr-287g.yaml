@@ -48,18 +48,7 @@ jobs:
         with:
           ref: ${{ steps.pr.outputs.ref }}
           lfs: false
-          sparse-checkout: |
-            code/diff-agreements-pr.R
-            data/agreements-sf.parquet
-            review/agreement-review.csv
-            review/qa-summary.csv
-            renv.lock
-            renv/activate.R
-            renv/settings.json
-            .Rprofile
-          sparse-checkout-cone-mode: false
 
-      # agreements-sf.parquet is in LFS, so both checkouts hold a pointer until it is pulled
       - name: Pull the LFS parquet on the PR head
         run: |
           git lfs install --local
@@ -71,11 +60,6 @@ jobs:
           ref: main
           path: _main
           lfs: false
-          sparse-checkout: |
-            data/agreements-sf.parquet
-            review/agreement-review.csv
-            review/qa-summary.csv
-          sparse-checkout-cone-mode: false
 
       - name: Pull the LFS parquet on main
         run: |
