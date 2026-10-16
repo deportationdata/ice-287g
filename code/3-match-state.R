@@ -45,10 +45,8 @@ territories_sf <- counties(cb = TRUE, year = vintage, class = "sf") |>
 state_lookup <- bind_rows(states_sf, territories_sf)
 
 state_overrides <- manual_polygons |>
-  select(
-    agency,
-    state,
-    county,
+  transmute(
+    agency_id = manual_agency_id(state, agency, county),
     manual_match_layer = match_layer,
     manual_state_match = match_name,
     manual_reason = reason,
@@ -56,7 +54,7 @@ state_overrides <- manual_polygons |>
   )
 
 state_agreements_sf <- agreements |>
-  left_join(state_overrides, by = c("agency", "state", "county")) |>
+  left_join(state_overrides, by = "agency_id") |>
   # un-overridden rows of another class evaluate to NA; filter() drops those
   filter(
     manual_match_layer == "state" |

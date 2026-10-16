@@ -365,10 +365,11 @@ ice_county_codes <- agreements |>
   select(agreement_id, ice_county_fips)
 
 # a regional jail authority's counties are its hand-listed members; its geometry stays its jails
+# keyed on the agency
 regional_jail_counties <- arrow::read_parquet(
   "data/intermediate/manual-regional-jail-counties.parquet"
 ) |>
-  mutate(county_key = norm_county(county)) |>
+  mutate(agency_id = manual_agency_id(state, agency), county_key = norm_county(county)) |>
   left_join(county_codes, by = c("state", "county_key"))
 stopifnot(
   "every regional jail county must match one census county" = !anyNA(
@@ -380,7 +381,9 @@ stopifnot(
   )
 )
 regional_jail_counties <- regional_jail_counties |>
-  summarize(member_county_fips = paste(county_fips, collapse = "; "), .by = c(agency, state))
+  # one county may be listed under several spellings
+  distinct(agency_id, county_fips) |>
+  summarize(member_county_fips = paste(county_fips, collapse = "; "), .by = agency_id)
 
 # HIFLD, the campus and airport layers and Pennsylvania's wards print names in capitals
 recase_capitals <- \(x) if_else(
@@ -474,7 +477,7 @@ agreement_level_sf <- agreement_level_sf |>
     moa_pending = coalesce(moa == "pending", FALSE)
   ) |>
   left_join(ice_county_codes, by = "agreement_id") |>
-  left_join(regional_jail_counties, by = c("agency", "state")) |>
+  left_join(regional_jail_counties, by = "agency_id") |>
   # geography names the census units holding the jurisdiction, never a unit inside it:
   # place only for municipal and campus agencies; no geometry falls back to ICE's county
   mutate(
@@ -506,10 +509,12 @@ agreement_level_sf <- agreement_level_sf |>
     )
   ) |>
   select(-ice_county_fips, -member_county_fips) |>
-  # the unit the agreement covers, by name; a jail or warrant-service agreement covers the agency's detention facilities
+  # the unit the agreement covers, by name; a jail or warrant-service agreement covers the agency's detention
+  # facilities, a judicial district's its counties
   mutate(
     jurisdiction = case_when(
-      support_type %in% c("Jail Enforcement Model", "Warrant Service Officer") ~ paste("Detention facilities operated by", agency),
+      support_type %in% c("Jail Enforcement Model", "Warrant Service Officer") & !jurisdiction_level %in% "Judicial District" ~
+        paste("Detention facilities operated by", agency),
       jurisdiction_level %in% "Constable District" ~ constable_district_name(agency, county),
       jurisdiction_level %in% "State" ~ state,
       jurisdiction_level %in% c("Municipal", "Campus", "Port") ~ coalesce(unit_names, municipality_name(place, place_type)),

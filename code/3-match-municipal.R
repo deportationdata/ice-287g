@@ -122,10 +122,8 @@ candidate_counties <- bind_rows(
   distinct(geoid, cand_county_fips)
 
 municipal_overrides <- manual_polygons |>
-  select(
-    agency,
-    state,
-    county,
+  transmute(
+    agency_id = manual_agency_id(state, agency, county),
     manual_match_layer = match_layer,
     manual_city_match = match_name,
     manual_reason = reason,
@@ -158,6 +156,7 @@ member_candidates <- bind_rows(
   )
 regional_members <- manual_regional |>
   mutate(
+    agency_id = manual_agency_id(state, agency, county),
     member_row = row_number(),
     state_key = norm_state(state),
     place_key = norm_place(municipality),
@@ -189,7 +188,7 @@ stopifnot(
 
 regional_sf <- agreements |>
   filter(geometry_type == "Polygon", jurisdiction_level == "Regional") |>
-  inner_join(regional_members, by = c("agency", "state", "county")) |>
+  inner_join(regional_members |> select(-agency, -state, -county), by = "agency_id") |>
   st_as_sf() |>
   transmute(
     agreement_id,
@@ -209,12 +208,12 @@ regional_sf <- agreements |>
   )
 stopifnot(
   "every department in the member list is a Regional agreement that matched its members" =
-    nrow(regional_sf) == nrow(agreements |> inner_join(regional_members, by = c("agency", "state", "county")))
+    nrow(regional_sf) == nrow(agreements |> inner_join(regional_members, by = "agency_id"))
 )
 # a regional body with no member list rides along unplaced rather than read as a town
 regional_unmatched <- agreements |>
   filter(geometry_type == "Polygon", jurisdiction_level == "Regional") |>
-  anti_join(regional_members, by = c("agency", "state", "county")) |>
+  anti_join(regional_members, by = "agency_id") |>
   transmute(
     agreement_id,
     match_name = NA_character_,
@@ -236,11 +235,8 @@ regional_unmatched <- st_as_sf(
 )
 
 municipal_base <- agreements |>
-  anti_join(regional_members, by = c("agency", "state", "county")) |>
-  left_join(
-    municipal_overrides,
-    by = c("agency", "state", "county")
-  ) |>
+  anti_join(regional_members, by = "agency_id") |>
+  left_join(municipal_overrides, by = "agency_id") |>
   # exact complement of 3-match-pa-constable.R's inclusion filter; constables must not land here
   filter(
     !(state == "Pennsylvania" & geometry_type == "Polygon" & jurisdiction_level == "Municipal" &

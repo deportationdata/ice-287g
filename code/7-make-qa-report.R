@@ -1,5 +1,6 @@
 # Invariants and counts over the shipped outputs; QA_STRICT=1 (CI) makes any "fail" an error
-# -> review/qa-summary.csv, review/agreement-review.csv (read by the update PR), data/intermediate/qa-*.csv, facility-ice-code-candidates.csv
+# -> review/qa-summary.csv, review/agreement-review.csv (read by the update PR), review/facility-ice-code-candidates.csv,
+#    data/intermediate/qa-*.csv
 library(tidyverse)
 library(sf)
 
@@ -174,7 +175,7 @@ summary <- bind_rows(
   check("agreements ICE printed whose every listing went to a later signing it never listed", sum(identities$n_pub == 0)),
   check(
     "identity candidates awaiting a verdict",
-    nrow(read_csv("data/intermediate/identity-candidates.csv", show_col_types = FALSE))
+    nrow(read_csv("review/identity-candidates.csv", show_col_types = FALSE))
   ),
   check("agencies across every era", nrow(agencies)),
   check(
@@ -428,7 +429,7 @@ features |>
 
 write_csv(review, "review/agreement-review.csv", na = "")
 
-write_csv(ice_code_candidates, "data/intermediate/facility-ice-code-candidates.csv", na = "")
+write_csv(ice_code_candidates, "review/facility-ice-code-candidates.csv", na = "")
 
 # provenance health per snapshot folder
 folders <- c(

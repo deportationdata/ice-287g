@@ -600,10 +600,75 @@ is_county_constable <- function(agency, state) {
   str_detect(str_to_lower(agency), "\\bconstable") & state != "Pennsylvania" & !is_constable_district(agency, state)
 }
 
-# the identity family's agency key for any (state, agency) string
-agency_id_of <- function(state, agency, state_abbr, aliases) {
+# the identity family's agency key for any (state, agency) string; `qualified` lists the bare keys whose slug
+# carries its county, and those need the county
+agency_id_of <- function(state, agency, state_abbr, aliases, county = NULL, qualified = character()) {
   key <- canonical_agency(agency, coalesce(state_abbr, ""), coalesce(state, ""))
   same <- aliases |> filter(relation == "same") |> distinct(state_key, alias_key, target_key)
   target <- same$target_key[match(paste(norm_state(state), key), paste(same$state_key, same$alias_key))]
-  paste0(coalesce(state_abbr, "XX"), "-", slug(coalesce(target, key)))
+  id <- paste0(coalesce(state_abbr, "XX"), "-", slug(coalesce(target, key)))
+  needs_county <- id %in% qualified
+  county <- if (is.null(county)) rep(NA_character_, length(id)) else county
+  stopifnot("an agency whose slug carries its county needs a county in the manual row" =
+              !any(needs_county & is.na(county)))
+  if_else(needs_county, paste0(id, "-", slug(coalesce(county, ""))), id)
+}
+
+# the agency a manual row names, through every spelling ICE printed (identity-agency-spellings.parquet). A spelling
+# two agencies share takes the row's county, else the agency the spelling itself names; a spelling ICE never printed
+# takes the alias-table key
+manual_agency_id <- function(state, agency, county = NULL,
+                             spellings = arrow::read_parquet("data/intermediate/identity-agency-spellings.parquet")) {
+  xwalk <- arrow::read_parquet("data/intermediate/reference-state-codes.parquet")
+  aliases <- read_agency_aliases(xwalk)
+  state_abbr <- xwalk$state_abbr[match(state, xwalk$state_full)]
+  county <- if (is.null(county)) rep(NA_character_, length(state)) else na_if(coalesce(county, ""), "")
+  own <- agency_id_of(state, agency, state_abbr, aliases)
+  rows <- tibble(.row = seq_along(state), state_key = norm_state(state),
+                 observed_agency = canonical_agency(agency, coalesce(state_abbr, ""), coalesce(state, "")),
+                 county_slug = slug(coalesce(county, "")), own)
+  cand <- rows |>
+    inner_join(spellings |> distinct(state_key, observed_agency, agency_id),
+               by = c("state_key", "observed_agency"), relationship = "many-to-many") |>
+    mutate(by_county = county_slug != "" & str_ends(agency_id, paste0("-", county_slug)),
+           by_own = agency_id == own) |>
+    group_by(.row) |>
+    filter(if (any(by_county)) by_county else if (any(by_own)) by_own else TRUE) |>
+    summarise(agency_id = if (n_distinct(agency_id) == 1) first(agency_id) else NA_character_, n = n_distinct(agency_id),
+              .groups = "drop")
+  ambiguous <- cand |> filter(n > 1) |> inner_join(rows, by = ".row")
+  stopifnot("a manual row names a spelling two agencies share; give the row the county that picks one" =
+              nrow(ambiguous) == 0 || stop(paste(unique(paste(ambiguous$state_key, ambiguous$observed_agency)), collapse = "; ")))
+  coalesce(cand$agency_id[match(rows$.row, cand$.row)], own)
+}
+
+# a fix with an agency applies to it alone; a blank fix removes the county, a blank county fills one
+read_county_name_fixes <- function(path = "inputs/manual/county-name-fixes.csv") {
+  read_csv(path, col_types = "ccccc", na = character(), progress = FALSE) |>
+    transmute(state, agency = na_if(agency, ""), county = na_if(county, ""), county_fixed)
+}
+
+# the county as ICE's cell reads after the name fixes: title case, #N/A-style text as missing
+sheet_county <- function(raw_county, state, agency, fixes) {
+  county <- str_to_title(str_squish(raw_county))
+  county <- if_else(str_to_lower(county) %in% c("#na", "#n/a", "na", "n/a"), NA_character_, county)
+  rows <- tibble(state, agency = str_squish(agency), county) |>
+    left_join(fixes |> filter(!is.na(agency)), by = c("state", "agency", "county")) |>
+    left_join(fixes |> filter(is.na(agency)) |> select(-agency), by = c("state", "county"), suffix = c("", "_any"))
+  na_if(coalesce(rows$county_fixed, rows$county_fixed_any, rows$county), "")
+}
+
+# longest run of up to three words before County/Parish that is a real county of the state
+county_from_agency_name <- function(agency, state, counties_ref) {
+  ref <- counties_ref |> distinct(state_key, county_key, county)
+  out <- rep(NA_character_, length(agency))
+  for (k in 3:1) {
+    pattern <- paste0("\\b((?:[A-Za-z.'-]+\\s+){", k - 1, "}[A-Za-z.'-]+)\\s+(County|Parish)\\b")
+    words <- str_match(str_squish(agency), regex(pattern, ignore_case = TRUE))[, 2]
+    hit <- tibble(state_key = norm_state(state), county_key = norm_county(words)) |>
+      left_join(ref, by = c("state_key", "county_key")) |>
+      pull(county)
+    out <- coalesce(out, hit)
+  }
+  out
 }
