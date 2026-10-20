@@ -25,8 +25,10 @@ coerce_signed_date <- function(x) {
   if (inherits(x, "POSIXt")) return(as.Date(x))
   if (is.numeric(x)) return(as.Date(round(x), origin = "1899-12-30"))
   chr <- str_squish(as.character(x))
-  # repair ICE's five-digit years ("5/31/20026") and dropped slashes ("7/72025")
+  # repair ICE's five-digit years ("5/31/20026"), three-digit years ("10/16/226") and dropped
+  # slashes ("7/72025")
   chr <- str_replace(chr, "/200(\\d{2})$", "/20\\1")
+  chr <- str_replace(chr, "/2(\\d{2})$", "/20\\1")
   chr <- str_replace(chr, "^(\\d{1,2})/(\\d{1,2})(\\d{4})$", "\\1/\\2/\\3")
   # window-check per format; base as.Date, since mdy trains on the whole vector and NAs it all
   in_window <- function(d) {
