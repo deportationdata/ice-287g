@@ -52,11 +52,13 @@ jobs:
           MOA_REPORT: ${{ runner.temp }}/moa-discovery.md
         run: Rscript --vanilla code/0-acquire-archive-index.R
 
-      # the guesser reads the published agreements and the state crosswalk, which is not committed
+      # the guesser reads the published agreements and the state crosswalk, which is not committed;
+      # data/intermediate/ is gitignored, so the checkout's clean removes it
       - name: Guess ice.gov file names for MOAs the sheet still shows pending
         env:
           MOA_REPORT: ${{ runner.temp }}/moa-discovery.md
         run: |
+          mkdir -p data/intermediate
           Rscript --vanilla code/1-read-reference-state-codes.R
           Rscript --vanilla code/0-acquire-moa-guesser.R
 
