@@ -810,7 +810,7 @@ GA-department-of-correction#JEM#2020-06-09,facility,Appling Integrated Treatment
 GA-department-of-public-safety#TFM#2007-07-27,state,Georgia,state_name,exact,1,,,agency,,,,,
 GA-department-of-public-safety#TFM#2009-10-21,state,Georgia,state_name,exact,1,,,leaic,GEORGIA DEPARTMENT OF PUBLIC SAFETY,Fulton County,,,
 GA-department-of-public-safety#TFM#2025-03-10,state,Georgia,state_name,exact,1,,,leaic,GEORGIA DEPARTMENT OF PUBLIC SAFETY,Fulton County,,,
-GA-eaton-police-department#TFM#2026-10-27,municipal,,unmatched,unmatched,1,,no geometry matched,,,,,,
+GA-eton-police-department#TFM#2026-10-27,municipal,Eton,place_name,exact,1,,,crime,Eton Police Department,Murray County,,,
 GA-euharlee-police-department#TFM#2025-05-16,municipal,Euharlee,place_name,exact,1,,,crime,Euharlee Police Department,Bartow County,,,
 GA-fayette-county-sheriff-office#WSO#2025-09-09,facility,FAYETTE COUNTY JAIL,exact_county_pattern_all_facilities,exact,1,FAYETTEVILLE,,crime,Fayette County Sheriff's Office,Fayette County,,,
 GA-flowery-branch-police-department#TFM#2026-06-23,municipal,Flowery Branch,place_name,exact,1,,,crime,Flowery Branch Police Department,Hall County,,,
@@ -2712,7 +2712,7 @@ TX-kleberg-county-sheriff-office#TFM#2025-12-18,county,Kleberg County,county_nam
 TX-knox-city-police-department#TFM#2026-07-13,municipal,Knox City,place_name,exact,1,,,crime,Knox City Police Department,Knox County,,,
 TX-knox-county-sheriff-office#TFM#2026-07-29,county,Knox County,county_name,exact,1,,,crime,Knox County Sheriff's Office,Knox County,,,
 TX-knox-county-sheriff-office#WSO#2025-06-30,facility,KNOX COUNTY JAIL,exact_county_pattern_all_facilities,exact,1,BENJAMIN,,crime,Knox County Sheriff's Office,Knox County,,,
-TX-la-coste-police-department#TFM#2026-10-26,municipal,,unmatched,unmatched,1,,no geometry matched,crime,Lacoste Police Department,Medina County,,,
+TX-la-coste-police-department#TFM#2026-10-26,municipal,Lacoste,manual_override,manual,1,,,crime,Lacoste Police Department,Medina County,,agency_name_spacing,"ICE writes La Coste as two words; the city and its Census place are LaCoste (4840108), Medina County"
 TX-la-grange-police-department#TFM#2026-07-20,municipal,La Grange,place_name,exact,1,,,crime,La Grange Police Department,Fayette County,,,
 TX-la-vernia-police-department#TFM#2026-02-23,municipal,La Vernia,place_name,exact,1,,,crime,La Vernia Police Department,Wilson County,,,
 TX-lamar-county-sheriff-office#WSO#2025-10-17,facility,LAMAR COUNTY JAIL,exact_county_pattern_all_facilities,exact,1,PARIS,,crime,Lamar County Sheriff's Office,Lamar County,,,
