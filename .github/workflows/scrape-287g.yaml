@@ -173,10 +173,26 @@ jobs:
           '
 
       - name: Snapshot the sheet
+        id: snapshot
         if: steps.sheet_check.outputs.changed == 'true'
+        # a failure here is judged by the next step, not the job
+        continue-on-error: true
         run: Rscript --vanilla code/0-acquire-scraper.R
 
+      - name: Carry on without a snapshot when the branch holds an unbuilt sheet
+        if: steps.snapshot.outcome == 'failure'
+        run: |
+          acquired=$(git log -1 --format=%ct -- sheets/)
+          built=$(git log -1 --format=%ct -- data/)
+          if [ "${acquired:-0}" -gt "${built:-0}" ]; then
+            echo "::warning::The sheet snapshot failed, but the branch's newest sheet ($(date -u -d "@$acquired" +%Y-%m-%dT%H:%MZ)) is newer than its datasets ($(date -u -d "@${built:-0}" +%Y-%m-%dT%H:%MZ)) — carrying on so it gets built."
+          else
+            echo "::error::The sheet snapshot failed and the branch holds no sheet newer than its datasets."
+            exit 1
+          fi
+
       - name: Revalidate MOA documents
+        if: steps.snapshot.outcome != 'failure'
         env:
           # every url when the sheet changed or failures are outstanding; one shard
           # of six otherwise (hour mod 6), so the 16 daily runs still cover every url
