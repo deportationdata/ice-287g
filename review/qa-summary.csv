@@ -1,21 +1,21 @@
 check,scope,value,expected,status
-agreements rows,all,3201,NA,info
-agreements active,all,2725,NA,info
-agreements removed,all,273,NA,info
-agreements superseded,all,203,NA,info
-agreements == identities,all,3201,3201,pass
-agencies,all,2491,NA,info
+agreements rows,all,3244,NA,info
+agreements active,all,2763,NA,info
+agreements removed,all,277,NA,info
+agreements superseded,all,204,NA,info
+agreements == identities,all,3244,3244,pass
+agencies,all,2523,NA,info
 identities folding more than one spelling,all,37,NA,info
 identities by resolution,alias,19,NA,info
 identities by resolution,date_corrected,69,NA,info
-identities by resolution,exact,3014,NA,info
+identities by resolution,exact,3057,NA,info
 identities by resolution,modifier,6,NA,info
 identities by resolution,relabel,5,NA,info
 identities by resolution,typo,28,NA,info
 identities by resolution,unlisted_signing,60,NA,info
 superseded agreements name a successor,all,0,0,pass
-sheet publications,all,472,NA,info
-sheet publications dated by ICE's filename,all,249,NA,info
+sheet publications,all,473,NA,info
+sheet publications dated by ICE's filename,all,250,NA,info
 sheet publications dated by ICE's Last-Modified,all,0,NA,info
 newest ICE sheet without a filename date,all,0,NA,info
 sheet publications dated by an archive capture,all,223,NA,info
@@ -23,67 +23,66 @@ sheet publications out of date order,all,0,0,pass
 sheet publications with a date flag,online before its ICE filename date,1,NA,info
 agreements absent from a publication inside their listing window,all,9,NA,info
 agreements ICE printed whose every listing went to a later signing it never listed,all,1,NA,info
-identity candidates awaiting a verdict,all,57,NA,info
-agencies across every era,all,2491,NA,info
+identity candidates awaiting a verdict,all,59,NA,info
+agencies across every era,all,2523,NA,info
 agencies whose agreement count differs from the agreements file,all,0,0,pass
-active agreements == newest sheet rows,all,2725,2725,pass
+active agreements == newest sheet rows,all,2763,2763,pass
 duplicate identity rows in agreements,all,0,0,pass
 distinct states in agreements,all,47,NA,info
-feature rows,all,3955,NA,info
-agreement-level rows == agreements rows,all,3201,3201,pass
+feature rows,all,4000,NA,info
+agreement-level rows == agreements rows,all,3244,3244,pass
 agreements with no feature row,all,0,0,pass
-agreement review rows == agreements rows,all,3201,3201,pass
+agreement review rows == agreements rows,all,3244,3244,pass
 "agreements whose features disagree on match quality, review reason or ORI source",all,0,0,pass
-facilities matched to an agreement that carry an ICE detention facility code,all,164,NA,info
+facilities matched to an agreement that carry an ICE detention facility code,all,163,NA,info
 facility and ICE roster pairs awaiting a same-or-different decision,all,0,NA,info
-feature rows by layer,county,764,NA,info
-feature rows by layer,facility,1774,NA,info
-feature rows by layer,municipal,1257,NA,info
+feature rows by layer,county,777,NA,info
+feature rows by layer,facility,1788,NA,info
+feature rows by layer,municipal,1275,NA,info
 feature rows by layer,port,5,NA,info
 feature rows by layer,precinct,54,NA,info
 feature rows by layer,state,81,NA,info
 feature rows by layer,university,20,NA,info
-empty-geometry features by layer,facility,348,NA,info
+empty-geometry features by layer,facility,352,NA,info
 empty-geometry features by layer,municipal,3,NA,info
 empty-geometry features by layer,precinct,54,NA,info
 empty-geometry features by layer,university,1,NA,info
-active features flagged needs_review,all,121,NA,info
-active features by match quality,exact,2629,NA,info
+active features flagged needs_review,all,122,NA,info
+active features by match quality,exact,2668,NA,info
 active features by match quality,exact_flagged,33,NA,info
 active features by match quality,fuzzy,5,NA,info
 active features by match quality,manual,745,NA,info
-active features by match quality,unmatched,57,NA,info
+active features by match quality,unmatched,58,NA,info
 active features by match quality,weak,8,NA,info
-active agreements flagged needs_review,all,105,NA,info
-active features with a pending MOA,all,771,NA,info
+active agreements flagged needs_review,all,106,NA,info
+active features with a pending MOA,all,814,NA,info
 active features with an addendum,all,195,NA,info
 county geoids outside the census county list,all,0,NA,info
 DOC agreements fanned out to state prisons,all,0,NA,info
-agreement-identifiers rows == agreements rows,all,3201,3201,pass
-active agreements with an ORI9,all,2622,NA,info
+agreement-identifiers rows == agreements rows,all,3244,3244,pass
+active agreements with an ORI9,all,2659,NA,info
 ORI9 by source,agency,5,NA,info
-ORI9 by source,crime,2793,NA,info
+ORI9 by source,crime,2833,NA,info
 ORI9 by source,leaic,42,NA,info
-ORI9 by source,lear,133,NA,info
+ORI9 by source,lear,135,NA,info
 ORI9 by source,manual,87,NA,info
-ORI9 by source,none,141,NA,info
+ORI9 by source,none,142,NA,info
 malformed ORI9 values,all,0,0,pass
 ORI9 sentinel -1 shipped,all,0,0,pass
 ori_conflict flagged,all,26,NA,info
 county_fips malformed or outside its state,all,0,0,pass
-placed features straddling counties,facility,1,NA,info
-placed features straddling counties,municipal,67,NA,info
+placed features straddling counties,municipal,70,NA,info
 placed features straddling counties,port,1,NA,info
 municipal jail agreements with no municipality of their name,all,0,NA,info
 Connecticut features carrying a legacy county fips,all,1,NA,info
 Connecticut features carrying a planning-region fips,all,0,0,pass
 placed features by geometry vintage,2016,5,NA,info
 placed features by geometry vintage,2021,3,NA,info
-placed features by geometry vintage,2024,2115,NA,info
-placed features by geometry vintage,NA,1426,NA,info
+placed features by geometry vintage,2024,2146,NA,info
+placed features by geometry vintage,NA,1436,NA,info
 missing identifiers by type,missing_both,4,NA,info
-missing identifiers by type,missing_fips,53,NA,info
-missing identifiers by type,missing_ori,99,NA,info
+missing identifiers by type,missing_fips,54,NA,info
+missing identifiers by type,missing_ori,100,NA,info
 distinct MOA urls on the sheet,all,2560,NA,info
 distinct MOA urls in agreements manifests,all,2980,NA,info
 agreements folders with outstanding failed downloads,all,0,0,pass
