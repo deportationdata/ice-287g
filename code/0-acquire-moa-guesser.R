@@ -39,6 +39,10 @@ pdf_text_of <- function(path) {
   }
   ""
 }
+# without a way to read PDF text every candidate fails verification, so stop before asking ice.gov anything
+if (!requireNamespace("pdftools", quietly = TRUE) && !nzchar(Sys.which("pdftotext"))) {
+  stop("no way to read PDF text: install pdftools or poppler's pdftotext (Debian: apt-get install poppler-utils)")
+}
 # NA when verified, else the reason it could not be
 verify <- function(txt, agency, signed) {
   flat <- str_squish(txt)
@@ -55,12 +59,18 @@ verify <- function(txt, agency, signed) {
   if (date_hit || name_hit) NA_character_ else "neither the signing date nor the agency's name is in the PDF text"
 }
 
+# a file found earlier still reads as pending until the datasets are rebuilt, so check what agreements/ holds
+held <- unique(c(doc_key(na.omit(snapshot_manifests("agreements")$url)),
+                 doc_key(list.files("agreements", "\\.pdf$", recursive = TRUE, ignore.case = TRUE))))
+
 n_requests <- 0
+n_held <- 0
 stop_reason <- NA_character_
 found <- list()
 for (i in seq_len(nrow(pending))) {
   a <- pending[i, ]
   for (f in moa_candidate_files(a$agency, a$state_abbr, a$model, a$signed_date)) {
+    if (doc_key(f) %in% held) { n_held <- n_held + 1; break }
     if (n_requests >= max_requests) { stop_reason <- "request cap reached"; break }
     r <- tryCatch(HEAD(paste0(base_url, f), user_agent("Mozilla/5.0"), timeout(30)), error = \(e) NULL)
     n_requests <- n_requests + 1
@@ -77,8 +87,8 @@ for (i in seq_len(nrow(pending))) {
   if (!is.na(stop_reason)) break
 }
 guessed <- if (is.na(stop_reason)) nrow(pending) else i
-message(sprintf("guessed for %d of %d pending agreements with %d requests; %d candidate PDF(s)%s",
-                guessed, nrow(pending), n_requests, length(found), if (is.na(stop_reason)) "" else paste0("; stopped: ", stop_reason)))
+message(sprintf("guessed for %d of %d pending agreements with %d requests; %d already held; %d candidate PDF(s)%s",
+                guessed, nrow(pending), n_requests, n_held, length(found), if (is.na(stop_reason)) "" else paste0("; stopped: ", stop_reason)))
 
 verified <- list(); unverified <- list()
 for (h in found) {
@@ -113,9 +123,9 @@ if (nrow(verified) && !dry_run) {
 if (nzchar(report)) {
   line <- \(d) sprintf("- %s — %s (%s signed %s, pending since %s): [%s](%s)", d$state, d$agency, d$model, d$signed_date, d$first_appeared_date, d$file, d$url)
   cat(c(sprintf("## MOA guesser, %s", Sys.Date()), "",
-        sprintf("Guessed for %d of %d %s, with %d requests to ice.gov%s.", guessed, nrow(pending),
+        sprintf("Guessed for %d of %d %s, with %d requests to ice.gov; %d already held under agreements/.%s", guessed, nrow(pending),
                 if (nzchar(ids)) "requested agreements" else sprintf("agreements pending at least %d days", min_days), n_requests,
-                if (is.na(stop_reason)) "" else paste0(" **Stopped early: ", stop_reason, ".**")), "",
+                n_held, if (is.na(stop_reason)) "" else paste0(" **Stopped early: ", stop_reason, ".**")), "",
         if (dry_run) sprintf("### Verified (dry run: nothing written) (%d)", nrow(verified)) else sprintf("### Verified and saved to `%s` (%d)", out_dir, nrow(verified)),
         if (nrow(verified)) map_chr(seq_len(nrow(verified)), \(k) line(verified[k, ])) else "None.", "",
         sprintf("### Found but not verified, so not added (%d)", nrow(unverified)),

@@ -5,10 +5,17 @@ on:
     # hourly over the same hours as the sheet scrape (10:00 to 01:00 UTC), at minute 47 to keep
     # clear of its minute 17
     - cron: '47 10-23,0-1 * * *'
+    # weekly discovery of MOAs the sheet does not link yet, since ICE usually links one within a
+    # month; Monday 06:43 finishes long before the first hourly pass
+    - cron: '43 6 * * 1'
   workflow_dispatch:
     inputs:
       full_pass:
         description: "revalidate every MOA url, not just this hour's shard"
+        type: boolean
+        default: false
+      discover:
+        description: "also look for MOAs the sheet does not link (archive page + file-name guesser, about an hour)"
         type: boolean
         default: false
 
@@ -23,11 +30,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # MOA documents get PRs of their own, holding only agreements/; the datasets read them once the
-  # PR merges, when the sheet scrape merges main into its open update branch and rebuilds
+  # MOA documents get PRs of their own, holding only agreements/ (and sheets/archive-index/ when
+  # discovery sees ICE's archive page change); the datasets read them once the PR merges, when the
+  # sheet scrape merges main into its open update branch and rebuilds
   acquire:
     runs-on: [self-hosted]
-    timeout-minutes: 120
+    # a discovery run takes about an hour; a pass alone takes minutes
+    timeout-minutes: 180
 
     steps:
       - uses: actions/checkout@v4
@@ -103,17 +112,38 @@ jobs:
           export MOA_SHARD=$(( 10#$(date -u +%H) % 6 ))
           Rscript --vanilla code/0-acquire-moa-pass.R
 
+      # discovery looks for MOAs ICE has posted but its sheet does not link. It runs after the pass,
+      # so a file the sheet has just linked is already held and the guesser skips it
+      - name: Check ICE's MOA archive page
+        if: github.event.schedule == '43 6 * * 1' || inputs.discover
+        env:
+          MOA_REPORT: ${{ runner.temp }}/moa-discovery.md
+        run: Rscript --vanilla code/0-acquire-archive-index.R
+
+      # the guesser reads the published agreements and the state crosswalk, which is not committed
+      # (data/intermediate/ is gitignored, so the checkout's clean removes it). Its report, with the
+      # files it found but could not verify, goes on the run's summary page
+      - name: Guess ice.gov file names for MOAs the sheet still shows pending
+        if: github.event.schedule == '43 6 * * 1' || inputs.discover
+        env:
+          MOA_REPORT: ${{ runner.temp }}/moa-discovery.md
+        run: |
+          mkdir -p data/intermediate
+          Rscript --vanilla code/1-read-reference-state-codes.R
+          Rscript --vanilla code/0-acquire-moa-guesser.R
+          cat "$MOA_REPORT" >> "$GITHUB_STEP_SUMMARY"
+
       # downloads are committed as they came; the summary is plain shell, so nothing between
       # download and push can fail on an R package
       - name: Check for changes
         id: check_changes
         run: |
-          git add agreements/
+          git add agreements/ sheets/archive-index/
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          bash code/0-acquire-diff.sh agreements > "$RUNNER_TEMP/moa-changes.txt"
+          bash code/0-acquire-diff.sh agreements sheets/archive-index > "$RUNNER_TEMP/moa-changes.txt"
           if [ ! -s "$RUNNER_TEMP/moa-changes.txt" ]; then
             echo "Only the pass log moved — nothing to commit."
             git reset HEAD -- agreements/
@@ -172,6 +202,11 @@ jobs:
             echo "### MOA files acquired $(date +%Y-%m-%d)"
             echo ""
             cat "$RUNNER_TEMP/moa-changes.txt"
+            # the discovery report can list a hundred unverified candidates, so the body links it
+            if [ -f "$RUNNER_TEMP/moa-discovery.md" ]; then
+              echo ""
+              echo "Discovery ran: [report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            fi
           } > "$RUNNER_TEMP/moa-pr-acquired.txt"
           # the QA check fails the sheet build while any download is outstanding, so the title says
           # when merging would do that; each pass retries them and retires those that succeed
@@ -194,7 +229,7 @@ jobs:
               -F "body=@$RUNNER_TEMP/moa-pr-body.txt" --jq .title
           else
             {
-              echo "MOA documents only. The datasets read them once this merges: the sheet scrape merges main into its open update PR (or starts from main in the next one) and rebuilds."
+              echo "MOA documents only, plus ICE's archive-page index when discovery sees it change. The datasets read them once this merges: the sheet scrape merges main into its open update PR (or starts from main in the next one) and rebuilds."
               echo
               cat "$RUNNER_TEMP/moa-pr-acquired.txt"
             } > "$RUNNER_TEMP/moa-pr-body.txt"
@@ -207,6 +242,6 @@ jobs:
       - name: Clean up
         if: always()
         run: |
-          rm -f "$RUNNER_TEMP"/moa-*.txt
+          rm -f "$RUNNER_TEMP"/moa-*.txt "$RUNNER_TEMP/moa-discovery.md"
           # the sheet snapshot the pass read is not this workflow's to keep
           git clean -fdq sheets/
