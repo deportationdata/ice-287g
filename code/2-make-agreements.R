@@ -90,6 +90,8 @@ agreements <- bind_rows(active, gone) |>
     signed,
     # sentinel string, not NA: needs_review keys off this exact value
     moa = case_when(
+      # ICE's internal file store, closed to the public
+      str_detect(moa_link, "^https?://[^/]*\\.sharepoint\\.com/") ~ "pending",
       !is.na(moa_link) ~ moa_link,
       str_to_lower(str_trim(raw_moa)) == "link pending" ~ "pending",
       TRUE ~ NA_character_
@@ -124,6 +126,8 @@ agreements <- agreements |>
   mutate(moa_fixed = !is.na(moa_url) & coalesce(moa, "pending") == coalesce(moa_linked, "pending"),
          moa = if_else(moa_fixed, moa_url, moa)) |>
   select(-moa_url, -moa_linked) |>
+  # edit.ice.gov answers 403 to the public; www.ice.gov serves the same path
+  mutate(moa = str_replace(moa, "^https?://edit\\.ice\\.gov/", "https://www.ice.gov/")) |>
   # a sheet that links a standalone addendum in the MOA cell links no MOA
   mutate(moa = if_else(moa %in% moa_addenda$addendum_url, NA_character_, moa)) |>
   # the county an agency names is the county it is in, overriding the sheet
@@ -231,6 +235,7 @@ addendum_pages_cache <- "data/cache/moa-addendum-pages.parquet"
 # a copy belongs to an MOA by its full url less any Wayback prefix, or its saved name, never the url's file name:
 # ICE reused names across folders (r_287gazdeptofcorrections.pdf is the 2013 MOA under foia/, the 2016 one under 287gMOA/)
 url_key <- \(u) u |> str_remove("^https?://web\\.archive\\.org/web/[^/]+/") |> str_remove("^https?://") |>
+  str_replace("^edit\\.ice\\.gov/", "www.ice.gov/") |>
   str_remove("[?#].*$") |> map_chr(\(x) tryCatch(URLdecode(x), error = \(e) x)) |> str_to_lower()
 moa_links <- agreements |> filter(!is.na(moa), moa != "pending") |> transmute(agreement_id, agency, moa, key = url_key(moa))
 held_pdfs <- moa_manifest |>
