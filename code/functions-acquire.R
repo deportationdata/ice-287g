@@ -2,39 +2,65 @@
 
 sanitize_path_component <- function(x, fallback = "unnamed") {
   x <- str_squish(as.character(x))
-  if (is.na(x) || x == "" || x == "NA") x <- fallback
+  if (is.na(x) || x == "" || x == "NA") {
+    x <- fallback
+  }
   x <- str_replace_all(x, "[[:space:]]+", "_")
   x <- fs::path_sanitize(x, replacement = "_")
   x <- str_replace_all(x, "_+", "_")
   x <- str_remove_all(x, "^_+|_+$")
-  if (is.na(x) || x == "") x <- fallback
+  if (is.na(x) || x == "") {
+    x <- fallback
+  }
   x
 }
 
 sanitize_download_filename <- function(file_name, fallback) {
   file_name <- sanitize_path_component(file_name, fallback = fallback)
-  if (!str_detect(file_name, fixed("."))) file_name <- paste0(file_name, ".xlsx")
+  if (!str_detect(file_name, fixed("."))) {
+    file_name <- paste0(file_name, ".xlsx")
+  }
   file_name
 }
 
 make_unique_file_path <- function(folder, file_name) {
   candidate <- file.path(folder, file_name)
-  if (!file.exists(candidate)) return(candidate)
+  if (!file.exists(candidate)) {
+    return(candidate)
+  }
   extension <- tools::file_ext(file_name)
-  stem <- if (extension == "") file_name else str_remove(file_name, paste0("\\.", extension, "$"))
+  stem <- if (extension == "") {
+    file_name
+  } else {
+    str_remove(file_name, paste0("\\.", extension, "$"))
+  }
   i <- 2
   repeat {
-    candidate <- file.path(folder, if (extension == "") paste0(stem, "_", i) else paste0(stem, "_", i, ".", extension))
-    if (!file.exists(candidate)) return(candidate)
+    candidate <- file.path(
+      folder,
+      if (extension == "") {
+        paste0(stem, "_", i)
+      } else {
+        paste0(stem, "_", i, ".", extension)
+      }
+    )
+    if (!file.exists(candidate)) {
+      return(candidate)
+    }
     i <- i + 1
   }
 }
 
 ice_get <- function(url, ...) {
   RETRY(
-    "GET", url,
-    user_agent("Mozilla/5.0"), timeout(60),
-    times = 4, pause_base = 2, pause_cap = 30,
+    # replace edit.ice.gov url b/c it's internal
+    "GET",
+    str_replace(url, "^https?://edit\\.ice\\.gov/", "https://www.ice.gov/"),
+    user_agent("Mozilla/5.0"),
+    timeout(60),
+    times = 4,
+    pause_base = 2,
+    pause_cap = 30,
     terminate_on = c(400, 401, 403, 404),
     ...
   )
@@ -45,11 +71,15 @@ response_filename <- function(response, url, fallback) {
   cd <- headers(response)[["content-disposition"]]
   name <- if (!is.null(cd) && grepl("filename=", cd)) {
     str_split(cd, "filename=", n = 2)[[1]][2] |>
-      str_remove(";.*$") |> str_trim() |> str_remove_all("^[\"']|[\"']$")
+      str_remove(";.*$") |>
+      str_trim() |>
+      str_remove_all("^[\"']|[\"']$")
   } else {
     basename(str_split(url, "\\?")[[1]][1])
   }
-  if (is.na(name) || name == "" || !grepl("\\.", name)) name <- fallback
+  if (is.na(name) || name == "" || !grepl("\\.", name)) {
+    name <- fallback
+  }
   name
 }
 
@@ -64,5 +94,6 @@ response_validators <- function(response) {
 body_has_magic <- function(raw_bytes, kind = c("zip", "pdf")) {
   kind <- match.arg(kind)
   magic <- if (kind == "zip") as.raw(c(0x50, 0x4b)) else charToRaw("%PDF")
-  length(raw_bytes) >= length(magic) && identical(raw_bytes[seq_along(magic)], magic)
+  length(raw_bytes) >= length(magic) &&
+    identical(raw_bytes[seq_along(magic)], magic)
 }
