@@ -77,11 +77,11 @@ roster_cols <- c("last_appeared_date")
 # the columns the merge comment covers: ICE's row, the agency match and the jurisdiction; a change
 # in one of them puts the agreement in the re-matched table
 review_cols <- c(
-  "agency", "state", "ice_county", "ice_type", "ORI9",
+  "agency", "state", "ice_state", "ice_county", "ice_type", "ORI9",
   "jurisdiction", "jurisdiction_facilities", "jurisdiction_level", "jurisdiction_level_source",
   "place", "place_type", "place_geoid", "county", "county_fips", "geoid", "geoid_type",
   "geometry_type", "geometry_vintage",
-  "match_layer", "match_name", "match_type", "match_quality", "n_features", "facility_city",
+  "match_layer", "match_name", "match_places", "match_type", "match_quality", "n_features", "facility_city",
   "review_reason", "ori_source", "ori_roster_name", "ori_roster_county", "ori_disagreements",
   "manual_reason", "manual_note"
 )
@@ -232,6 +232,8 @@ county_key <- function(x) {
     str_remove_all("\\bcounty\\b|[^a-z0-9 ;]") |>
     str_squish()
 }
+# a state name reduced to what ICE and the census spell the same way
+state_key <- function(x) str_remove(str_to_lower(str_squish(x)), "^commonwealth of the ")
 plural <- function(n, noun) sprintf("%d %s%s", n, noun, if_else(n == 1, "", "s"))
 
 status_changes <- changes |> filter(column == "status")
@@ -329,12 +331,15 @@ merge_rows <- function(df) {
   df <- df |>
     mutate(across(all_of(review_cols), as.character)) |>
     mutate(
-      n_names = str_count(coalesce(match_name, ""), "; ") + 1,
-      first_names = str_split_fixed(coalesce(match_name, ""), "; ", 4)[, 1:3, drop = FALSE] |>
+      # a matched facility reads "name (city, county, state)"; a review file from before match_places
+      # existed, and every layer but facilities, lists the matched names alone
+      matched_list = coalesce(match_places, match_name),
+      n_names = str_count(coalesce(matched_list, ""), "; ") + 1,
+      first_names = str_split_fixed(coalesce(matched_list, ""), "; ", 4)[, 1:3, drop = FALSE] |>
         apply(1, \(r) paste(r[r != ""], collapse = "; ")),
       matched_to = case_when(
         is.na(match_layer) ~ NA_character_,
-        is.na(match_name) ~ match_layer,
+        is.na(matched_list) ~ match_layer,
         n_names > 3 ~ sprintf("%s: %s (+%d more)", match_layer, first_names, n_names - 3),
         TRUE ~ paste0(match_layer, ": ", first_names)
       ),
@@ -349,6 +354,8 @@ merge_rows <- function(df) {
         is.na(ice_county) ~ "no ICE county",
         county_differs ~ "ICE county differs"
       ),
+      # the pipeline put the agreement in another state than ICE prints (state-fixes.csv or the wrong-state rule)
+      note_state = if_else(!is.na(ice_state) & state_key(ice_state) != state_key(state), "ICE state differs", NA_character_),
       # the level ICE's TYPE alone would give, as 2-make-agreements.R reads it
       ice_type_level = case_when(
         str_to_lower(ice_type) %in% c("state agency", "state") ~ "State",
@@ -367,16 +374,17 @@ merge_rows <- function(df) {
       note_ori = if_else(is.na(ORI9) & status == "Active", "no ORI", NA_character_),
       note_manual = if_else(is.na(manual_note), NA_character_, paste0("manual: ", manual_note))
     ) |>
-    unite(notes, note_county, note_level, note_geometry, note_ori, note_manual, sep = "; ", na.rm = TRUE) |>
+    unite(notes, note_state, note_county, note_level, note_geometry, note_ori, note_manual, sep = "; ", na.rm = TRUE) |>
     mutate(
       `ICE says` = br_join(
         paste0("**", blank_na(agency), "**"),
-        dot_join(ice_county, state),
+        # a review file from before ice_state existed has only the pipeline's state
+        dot_join(ice_county, coalesce(ice_state, state)),
         dot_join(ice_type, support_type, signed_text(pick(everything())))
       ),
       `we say` = br_join(
         paste0("**", blank_na(jurisdiction), "** · ", with_paren(jurisdiction_level, jurisdiction_level_source)),
-        dot_join(county, with_paren(place, place_type), paste("geoid", with_paren(geoid, geoid_type)),
+        dot_join(join_pieces(", ", county, state), with_paren(place, place_type), paste("geoid", with_paren(geoid, geoid_type)),
                  replace_na(geometry_type, "no geometry")),
         if_else(is.na(ORI9), "no ORI9", paste0("ORI9 ", ORI9, if_else(is.na(roster), "", paste0(" from ", roster))))
       ),

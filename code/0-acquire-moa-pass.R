@@ -1,5 +1,6 @@
 # Revalidate every MOA/addendum url the newest sheet links with conditional requests; store only what changed.
-# MOA_FULL=1 every url; else MOA_SHARD=k the k-th of MOA_SHARDS (default 6); MOA_RETRY_DEAD=1 re-asks gone urls
+# MOA_FULL=1 every url; else MOA_SHARD=k the urls not yet held plus the k-th of MOA_SHARDS (default 6) of the rest;
+# MOA_RETRY_DEAD=1 re-asks gone urls
 suppressPackageStartupMessages({
   library(httr)
   library(stringr)
@@ -76,12 +77,15 @@ if (!full && !nzchar(Sys.getenv("MOA_RETRY_DEAD"))) {
 }
 shard <- suppressWarnings(as.integer(Sys.getenv("MOA_SHARD")))
 n_shards <- max(1L, suppressWarnings(as.integer(Sys.getenv("MOA_SHARDS", "6"))))
+# a url not yet held (new on the sheet, or failed last time) is fetched on every pass; the shard
+# spreads only the revalidation of copies already held
 if (!full && !is.na(shard)) {
   work <- work |>
     filter(
-      strtoi(substr(map_chr(url, digest, algo = "sha1"), 1, 4), 16L) %%
-        n_shards ==
-        shard %% n_shards
+      !held |
+        strtoi(substr(map_chr(url, digest, algo = "sha1"), 1, 4), 16L) %%
+          n_shards ==
+          shard %% n_shards
     )
 }
 cat(sprintf(
@@ -430,7 +434,7 @@ if (length(manifest_rows) || length(failed) || nrow(newly_dead)) {
 }
 dead <- c(known_dead, if (length(unreachable)) bind_rows(unreachable)$url)
 
-# retire a recorded failure once its url is held, or the outstanding-failures check forces a full pass forever
+# retire a recorded failure once its url is held, or the QA check counts it outstanding forever
 if (
   any(tally[c("n_new", "n_changed", "n_unreachable")] > 0) ||
     length(failed) == 0

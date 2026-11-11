@@ -1,4 +1,4 @@
-# Delete duplicate downloads and empty folders under agreements/ and sheets/.
+# Delete duplicate downloads and empty folders under agreements/ and sheets/, or only the root(s) given as arguments.
 
 library(digest)
 suppressPackageStartupMessages({ library(stringr); library(purrr); library(dplyr); library(readr) })
@@ -157,22 +157,30 @@ delete_path_log_only_dirs <- function(base_path) {
   }
 }
 
-remove_duplicate_files_recursive("agreements")
-delete_empty_dirs("agreements")
-delete_path_log_only_dirs("agreements")
-delete_empty_dirs("agreements")
+# each workflow deduplicates only the root it acquires into
+roots <- commandArgs(trailingOnly = TRUE)
+if (length(roots) == 0) roots <- c("agreements", "sheets")
+stopifnot("roots are agreements and/or sheets" = all(roots %in% c("agreements", "sheets")))
 
-remove_duplicate_files_one_level("sheets")
-delete_empty_dirs("sheets")
-delete_path_log_only_dirs("sheets")
-delete_empty_dirs("sheets")
+if ("agreements" %in% roots) {
+  remove_duplicate_files_recursive("agreements")
+  delete_empty_dirs("agreements")
+  delete_path_log_only_dirs("agreements")
+  delete_empty_dirs("agreements")
+}
+
+if ("sheets" %in% roots) {
+  remove_duplicate_files_one_level("sheets")
+  delete_empty_dirs("sheets")
+  delete_path_log_only_dirs("sheets")
+  delete_empty_dirs("sheets")
+}
 
 # the manifests of folders that lost files must say where the bytes now live
 snapshot_folders <- function(paths, root) {
   unique(str_extract(paths[startsWith(paths, paste0(root, "/"))], sprintf("^%s/[^/]+", root)))
 }
-n <- annotate_ghost_rows("agreements", snapshot_folders(deleted_in, "agreements")) +
-  annotate_ghost_rows("sheets", snapshot_folders(deleted_in, "sheets"))
+n <- sum(map_dbl(roots, \(root) annotate_ghost_rows(root, snapshot_folders(deleted_in, root))))
 cat(sprintf("Annotated %d manifest rows for deleted duplicates.\n", n))
 
 cat("Deduplication complete.\n")
