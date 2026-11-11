@@ -7,10 +7,6 @@ on:
     - cron: '17 10-23,0-1 * * *'
   workflow_dispatch:
     inputs:
-      full_pass:
-        description: "revalidate every MOA url, not just this hour's shard"
-        type: boolean
-        default: false
       rebuild:
         description: "rebuild the open update branch's datasets even though the sheet is unchanged"
         type: boolean
@@ -28,7 +24,8 @@ concurrency:
 
 jobs:
   # acquisitions are committed and pushed before any pipeline code runs, so a failed build
-  # never discards one
+  # never discards one. This workflow acquires only the sheet; MOA documents come in their own
+  # PRs from moa-287g.yaml and reach the datasets when main is merged into the update branch
   acquire:
     runs-on: [self-hosted]
     timeout-minutes: 150
@@ -52,13 +49,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # while an agreements-update PR is open, each run commits onto its branch
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          # while an agreements-update PR is open, each run commits onto its branch, merging main in
+          # first so the build reads the MOAs and code merged there
           open_branch=$(gh pr list --state open --json headRefName \
             --jq '[.[].headRefName | select(startswith("agreements-update"))][0] // empty')
           if [ -n "$open_branch" ]; then
             git fetch origin "$open_branch"
             git checkout -B "$open_branch" "origin/$open_branch"
             echo "Continuing open update branch: $open_branch"
+            if ! git merge --no-edit -m "Merge main into $open_branch [skip ci]" origin/main; then
+              git merge --abort
+              echo "::warning::main does not merge cleanly into $open_branch, so this run uses the branch as it is."
+            elif [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$open_branch")" ]; then
+              # pushed now, since the build checks the branch out from origin
+              git push origin HEAD
+            fi
             echo "branch=$open_branch" >> "$GITHUB_OUTPUT"
           else
             branch="agreements-update-$(date +%Y-%m-%d-%H%M%S)"
@@ -99,12 +106,6 @@ jobs:
           # a bare file-download id is no filename; the scraper records participating.xlsx then
           case "$served_name" in *.*) ;; *) served_name="participating.xlsx" ;; esac
           echo "Sheet served as $served_name"
-          # a failed PDF download is retried on the next tick, not the next sheet edit
-          if find agreements -name failed_downloads.txt -size +0 2>/dev/null | grep -q .; then
-            echo "Outstanding failed downloads — running full scrape."
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           newest_dir=$(ls -d sheets/sheets_2* 2>/dev/null | sort | tail -1 || true)
           today=$(date -u +%Y-%m-%d)
           # a folder's hashes are in its manifest.csv, or in a download_path_log.csv where it has that instead
@@ -179,85 +180,54 @@ jobs:
         continue-on-error: true
         run: Rscript --vanilla code/0-acquire-scraper.R
 
-      - name: Carry on without a snapshot when the branch holds an unbuilt sheet
+      - name: Carry on without a snapshot when the branch holds an unbuilt sheet or MOAs
         if: steps.snapshot.outcome == 'failure'
         run: |
-          acquired=$(git log -1 --format=%ct -- sheets/)
-          built=$(git log -1 --format=%ct -- data/)
-          if [ "${acquired:-0}" -gt "${built:-0}" ]; then
-            echo "::warning::The sheet snapshot failed, but the branch's newest sheet ($(date -u -d "@$acquired" +%Y-%m-%dT%H:%MZ)) is newer than its datasets ($(date -u -d "@${built:-0}" +%Y-%m-%dT%H:%MZ)) — carrying on so it gets built."
+          built=$(git log -1 --format=%H --grep='^Update 287(g) datasets' HEAD)
+          if [ -z "$built" ] || ! git diff --quiet "$built" HEAD -- sheets/ agreements/; then
+            echo "::warning::The sheet snapshot failed, but the branch holds sheets or MOAs its datasets were not built from — carrying on so they get built."
           else
-            echo "::error::The sheet snapshot failed and the branch holds no sheet newer than its datasets."
+            echo "::error::The sheet snapshot failed and the branch holds nothing its datasets were not built from."
             exit 1
           fi
 
-      - name: Revalidate MOA documents
-        if: steps.snapshot.outcome != 'failure'
-        env:
-          # every url when the sheet changed or failures are outstanding; one shard
-          # of six otherwise (hour mod 6), so the 16 daily runs still cover every url
-          MOA_FULL: ${{ (steps.sheet_check.outputs.changed == 'true' || inputs.full_pass == true) && '1' || '' }}
-        run: |
-          export MOA_SHARD=$(( 10#$(date -u +%H) % 6 ))
-          Rscript --vanilla code/0-acquire-moa-pass.R
-
-      # downloads are committed as they came, before any pipeline code; the summary is plain
+      # the sheet is committed as it came, before any pipeline code; the summary is plain
       # shell, so nothing between download and push can fail on an R package
       - name: Check for changes
         id: check_changes
         run: |
-          git add agreements/ sheets/
+          git add sheets/
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          bash code/0-acquire-diff.sh > "$RUNNER_TEMP/287g-changes.txt"
-          if [ ! -s "$RUNNER_TEMP/287g-changes.txt" ]; then
-            echo "Only the pass log moved — nothing to commit."
-            git reset HEAD -- agreements/ sheets/
-            git checkout -- agreements/ sheets/
-            git clean -fd agreements/ sheets/
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            cat "$RUNNER_TEMP/287g-changes.txt"
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+          bash code/0-acquire-diff.sh sheets > "$RUNNER_TEMP/287g-changes.txt"
+          cat "$RUNNER_TEMP/287g-changes.txt"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Commit and push the acquisition
         if: steps.check_changes.outputs.changed == 'true'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -m "Update 287(g) agreement files [skip ci]"
+          git commit -m "Update 287(g) sheets [skip ci]"
           git push --set-upstream origin HEAD
 
-      # byte-identical downloads (one pdf under several agencies, a re-served sheet) are
-      # deleted in a commit of their own once the acquisition is pushed
+      # a sheet byte-identical to one already held for the same day is deleted in a commit of
+      # its own once the acquisition is pushed
       - name: Run deduplicator
-        run: Rscript --vanilla code/0-acquire-dedupe.R
+        run: Rscript --vanilla code/0-acquire-dedupe.R sheets
 
       - name: Commit and push the deduplication
         id: dedupe_changes
         run: |
-          git add agreements/ sheets/
+          git add sheets/
           if git diff --cached --quiet; then
             echo "Nothing deduplicated."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          bash code/0-acquire-diff.sh > "$RUNNER_TEMP/287g-dedupe.txt"
-          if [ ! -s "$RUNNER_TEMP/287g-dedupe.txt" ]; then
-            echo "Only the pass log moved — nothing to commit."
-            git reset HEAD -- agreements/ sheets/
-            git checkout -- agreements/ sheets/
-            git clean -fd agreements/ sheets/
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          bash code/0-acquire-diff.sh sheets > "$RUNNER_TEMP/287g-dedupe.txt"
           cat "$RUNNER_TEMP/287g-dedupe.txt"
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -m "Remove duplicate 287(g) downloads [skip ci]"
+          git commit -m "Remove duplicate 287(g) sheets [skip ci]"
           git push --set-upstream origin HEAD
           # the PR description lists these under the files acquired
           { [ -s "$RUNNER_TEMP/287g-changes.txt" ] && cat "$RUNNER_TEMP/287g-changes.txt"
@@ -308,7 +278,9 @@ jobs:
           echo "pr_number=${pr_num}" >> "$GITHUB_OUTPUT"
 
       # a build that failed or never ran leaves the datasets stale behind an unchanged sheet, so
-      # rebuild when acquisitions are newer than data/ or the PR carries the "run failed" label
+      # rebuild when agreements/ or sheets/ differ from what the last build read (a new sheet, or
+      # MOAs merged in from main) or the PR carries the "run failed" label. Trees are compared, not
+      # commit times: an MOA commit merged in from main can be older than the last build
       - name: Check whether the update branch needs a build
         id: needs_build
         env:
@@ -322,12 +294,16 @@ jobs:
             echo "needs_build=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          acquired=$(git log -1 --format=%ct -- agreements/ sheets/)
-          built=$(git log -1 --format=%ct -- data/)
+          # every build commits under this message, an empty commit when nothing changed
+          built=$(git log -1 --format=%H --grep='^Update 287(g) datasets' HEAD)
           flagged=$(gh api "repos/${{ github.repository }}/issues/$pr_num/labels" \
             --jq 'any(.[]; .name == "run failed")')
-          if [ "${acquired:-0}" -gt "${built:-0}" ]; then
-            echo "The newest acquisition ($(date -u -d "@$acquired" +%Y-%m-%dT%H:%MZ)) is newer than the datasets ($(date -u -d "@${built:-0}" +%Y-%m-%dT%H:%MZ)) — a build is needed."
+          if [ -z "$built" ]; then
+            echo "No datasets commit found — a build is needed."
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+          elif ! git diff --quiet "$built" HEAD -- agreements/ sheets/; then
+            echo "agreements/ or sheets/ changed since the datasets were built at ${built:0:7}:"
+            git diff --stat "$built" HEAD -- agreements/ sheets/ | tail -1
             echo "needs_build=true" >> "$GITHUB_OUTPUT"
           elif [ "$flagged" = "true" ]; then
             echo "PR #$pr_num carries the run failed label — a build is needed."
@@ -513,12 +489,14 @@ jobs:
           git add data/ review/
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          # a build that changed nothing still commits, empty, so the next run knows what it read
           if git diff --cached --quiet; then
             echo "Datasets unchanged."
+            git commit --allow-empty -m "Update 287(g) datasets (unchanged) [skip ci]"
           else
             git commit -m "Update 287(g) datasets [skip ci]"
-            git push origin HEAD
           fi
+          git push origin HEAD
 
       - name: Trigger diff workflow
         if: steps.pr.outputs.number != ''

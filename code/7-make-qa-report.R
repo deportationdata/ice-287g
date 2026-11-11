@@ -94,6 +94,16 @@ review <- features |>
   ) |>
   unite(ori_disagreements, leaic_ori_other, lear_ori_other, crime_ori_other, sep = "; ", na.rm = TRUE) |>
   mutate(ori_disagreements = na_if(ori_disagreements, "")) |>
+  # each matched facility with the city, county and state it sits in; facility_city below is a
+  # de-duplicated list that does not line up with the names, so the update PR reads this instead
+  unite(facility_where, facility_city, county, facility_state, sep = ", ", na.rm = TRUE, remove = FALSE) |>
+  mutate(
+    match_places = if_else(
+      match_layer == "facility" & !is.na(match_name),
+      if_else(facility_where == "", match_name, paste0(match_name, " (", facility_where, ")")),
+      NA_character_
+    )
+  ) |>
   summarise(
     across(
       c(match_layer, match_quality, review_reason, ori_source, ori_roster_name, ori_roster_county,
@@ -101,12 +111,18 @@ review <- features |>
       first
     ),
     # radix order is the same on a Mac and on the runner, so the committed file does not churn
-    across(c(match_name, match_type, facility_city), \(x) na_if(paste(sort(unique(x[!is.na(x)]), method = "radix"), collapse = "; "), "")),
+    across(c(match_name, match_places, match_type, facility_city), \(x) na_if(paste(sort(unique(x[!is.na(x)]), method = "radix"), collapse = "; "), "")),
     n_features = n(),
     .by = agreement_id
   ) |>
+  # the state ICE's newest listing of the agreement prints; state-fixes.csv and the wrong-state rule
+  # in 1-read-sheets.R can put the agreement in another, so the update PR shows both
+  left_join(
+    identities |> transmute(agreement_id, ice_state = str_to_title(str_squish(raw_state_last))),
+    by = "agreement_id"
+  ) |>
   select(
-    agreement_id, match_layer, match_name, match_type, match_quality, n_features, facility_city,
+    agreement_id, ice_state, match_layer, match_name, match_places, match_type, match_quality, n_features, facility_city,
     review_reason, ori_source, ori_roster_name, ori_roster_county, ori_disagreements, manual_reason, manual_note
   ) |>
   arrange(agreement_id)

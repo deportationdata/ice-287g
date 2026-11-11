@@ -1,7 +1,8 @@
 #!/bin/bash
-# Summarize what an acquisition run staged under agreements/ and sheets/ for the update PR; run after `git add`.
-# Prints nothing when the only change is the MOA pass log (agreements/moa-passes.csv).
-git status --porcelain=v1 --untracked-files=all -- agreements sheets | awk '
+# Summarize what an acquisition run staged for its PR, under the roots given as arguments (default agreements
+# and sheets); run after `git add`. Prints nothing when the only change is the MOA pass log (agreements/moa-passes.csv).
+[ $# -gt 0 ] || set -- agreements sheets
+git status --porcelain=v1 --untracked-files=all -- "$@" | awk '
   function section(kind, title) {
     if (n[kind]) printf "**%d file(s) %s:**\n%s\n", n[kind], title, list[kind]
   }

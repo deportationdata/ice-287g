@@ -1,0 +1,212 @@
+name: "Pull 287(g) MOAs"
+
+on:
+  schedule:
+    # hourly over the same hours as the sheet scrape (10:00 to 01:00 UTC), at minute 47 to keep
+    # clear of its minute 17
+    - cron: '47 10-23,0-1 * * *'
+  workflow_dispatch:
+    inputs:
+      full_pass:
+        description: "revalidate every MOA url, not just this hour's shard"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# never cancel a pass mid-run; a newer tick queues behind it. This is not the sheet scrape's group:
+# GitHub keeps one pending run per group, so a queued tick of one workflow would cancel the other's
+concurrency:
+  group: 287g-moa
+  cancel-in-progress: false
+
+jobs:
+  # MOA documents get PRs of their own, holding only agreements/; the datasets read them once the
+  # PR merges, when the sheet scrape merges main into its open update branch and rebuilds
+  acquire:
+    runs-on: [self-hosted]
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: true
+          lfs: true
+          fetch-depth: 0
+
+      - name: Continue open MOA PR if one exists
+        id: update_branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          # while an moa-update PR is open, each run commits onto its branch, merging main in first
+          # so the pass runs main's scripts
+          open_branch=$(gh pr list --state open --json headRefName \
+            --jq '[.[].headRefName | select(startswith("moa-update"))][0] // empty')
+          if [ -n "$open_branch" ]; then
+            git fetch origin "$open_branch"
+            git checkout -B "$open_branch" "origin/$open_branch"
+            echo "Continuing open MOA branch: $open_branch"
+            if ! git merge --no-edit -m "Merge main into $open_branch [skip ci]" origin/main; then
+              git merge --abort
+              echo "::warning::main does not merge cleanly into $open_branch, so this run uses the branch as it is."
+            elif [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$open_branch")" ]; then
+              git push origin HEAD
+            fi
+            echo "branch=$open_branch" >> "$GITHUB_OUTPUT"
+          else
+            branch="moa-update-$(date +%Y-%m-%d-%H%M%S)"
+            git checkout -b "$branch"
+            echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ensure clean working tree
+        run: |
+          git lfs pull
+          git checkout -- .
+          # the runner is persistent; drop anything git doesn't track before acquiring
+          git clean -fd agreements/ sheets/
+
+      - name: Install R packages
+        run: |
+          Rscript --vanilla -e '
+            pkgs <- c(
+              "arrow", "digest", "dplyr", "fs", "haven", "httr", "httr2", "openxlsx",
+              "readr", "readxl", "rvest", "sf", "stringi", "stringdist",
+              "stringr", "tidygeocoder", "tigris", "tidyr", "tidyverse", "xml2"
+            )
+            # the runner keeps its library, and reinstalling arrow takes ~50 min, so only missing
+            # packages install (delete one from the library to refresh it)
+            missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
+            if (length(missing) > 0) {
+              install.packages(missing, repos = "https://cloud.r-project.org")
+            }
+          '
+
+      # the pass fetches what the newest sheet links, so it reads ICE's sheet as served now, which
+      # can be ahead of any sheet on main; this snapshot is never committed (the sheet scrape
+      # archives sheets), and if it fails the pass reads the newest sheet the branch holds
+      - name: Snapshot the sheet for the pass to read
+        continue-on-error: true
+        run: Rscript --vanilla code/0-acquire-scraper.R
+
+      - name: Revalidate MOA documents
+        env:
+          MOA_FULL: ${{ inputs.full_pass == true && '1' || '' }}
+        run: |
+          # urls not yet held are fetched every run; held copies are revalidated one shard of six
+          # at a time (hour mod 6), so the 16 daily runs cover every url
+          export MOA_SHARD=$(( 10#$(date -u +%H) % 6 ))
+          Rscript --vanilla code/0-acquire-moa-pass.R
+
+      # downloads are committed as they came; the summary is plain shell, so nothing between
+      # download and push can fail on an R package
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git add agreements/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          bash code/0-acquire-diff.sh agreements > "$RUNNER_TEMP/moa-changes.txt"
+          if [ ! -s "$RUNNER_TEMP/moa-changes.txt" ]; then
+            echo "Only the pass log moved — nothing to commit."
+            git reset HEAD -- agreements/
+            git checkout -- agreements/
+            git clean -fd agreements/
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            cat "$RUNNER_TEMP/moa-changes.txt"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push the downloads
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git commit -m "Update 287(g) MOA files [skip ci]"
+          git push --set-upstream origin HEAD
+
+      # byte-identical downloads (one pdf under several agencies) are deleted in a commit of their
+      # own once the downloads are pushed
+      - name: Run deduplicator
+        run: Rscript --vanilla code/0-acquire-dedupe.R agreements
+
+      - name: Commit and push the deduplication
+        id: dedupe_changes
+        run: |
+          git add agreements/
+          if git diff --cached --quiet; then
+            echo "Nothing deduplicated."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          bash code/0-acquire-diff.sh agreements > "$RUNNER_TEMP/moa-dedupe.txt"
+          if [ ! -s "$RUNNER_TEMP/moa-dedupe.txt" ]; then
+            echo "Only the pass log moved — nothing to commit."
+            git reset HEAD -- agreements/
+            git checkout -- agreements/
+            git clean -fd agreements/
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cat "$RUNNER_TEMP/moa-dedupe.txt"
+          git commit -m "Remove duplicate 287(g) MOA downloads [skip ci]"
+          git push --set-upstream origin HEAD
+          # the PR description lists these under the files acquired
+          { [ -s "$RUNNER_TEMP/moa-changes.txt" ] && cat "$RUNNER_TEMP/moa-changes.txt"
+            echo "_After deduplication:_"; echo; cat "$RUNNER_TEMP/moa-dedupe.txt"; } > "$RUNNER_TEMP/moa-listed.txt"
+          mv "$RUNNER_TEMP/moa-listed.txt" "$RUNNER_TEMP/moa-changes.txt"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update pull request
+        if: steps.check_changes.outputs.changed == 'true' || steps.dedupe_changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "### MOA files acquired $(date +%Y-%m-%d)"
+            echo ""
+            cat "$RUNNER_TEMP/moa-changes.txt"
+          } > "$RUNNER_TEMP/moa-pr-acquired.txt"
+          # the QA check fails the sheet build while any download is outstanding, so the title says
+          # when merging would do that; each pass retries them and retires those that succeed
+          title="287(g) MOAs through $(date +%Y-%m-%d)"
+          outstanding=$(find agreements -name failed_downloads.txt -size +0 -exec cat {} + | sort -u | wc -l)
+          [ "$outstanding" -eq 0 ] || title="$title (${outstanding// /} downloads outstanding, merge after they clear)"
+          # the pass takes minutes, so look the PR up again now: the one that was open at the
+          # start may have been merged or closed meanwhile
+          pr_num=$(gh pr list --state open \
+            --head "${{ steps.update_branch.outputs.branch }}" \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$pr_num" ]; then
+            gh api "repos/${{ github.repository }}/pulls/$pr_num" --jq '.body // ""' > "$RUNNER_TEMP/moa-pr-body-current.txt"
+            { cat "$RUNNER_TEMP/moa-pr-body-current.txt"; echo; echo; cat "$RUNNER_TEMP/moa-pr-acquired.txt"; } \
+              | head -c 65000 > "$RUNNER_TEMP/moa-pr-body.txt"
+            # REST, not `gh pr edit`: gh before 2.82.1 (Debian ships 2.46) fails asking for the
+            # retired classic-project cards
+            gh api -X PATCH "repos/${{ github.repository }}/pulls/$pr_num" \
+              -f title="$title" \
+              -F "body=@$RUNNER_TEMP/moa-pr-body.txt" --jq .title
+          else
+            {
+              echo "MOA documents only. The datasets read them once this merges: the sheet scrape merges main into its open update PR (or starts from main in the next one) and rebuilds."
+              echo
+              cat "$RUNNER_TEMP/moa-pr-acquired.txt"
+            } > "$RUNNER_TEMP/moa-pr-body.txt"
+            gh pr create \
+              --title "$title" \
+              --body-file "$RUNNER_TEMP/moa-pr-body.txt" \
+              --base main
+          fi
+
+      - name: Clean up
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP"/moa-*.txt
+          # the sheet snapshot the pass read is not this workflow's to keep
+          git clean -fdq sheets/
