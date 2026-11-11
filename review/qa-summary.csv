@@ -44,29 +44,29 @@ feature rows by layer,precinct,54,NA,info
 feature rows by layer,state,81,NA,info
 feature rows by layer,university,20,NA,info
 empty-geometry features by layer,facility,352,NA,info
-empty-geometry features by layer,municipal,4,NA,info
+empty-geometry features by layer,municipal,3,NA,info
 empty-geometry features by layer,precinct,54,NA,info
 empty-geometry features by layer,university,1,NA,info
-active features flagged needs_review,all,122,NA,info
-active features by match quality,exact,2678,NA,info
+active features flagged needs_review,all,121,NA,info
+active features by match quality,exact,2679,NA,info
 active features by match quality,exact_flagged,33,NA,info
 active features by match quality,fuzzy,5,NA,info
 active features by match quality,manual,746,NA,info
-active features by match quality,unmatched,58,NA,info
+active features by match quality,unmatched,57,NA,info
 active features by match quality,weak,8,NA,info
-active agreements flagged needs_review,all,106,NA,info
-active features with a pending MOA,all,527,NA,info
+active agreements flagged needs_review,all,105,NA,info
+active features with a pending MOA,all,528,NA,info
 active features with an addendum,all,195,NA,info
 county geoids outside the census county list,all,0,NA,info
 DOC agreements fanned out to state prisons,all,0,NA,info
 agreement-identifiers rows == agreements rows,all,3257,3257,pass
-active agreements with an ORI9,all,2669,NA,info
+active agreements with an ORI9,all,2670,NA,info
 ORI9 by source,agency,5,NA,info
-ORI9 by source,crime,2843,NA,info
+ORI9 by source,crime,2844,NA,info
 ORI9 by source,leaic,42,NA,info
 ORI9 by source,lear,136,NA,info
 ORI9 by source,manual,87,NA,info
-ORI9 by source,none,144,NA,info
+ORI9 by source,none,143,NA,info
 malformed ORI9 values,all,0,0,pass
 ORI9 sentinel -1 shipped,all,0,0,pass
 ori_conflict flagged,all,26,NA,info
@@ -78,9 +78,9 @@ Connecticut features carrying a legacy county fips,all,1,NA,info
 Connecticut features carrying a planning-region fips,all,0,0,pass
 placed features by geometry vintage,2016,5,NA,info
 placed features by geometry vintage,2021,3,NA,info
-placed features by geometry vintage,2024,2158,NA,info
+placed features by geometry vintage,2024,2159,NA,info
 placed features by geometry vintage,NA,1436,NA,info
-missing identifiers by type,missing_both,5,NA,info
+missing identifiers by type,missing_both,4,NA,info
 missing identifiers by type,missing_fips,53,NA,info
 missing identifiers by type,missing_ori,100,NA,info
 distinct MOA urls on the sheet,all,2756,NA,info
