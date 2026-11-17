@@ -17,7 +17,7 @@ superseded agreements name a successor,all,0,0,pass
 sheet publications,all,475,NA,info
 sheet publications dated by ICE's filename,all,252,NA,info
 sheet publications dated by ICE's Last-Modified,all,0,NA,info
-newest ICE sheet without a filename date,all,0,NA,info
+newest ICE sheet without a filename date,all,1,NA,info
 sheet publications dated by an archive capture,all,223,NA,info
 sheet publications out of date order,all,0,0,pass
 sheet publications with a date flag,online before its ICE filename date,1,NA,info
